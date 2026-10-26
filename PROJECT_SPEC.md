@@ -228,6 +228,12 @@ Stretch work (assistant, operator web, insights) only if the must-haves are soli
 5. Disconnect the bus device to show the stale state.
 6. Explain the estimation, the safety margin, and the security measures.
 
+**Demo order:** residents first (commuter, anonymous), then the driver side.
+- Driver entry: Settings (S12) > "Driver or conductor? Sign in" > **bus code + PIN** (accounts are created by seed script, no public sign-up; PIN hashed, rate-limited login, JWT with role `driver`, token in `expo-secure-store`). The driver screen needs a "Sign out" to get back to commuter mode.
+- Best moment: a second device taps "I'm here, waiting" and the pin appears live on the driver screen.
+- Operator: no app in the MVP. Show the Figma dashboard (S5, S6) as roadmap; Prisma Studio can show buses/drivers if asked. Say clearly it is not the final operator dashboard.
+- Use one emulator + one real Android phone (laptop RAM is limited).
+
 ## 15. Open questions
 
 - Operator web dashboard: required, or stretch only? (default: stretch)
@@ -262,7 +268,22 @@ Stretch work (assistant, operator web, insights) only if the must-haves are soli
 - AVDs live in `D:\AndroidAVD` (junction from `C:\Users\LENOVO\.android\avd`) because C: is tight.
 - Onboarding scenes: `HeroIllustration` (O1), `HeroLocation` (O2), `HeroAlerts` (O3), shown inside `HeroCard` (scales to fit short screens); shared pieces in `heroParts.js`; `PrimaryButton`, `PulseRing` are reusable.
 
-**Next (tomorrow's task: onboarding O1)**
+- **`expo-notifications` does not work in Expo Go (SDK 57):** importing it crashes with `Cannot find native module 'ExpoTopicSubscriptionModule'`. `src/lib/permissions.js` checks the native modules first (`requireOptionalNativeModule`) and returns `available: false`, so the app still runs in Expo Go. Alerts need a **development build** (`eas build --profile development` or `npx expo run:android`), which we need anyway for push (FCM). Schedule it early.
+- Permissions are asked in onboarding steps 2 (location, foreground only) and 3 (notifications); the answer never blocks the flow. Read-only helpers (`getLocationPermission`, `getAlertsPermission`) and `openAppSettings` are ready for the S8 / S9 / S10 states.
+- Testing permission dialogs: revoke first with `adb shell pm revoke host.exp.exponent android.permission.ACCESS_FINE_LOCATION` (and COARSE), otherwise no dialog appears.
+
+**Status (end of Oct 27) — onboarding is done**
+- Onboarding O1 to O3 is one screen driven by a `step` state (`app/onboarding/index.js`): scenes, animated dots, haptic buttons, Android back handling, permissions (location asked for real; notifications unavailable in Expo Go).
+- Launch gate: `app/index.js` reads `busina:onboardingDone` from AsyncStorage (`src/lib/storage.js`) and redirects to `/home` (done) or `/onboarding` (first time). Finishing or skipping onboarding saves the flag and `router.replace("/home")`. `app/home.js` is a placeholder with a dev-only "Reset onboarding" button.
+- Tested on the Pixel 7 emulator: first launch shows onboarding, finish goes home, relaunch goes straight home, reset shows onboarding again. Haptics and notifications are untested (need a real phone / dev build).
+
+**Next**
+1. Development build (EAS or `npx expo run:android`) so notifications and push can work; schedule early.
+2. First feature slice: S1 map view with fake data, then the first Prisma models (`Route`, `Bus`) and `GET /buses`.
+3. Agree the ESP32 JSON payload with the IoT teammate; choose the test route.
+4. Later: driver sign-in (bus code + PIN), S8 / S9 / S10 permission states using `getLocationPermission`, `getAlertsPermission`, `openAppSettings`.
+
+**(Older plan, done) onboarding O1**
 - Theme tokens from the O1 design: primary `#1f73bd`, navy `#103b60`, heading text `#0f2233`, muted text `#4a5b6b`, inactive dot `#c9d6e2`, hero bg `#e7f0f8`, green `#2a7230`, button gradient `#3a8fd6` to `#165a98`. Fonts: Bricolage Grotesque ExtraBold (headings), DM Sans Regular/Medium/Bold (body).
 - Steps: install `expo-font @expo-google-fonts/dm-sans @expo-google-fonts/bricolage-grotesque`; add colors and font names to `tailwind.config.js`; load fonts in `app/_layout.js`; build O1 (heading, paragraph, progress dots, Continue, Skip, then the hero card). Ignore the iPhone status bar in the mockup. The logo is a complex vector: export it from Figma as one asset (Figma file key `AZW4pIVAs60FO20tNjwbCJ`, node `145:236`).
 
