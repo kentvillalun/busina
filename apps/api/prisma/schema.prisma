@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Placeholder so the client can be generated. The real tables (users, routes, buses, ...)
+// are designed together next, following PROJECT_SPEC.md section 9.
+model Ping {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+}
