@@ -161,6 +161,28 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
   force exit after 10 s. This is a deployed app.
 - Add Prisma models **one feature at a time**, not the whole schema at once (see PROJECT_SPEC section 9 for the
   draft tables). Device endpoints authenticate with a per-device key (store only its hash); never reuse user JWTs.
+- **Code shape:** `const name = async (...) => { ... };` with early returns and an `export { ... }` block at the bottom.
+  **Controllers** are plain `(req, res)` functions and signal a problem with `throw new HttpError(404, "...")` (Express 5
+  forwards a throw, even in async code, to the error handler, so no try/catch and no `next`). **Middlewares** take
+  `(req, res, next)` and hand an error over with `return next(new HttpError(401, "..."))`; `requireRoles(allowedRoles)` takes an array.
+  Keep the code simple and readable; do not over-engineer.
+- **Errors:** never write `res.status(...).json({ error })` for an error. `src/utils/HttpError.js` plus
+  `src/middlewares/errorHandler.js` (registered last) turn every error into `{ "error": { "code", "message", "details?" } }`,
+  so the response shape is defined in one place.
+- **Live bus API:** `POST /device/ping` (the ESP32; stores the latest position in `BusState`, one row per bus, upserted) and
+  `GET /buses` (public; adds `seatsFree`, `onBoard`, `standing` and `stale`, true after 30 s without a ping).
+  `npm run simulate` fakes bus 0015 so no hardware is needed; `npm run seed` creates the demo data.
+- **Validation:** every request body is checked with a **zod** schema in `src/schemas/`, through `validate(schema)`
+  (`src/middlewares/validate.js`). Controllers receive clean data in `req.body`.
+- **Middleware order on a route:** validate, then authentication (`deviceAuth` for ESP32s, `authenticate` +
+  `requireRoles(...)` for people, still a stub), then the per-device or per-user rate limiter, then the controller.
+  Global middlewares in `server.js`: `helmet`, `generalLimiter`, then routes, then `notFound` and `errorHandler`.
+- Devices authenticate with `deviceId` (body) + `X-Device-Key` (header), compared as SHA-256 hashes in constant time.
+  Unknown device and wrong key return the same 401.
+- **Comments:** write one only when the code cannot say it: *why* something is done (a security reason, a hidden
+  constraint, a workaround) or a unit/format that is not obvious. Do not restate what the line does, do not explain
+  the framework, do not mention other projects (Ecoaid) and do not write tutorial text. Explanations for the owner
+  belong in the chat reply, not in the file. A comment that would go stale when the code changes is probably wrong.
 - Estimation method and safety margins: PROJECT_SPEC sections 6 and 7.
 
 ## 10. Git workflow
