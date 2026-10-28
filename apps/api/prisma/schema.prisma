@@ -7,9 +7,111 @@ datasource db {
   provider = "postgresql"
 }
 
-// Placeholder so the client can be generated. The real tables (users, routes, buses, ...)
-// are designed together next, following PROJECT_SPEC.md section 9.
-model Ping {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+enum Direction {
+  NORTHBOUND
+  SOUTHBOUND
+}
+
+enum Role {
+  DRIVER
+  CONDUCTOR
+  OPERATOR
+}
+
+model Company {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  name      String  @unique
+  shortName String?
+  logoUrl   String?
+
   createdAt DateTime @default(now())
+
+  users  User[]
+  routes Route[]
+  buses  Bus[]
+}
+
+model User {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  companyId String  @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id])
+
+  role Role
+
+  firstName    String
+  lastName     String
+  username     String @unique
+  passwordHash String
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model Route {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  companyId String  @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id])
+
+  name     String
+  polyline Json
+  lengthM  Int
+
+  createdAt DateTime @default(now())
+
+  buses Bus[]
+
+  @@unique([companyId, name])
+}
+
+model Bus {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  companyId String  @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id])
+
+  routeId String @db.Uuid
+  route   Route  @relation(fields: [routeId], references: [id])
+
+  busNumber     String
+  plateNumber   String  @unique
+  name          String?
+  photoUrl      String?
+  seatCount     Int     @default(40)
+  deviceId      String  @unique
+  deviceKeyHash String
+  active        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  state BusState?
+
+  @@unique([companyId, busNumber])
+  @@index([routeId])
+}
+
+model BusState {
+  busId String @id @db.Uuid
+  bus   Bus    @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  lat Float
+  lng Float
+
+  speedMps     Float
+  seats        Int[]
+  occupied     Int
+  doorInTotal  Int   @default(0)
+  doorOutTotal Int   @default(0)
+
+  direction Direction?
+
+  lastPingAt DateTime
+  updatedAt  DateTime @updatedAt
 }
