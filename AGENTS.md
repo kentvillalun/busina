@@ -222,3 +222,40 @@ ETA and "time to leave", driver sign-in, deploy, development build.
 Definition of done for any task: runs on the Pixel 7 emulator and on a 360x640 screen, matches the Figma frame,
 uses the existing theme and components, touches no unrelated files, and the pull request explains what changed
 and how to test it.
+
+## 13. AI skills and working agreements
+
+Seven small instruction files live in `.claude/skills/<name>/SKILL.md` (sources and MIT licenses:
+`.claude/skills/THIRD-PARTY-LICENSES.md`). **Claude Code** loads them automatically (the ones that say "use when..."
+trigger by themselves; the others run when you type the slash command). **Any other agent**: open the file and follow
+it, or just follow the short rules below, which say the same thing.
+
+**Order of authority:** section 2 (explain things to a beginner) decides *how you communicate*. Ponytail decides *how
+much code you write*. When they clash about communication, section 2 wins; when they clash about code size, Ponytail wins.
+
+| Skill | What it does | When / how |
+|---|---|---|
+| `ponytail` | The smallest change that fully solves the task: reuse what exists, no abstractions, options or dependencies nobody asked for, shortcuts marked with a `shortcut:` comment. It exists to stop AI over-building | Any coding task. Levels: `/ponytail lite`, `full` (default), `ultra` |
+| `ponytail-review` | Reviews a change (bugs, security, load, missing tests, code that should not exist) and lists findings in plain English. Changes no code | `/ponytail-review` before opening a pull request |
+| `ponytail-audit` | The same, for the whole repo or a folder. One report, changes nothing | `/ponytail-audit` now and then, and before the demo |
+| `ponytail-debt` | Lists every `shortcut:` comment as a ledger of what was deferred | `/ponytail-debt` |
+| `systematic-debugging` | Find the root cause before fixing; one hypothesis at a time; stop after 3 failed fixes. Includes the known culprits in this repo | Automatically, on any bug or error |
+| `verification-before-completion` | No "done / works / fixed" until you ran the check and read the real output (curl, emulator, `expo export`, `prisma validate`) | Automatically, before claiming success or committing |
+| `receiving-code-review` | Check review feedback against the code, ask when unclear, push back with reasons, do one item at a time, no performative agreement | Automatically, when handling pull request comments |
+| `wayfinder` | For work too big or too foggy to plan at once: a markdown map of decision tickets in `docs/wayfinder/<effort>.md`, resolved one at a time. Not for normal feature slices | `/wayfinder`, only when asked |
+
+**The rules in plain words (for agents without skills):**
+- *Ponytail:* before writing, list everything the change must touch (callers, config, exports). Then take the first option that works:
+  skip it if nobody needs it, reuse what the repo already has, use the standard library or a platform feature, use a
+  dependency that is already installed, and only then write the minimum code. No new abstraction, wrapper, option or
+  package "for later". Never cut validation at trust boundaries, error handling that prevents data loss, security, or
+  anything the user asked for. New non-trivial logic gets one small check. End your reply with what you skipped or did not check.
+- *Verification:* identify the command that proves the claim, run it fresh, read the output, and only then say it works.
+  Words like "should work" or "looks good" before running anything are a red flag.
+- *Debugging:* read the whole error, reproduce, check what changed, find the first broken link in the chain
+  (app, API, middleware, Prisma, Neon), form one hypothesis, change one thing. After 3 failed fixes, ask the owner.
+- *Review feedback:* understand it, verify it in the code, ask about anything unclear before changing anything.
+
+**Deliberately not installed:** the plugins' hooks (they run scripts on your machine), Superpowers' brainstorming
+server and its heavy planning/TDD/subagent skills (too much ceremony for this timeline), and Ponytail's benchmark
+and help skills. Add a skill only after reading its whole `SKILL.md`, and never copy scripts into this repo without review.
