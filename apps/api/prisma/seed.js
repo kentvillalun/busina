@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { disconnectDB, prisma } from "../src/config/db.js";
+import { pathLengthM } from "../src/utils/geo.js";
 
 const ENV_PATH = new URL("../.env", import.meta.url);
 
@@ -39,24 +40,6 @@ const ROUTE_POINTS = [
   [120.5877, 18.1798],
 ];
 
-// Distance in meters between two [lng, lat] points (haversine formula).
-function distanceM([lng1, lat1], [lng2, lat2]) {
-  const R = 6371000;
-  const rad = (deg) => (deg * Math.PI) / 180;
-  const dLat = rad(lat2 - lat1);
-  const dLng = rad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-function routeLengthM(points) {
-  let total = 0;
-  for (let i = 1; i < points.length; i++) total += distanceM(points[i - 1], points[i]);
-  return Math.round(total);
-}
-
 // A long random key is safe to store as a plain SHA-256 hash (bcrypt is for short, guessable passwords).
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
@@ -81,12 +64,12 @@ async function main() {
 
   const route = await prisma.route.upsert({
     where: { companyId_name: { companyId: company.id, name: ROUTE_NAME } },
-    update: { polyline: ROUTE_POINTS, lengthM: routeLengthM(ROUTE_POINTS) },
+    update: { polyline: ROUTE_POINTS, lengthM: pathLengthM(ROUTE_POINTS) },
     create: {
       companyId: company.id,
       name: ROUTE_NAME,
       polyline: ROUTE_POINTS,
-      lengthM: routeLengthM(ROUTE_POINTS),
+      lengthM: pathLengthM(ROUTE_POINTS),
     },
   });
 

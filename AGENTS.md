@@ -161,6 +161,28 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
   force exit after 10 s. This is a deployed app.
 - Add Prisma models **one feature at a time**, not the whole schema at once (see PROJECT_SPEC section 9 for the
   draft tables). Device endpoints authenticate with a per-device key (store only its hash); never reuse user JWTs.
+- **Code shape:** `const name = async (...) => { ... };` with early returns and an `export { ... }` block at the bottom.
+  **Controllers** are plain `(req, res)` functions and signal a problem with `throw new HttpError(404, "...")` (Express 5
+  forwards a throw, even in async code, to the error handler, so no try/catch and no `next`). **Middlewares** take
+  `(req, res, next)` and hand an error over with `return next(new HttpError(401, "..."))`; `requireRoles(allowedRoles)` takes an array.
+  Keep the code simple and readable; do not over-engineer.
+- **Errors:** never write `res.status(...).json({ error })` for an error. `src/utils/HttpError.js` plus
+  `src/middlewares/errorHandler.js` (registered last) turn every error into `{ "error": { "code", "message", "details?" } }`,
+  so the response shape is defined in one place.
+- **Live bus API:** `POST /device/ping` (the ESP32; stores the latest position in `BusState`, one row per bus, upserted) and
+  `GET /buses` (public; adds `seatsFree`, `onBoard`, `standing` and `stale`, true after 30 s without a ping).
+  `npm run simulate` fakes bus 0015 so no hardware is needed; `npm run seed` creates the demo data.
+- **Validation:** every request body is checked with a **zod** schema in `src/schemas/`, through `validate(schema)`
+  (`src/middlewares/validate.js`). Controllers receive clean data in `req.body`.
+- **Middleware order on a route:** validate, then authentication (`deviceAuth` for ESP32s, `authenticate` +
+  `requireRoles(...)` for people, still a stub), then the per-device or per-user rate limiter, then the controller.
+  Global middlewares in `server.js`: `helmet`, `generalLimiter`, then routes, then `notFound` and `errorHandler`.
+- Devices authenticate with `deviceId` (body) + `X-Device-Key` (header), compared as SHA-256 hashes in constant time.
+  Unknown device and wrong key return the same 401.
+- **Comments:** write one only when the code cannot say it: *why* something is done (a security reason, a hidden
+  constraint, a workaround) or a unit/format that is not obvious. Do not restate what the line does, do not explain
+  the framework, do not mention other projects (Ecoaid) and do not write tutorial text. Explanations for the owner
+  belong in the chat reply, not in the file. A comment that would go stale when the code changes is probably wrong.
 - Estimation method and safety margins: PROJECT_SPEC sections 6 and 7.
 
 ## 10. Git workflow
@@ -200,3 +222,40 @@ ETA and "time to leave", driver sign-in, deploy, development build.
 Definition of done for any task: runs on the Pixel 7 emulator and on a 360x640 screen, matches the Figma frame,
 uses the existing theme and components, touches no unrelated files, and the pull request explains what changed
 and how to test it.
+
+## 13. AI skills and working agreements
+
+Seven small instruction files live in `.claude/skills/<name>/SKILL.md` (sources and MIT licenses:
+`.claude/skills/THIRD-PARTY-LICENSES.md`). **Claude Code** loads them automatically (the ones that say "use when..."
+trigger by themselves; the others run when you type the slash command). **Any other agent**: open the file and follow
+it, or just follow the short rules below, which say the same thing.
+
+**Order of authority:** section 2 (explain things to a beginner) decides *how you communicate*. Ponytail decides *how
+much code you write*. When they clash about communication, section 2 wins; when they clash about code size, Ponytail wins.
+
+| Skill | What it does | When / how |
+|---|---|---|
+| `ponytail` | The smallest change that fully solves the task: reuse what exists, no abstractions, options or dependencies nobody asked for, shortcuts marked with a `shortcut:` comment. It exists to stop AI over-building | Any coding task. Levels: `/ponytail lite`, `full` (default), `ultra` |
+| `ponytail-review` | Reviews a change (bugs, security, load, missing tests, code that should not exist) and lists findings in plain English. Changes no code | `/ponytail-review` before opening a pull request |
+| `ponytail-audit` | The same, for the whole repo or a folder. One report, changes nothing | `/ponytail-audit` now and then, and before the demo |
+| `ponytail-debt` | Lists every `shortcut:` comment as a ledger of what was deferred | `/ponytail-debt` |
+| `systematic-debugging` | Find the root cause before fixing; one hypothesis at a time; stop after 3 failed fixes. Includes the known culprits in this repo | Automatically, on any bug or error |
+| `verification-before-completion` | No "done / works / fixed" until you ran the check and read the real output (curl, emulator, `expo export`, `prisma validate`) | Automatically, before claiming success or committing |
+| `receiving-code-review` | Check review feedback against the code, ask when unclear, push back with reasons, do one item at a time, no performative agreement | Automatically, when handling pull request comments |
+| `wayfinder` | For work too big or too foggy to plan at once: a markdown map of decision tickets in `docs/wayfinder/<effort>.md`, resolved one at a time. Not for normal feature slices | `/wayfinder`, only when asked |
+
+**The rules in plain words (for agents without skills):**
+- *Ponytail:* before writing, list everything the change must touch (callers, config, exports). Then take the first option that works:
+  skip it if nobody needs it, reuse what the repo already has, use the standard library or a platform feature, use a
+  dependency that is already installed, and only then write the minimum code. No new abstraction, wrapper, option or
+  package "for later". Never cut validation at trust boundaries, error handling that prevents data loss, security, or
+  anything the user asked for. New non-trivial logic gets one small check. End your reply with what you skipped or did not check.
+- *Verification:* identify the command that proves the claim, run it fresh, read the output, and only then say it works.
+  Words like "should work" or "looks good" before running anything are a red flag.
+- *Debugging:* read the whole error, reproduce, check what changed, find the first broken link in the chain
+  (app, API, middleware, Prisma, Neon), form one hypothesis, change one thing. After 3 failed fixes, ask the owner.
+- *Review feedback:* understand it, verify it in the code, ask about anything unclear before changing anything.
+
+**Deliberately not installed:** the plugins' hooks (they run scripts on your machine), Superpowers' brainstorming
+server and its heavy planning/TDD/subagent skills (too much ceremony for this timeline), and Ponytail's benchmark
+and help skills. Add a skill only after reading its whole `SKILL.md`, and never copy scripts into this repo without review.
