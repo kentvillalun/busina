@@ -283,6 +283,24 @@ Stretch work (assistant, operator web, insights) only if the must-haves are soli
 3. Agree the ESP32 JSON payload with the IoT teammate; choose the test route.
 4. Later: driver sign-in (bus code + PIN), S8 / S9 / S10 permission states using `getLocationPermission`, `getAlertsPermission`, `openAppSettings`.
 
+**Plan: Oct 28 to Nov 4 (competition Nov 4)**
+Day counting: it is past midnight but the user's day has not ended, so the next work session still counts as Oct 27. That gives **eight working days** (Oct 27 to Nov 3) before the competition on Nov 4. Feature freeze at the end of Oct 30, Oct 31 is a buffer day, Nov 1-2 integration with the real ESP32 + APK, Nov 3 rehearsal.
+- **Oct 27 (next work session) — slice 1 backend, "a bus and its live position":** agree the ESP32 JSON payload with the IoT teammate; choose the test route (a short real road) and its coordinates; Prisma models `Route`, `Bus`, `BusState` (only what this slice needs); seed script; `POST /device/ping` with a device key; `GET /buses`; a bus simulator script.
+- **Oct 28 — slice 1 frontend:** S1 map view (map library, bus markers, "Buses coming to you" list) on real data from the API; S2 bus details with the seat map; start the development build (EAS builds can queue, so start it early).
+- **Oct 29 — ETA + "time to leave":** route snapping and ETA with the safety margin (pure JS functions first), boarding spot picker (S11), the alert on the server; push needs the dev build + FCM.
+- **Oct 30 — driver side + deploy:** driver sign-in (bus code + PIN), D1 screen with waiting passengers, "I'm here, waiting"; deploy API to Render + Neon. FEATURE FREEZE at the end of the day.
+- **Oct 31 — buffer day:** catch up on anything late, dev build / APK problems, polish, backup plan.
+- **Nov 1-2:** real ESP32 integration, tune margins on the real route, build and install the APK on a real phone, security pass (rate limits, device keys, validation).
+- **Nov 3:** rehearse the demo and Q&A, warm up Neon and Render, backup plan (laptop + hotspot).
+- **Cut first if late:** S8/S9/S10 permission states, S3 stale state polish, S12 settings, haptics tuning, Prisma Studio demo of the operator side.
+
+**Backup plan and working modes (agreed Oct 28)**
+- **Learning mode (current):** explain the plan and the decision first, wait for the user's go, explain after. Treat the user as a React Native beginner.
+- **Agentic mode (backup):** I implement a whole feature end to end (model, API, screen, tests) without waiting at each step; short summary after each feature (what changed, which files, how to test, where to look when it breaks); stop and ask only for real decisions or anything risky (cost, deleting, pushing). The user commits and pushes. Keep this spec updated and write a short Q&A cheat sheet for the judges as we go.
+- **Switch to agentic mode when:** (1) at the end of Oct 30 slice 1 (live bus backend) and S1 on real data are not done, or (2) a setup surprise eats the buffer (dev build, deploy, APK) through Oct 31, or (3) the user says "agentic mode".
+- **Risks and fallbacks:** no hardware by Oct 30 -> plan B (driver's phone as the bus GPS, simulated seat sensors, say so honestly in the demo); entry change not allowed -> keep Busina with a reduced scope; entry change allowed and Kabutech (existing capstone, Android, hardware) is safer -> switch to Kabutech (what was learned here still applies); out of time -> agentic mode and cut level 3; health -> accept level 1 only (live bus on the map, seats, ETA).
+- **Open items:** coach's date for the hardware go signal; whether the entry can be changed to Kabutech (organizers, in writing); fear of not being reimbursed for P800 each -> ask for a written agreement or for the college to buy the parts.
+
 **(Older plan, done) onboarding O1**
 - Theme tokens from the O1 design: primary `#1f73bd`, navy `#103b60`, heading text `#0f2233`, muted text `#4a5b6b`, inactive dot `#c9d6e2`, hero bg `#e7f0f8`, green `#2a7230`, button gradient `#3a8fd6` to `#165a98`. Fonts: Bricolage Grotesque ExtraBold (headings), DM Sans Regular/Medium/Bold (body).
 - Steps: install `expo-font @expo-google-fonts/dm-sans @expo-google-fonts/bricolage-grotesque`; add colors and font names to `tailwind.config.js`; load fonts in `app/_layout.js`; build O1 (heading, paragraph, progress dots, Continue, Skip, then the hero card). Ignore the iPhone status bar in the mockup. The logo is a complex vector: export it from Figma as one asset (Figma file key `AZW4pIVAs60FO20tNjwbCJ`, node `145:236`).

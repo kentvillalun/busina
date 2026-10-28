@@ -1,41 +1,42 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# apps/mobile
 
-## Expo has changed — do not trust your training data
+Read the **root `AGENTS.md`** first (`../../AGENTS.md`). It is the source of truth for the stack, conventions,
+design tokens, Figma references and git workflow. This file only adds the mobile-specific reminders below.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+This is an Expo SDK 57 / React Native app written in **JavaScript** (no TypeScript).
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+## Expo has changed: do not trust your training data
+
+Expo ships breaking changes every SDK release. APIs you remember may be renamed, moved or removed. Before writing
+code that touches an Expo, EAS or React Native API:
+
+1. Read the major version of `expo` in `package.json` (currently 57).
+2. Fetch the matching docs: `https://docs.expo.dev/versions/v57.0.0/` (e.g. `/sdk/location/`).
+3. For anything else, fetch https://docs.expo.dev/llms.txt and follow its links. Do not answer from memory.
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
-
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+npm install
+npx expo start --clear        # then "a" for the Android emulator
+npx expo install <package>    # always use this to add packages (picks SDK-compatible versions)
+npx expo-doctor               # diagnose dependency and config problems
+npx expo install --fix        # fix incompatible package versions
 ```
 
-Run lint and typecheck before declaring any task done.
+There is no TypeScript and no lint setup yet, so there is no typecheck or lint step. Verify a change by running
+it on the emulator (and on a 360x640 screen), and check that `npx expo export --platform android` still compiles.
 
-## Navigation & Routing
+## Routing
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+- **Expo Router**, routes live in `app/` (not `src/app/`). Every file there is a screen; `_layout.js` files define
+  navigators. Keep components, hooks and helpers in `src/`, outside `app/`.
+- Import `Link`, `router`, `useLocalSearchParams` from `expo-router`.
 
 ## Rules
 
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+- `android/` and `ios/` do not exist and are generated on build; never create or edit them by hand. Native behavior
+  goes in `app.json` and config plugins.
+- Expo Go only includes its bundled native modules. `expo-notifications` does not work in Expo Go; real alerts need a
+  development build (`eas build --profile development` or `npx expo run:android`).
+- Prefer Expo modules over third-party libraries, and ask before adding any dependency.
