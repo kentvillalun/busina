@@ -3,12 +3,7 @@ import { Pressable, Text } from "react-native";
 
 // Quiet secondary action like "Not now" or "Skip".
 // Usage: <TextButton title="Not now" onPress={...} />
-export default function TextButton({
-  title,
-  onPress,
-  bold = true,
-  className = "",
-}) {
+const TextButton = ({ title, onPress, bold = true, className = "" }) => {
   return (
     <Pressable
       accessibilityRole="button"
@@ -27,4 +22,6 @@ export default function TextButton({
       </Text>
     </Pressable>
   );
-}
+};
+
+export default TextButton;

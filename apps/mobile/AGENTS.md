@@ -29,7 +29,7 @@ it on the emulator (and on a 360x640 screen), and check that `npx expo export --
 
 ## Routing
 
-- **Expo Router**, routes live in `app/` (not `src/app/`). Every file there is a screen; `_layout.js` files define
+- **Expo Router**, routes live in `app/` (not `src/app/`). Every file there is a screen; `_layout.jsx` files define
   navigators. Keep components, hooks and helpers in `src/`, outside `app/`.
 - Import `Link`, `router`, `useLocalSearchParams` from `expo-router`.
 

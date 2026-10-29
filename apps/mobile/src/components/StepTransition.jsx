@@ -5,13 +5,13 @@ import Animated, { FadeIn, FadeInRight } from "react-native-reanimated";
 //
 //   <StepTransition stepKey={step}>...heading + body...</StepTransition>
 //   <StepTransition stepKey={step} kind="fade">...illustration...</StepTransition>
-export default function StepTransition({
+const StepTransition = ({
   stepKey,
   kind = "slide",
   delay = 0,
   className = "",
   children,
-}) {
+}) => {
   const entering =
     kind === "fade"
       ? FadeIn.duration(350).delay(delay)
@@ -22,4 +22,6 @@ export default function StepTransition({
       {children}
     </Animated.View>
   );
-}
+};
+
+export default StepTransition;

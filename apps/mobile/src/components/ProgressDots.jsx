@@ -10,7 +10,7 @@ import Animated, {
 
 // One dot: 6 dp round and light when inactive, 22 dp long and blue when active.
 // `progress` animates 0 -> 1 so the width and the color change smoothly together.
-function Dot({ active }) {
+const Dot = ({ active }) => {
   const progress = useSharedValue(active ? 1 : 0);
 
   useEffect(() => {
@@ -23,10 +23,10 @@ function Dot({ active }) {
   }));
 
   return <Animated.View style={[{ height: 6, borderRadius: 3 }, style]} />;
-}
+};
 
 // <ProgressDots step={0} total={3} />
-export default function ProgressDots({ step, total }) {
+const ProgressDots = ({ step, total }) => {
   return (
     <View className="flex-row items-center gap-[6px]">
       {Array.from({ length: total }, (_, i) => (
@@ -34,4 +34,6 @@ export default function ProgressDots({ step, total }) {
       ))}
     </View>
   );
-}
+};
+
+export default ProgressDots;

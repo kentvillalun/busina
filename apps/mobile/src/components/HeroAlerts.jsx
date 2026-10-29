@@ -4,7 +4,7 @@ import { BusMarker, RoadBase } from "./heroParts";
 
 // O3 "Never miss your bus": a notification preview floating over the road.
 // Exact Figma sizes (decimals) go in `style`; NativeWind ignores decimal arbitrary values.
-export default function HeroAlerts() {
+const HeroAlerts = () => {
   return (
     <View className="h-[380px] w-[350px]">
       <RoadBase />
@@ -56,4 +56,6 @@ export default function HeroAlerts() {
       </View>
     </View>
   );
-}
+};
+
+export default HeroAlerts;

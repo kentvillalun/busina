@@ -9,7 +9,7 @@ const STAGE_H = 380;
 // A card that takes whatever space it is given (so it can shrink on short phones)
 // and scales the illustration down to fit, never up.
 // Pass a scene as children (HeroLocation, HeroAlerts, ...); defaults to the O1 scene.
-export default function HeroCard({ className = "", children }) {
+const HeroCard = ({ className = "", children }) => {
   const [size, setSize] = useState(null);
 
   const scale = size
@@ -41,4 +41,6 @@ export default function HeroCard({ className = "", children }) {
       )}
     </View>
   );
-}
+};
+
+export default HeroCard;

@@ -15,7 +15,7 @@ const shadow = {
 // Center of the "You" dot, used to place the halo and pulse rings.
 const YOU = { x: 73.6, y: 265.2 };
 
-export default function HeroIllustration() {
+const HeroIllustration = () => {
   return (
     <View className="h-[380px] w-[350px]">
       {/* road, dashed centre line and the blue route (exported from Figma) */}
@@ -101,4 +101,6 @@ export default function HeroIllustration() {
       </View>
     </View>
   );
-}
+};
+
+export default HeroIllustration;
