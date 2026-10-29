@@ -12,7 +12,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${bricolage.variable} h-full antialiased`}>
+    <html lang="en" className={`${dmSans.variable} ${bricolage.variable} h-full antialiased bg-[#f4f8fb]`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

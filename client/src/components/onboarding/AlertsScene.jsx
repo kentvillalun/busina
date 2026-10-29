@@ -6,11 +6,12 @@ import { BusMarker, Pop, RoadBase, Scene } from "./sceneParts";
 
 // O3 "Never miss your bus": a notification preview floating over the road.
 // The pieces appear in the order they are written below: road, bus, notification.
-const AlertsScene = ({ active }) => (
+// `showBus` is false in the home alerts sheet (S10), which shows only the road and the notification.
+const AlertsScene = ({ active, showBus = true }) => (
   <Scene active={active}>
     <RoadBase />
 
-    <BusMarker left={268} top={67} />
+    {showBus && <BusMarker left={268} top={67} />}
 
     {/* notification preview */}
     <Pop
