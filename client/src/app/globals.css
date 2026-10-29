@@ -15,6 +15,8 @@
   --color-success: #2a7230; /* seats free */
   --color-uncertain: #5a6b78; /* text when a bus lost its signal */
   --color-uncertain-bg: #eef1f4; /* background when a bus lost its signal */
+  --breakpoint-xs: 300px;
+  --breakpoint-mobile: 400px;
 }
 
 /* `inline` because the variables come from next/font on <html> (see layout.js). */
@@ -31,4 +33,15 @@
 body {
   background: var(--color-stage);
   color: var(--color-ink);
+}
+
+html,
+body {
+  overscroll-behavior: none;
+}
+
+@layer components {
+  .gradient-button {
+    @apply mt-6 h-14 w-full rounded-[18px] bg-linear-to-b from-primary-light to-primary-dark font-bold text-white;
+  }
 }
