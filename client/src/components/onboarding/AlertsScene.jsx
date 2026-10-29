@@ -2,17 +2,18 @@
 
 /* eslint-disable @next/next/no-img-element -- a plain <img> on purpose: it is a tiny SVG, so next/image would only add work */
 
-import { BusMarker, RoadBase } from "./sceneParts";
+import { BusMarker, Pop, RoadBase, Scene } from "./sceneParts";
 
 // O3 "Never miss your bus": a notification preview floating over the road.
-const AlertsScene = () => (
-  <div className="relative h-[380px] w-[350px]">
+// The pieces appear in the order they are written below: road, bus, notification.
+const AlertsScene = ({ active }) => (
+  <Scene active={active}>
     <RoadBase />
 
     <BusMarker left={268} top={67} />
 
     {/* notification preview */}
-    <div
+    <Pop
       className="absolute flex w-[321.64px] gap-[10.32px] rounded-[20.64px] bg-[#fbfcfe] px-[13.76px] py-[12.04px] shadow-[0_6.88px_10px_rgba(15,33,51,0.28)]"
       style={{ left: 14, top: 165 }}
     >
@@ -24,8 +25,8 @@ const AlertsScene = () => (
           9 of 40 seats free now. You will likely still get a seat. Tap to view.
         </p>
       </div>
-    </div>
-  </div>
+    </Pop>
+  </Scene>
 );
 
 export default AlertsScene;

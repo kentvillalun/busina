@@ -93,11 +93,7 @@ export default function OnboardingPage() {
   const current = steps[step];
   const isLast = step === steps.length - 1;
 
-  // `replace`, not `push`, so the back button cannot return to the onboarding.
-  // TODO (you): remember that onboarding was seen before leaving, and decide where to go.
   const finish = () => router.replace("/home");
-
-  useEffect
 
   const next = () => {
     haptic.light();
@@ -144,7 +140,7 @@ export default function OnboardingPage() {
                   {steps.map((item, i) => (
                     <div key={i} className="h-full min-w-full px-6 pt-4 md:p-0">
                       <SceneStage maxScale={1.3} className="h-full w-full">
-                        <item.Scene />
+                        <item.Scene active={step >= i} />
                       </SceneStage>
                     </div>
                   ))}
@@ -175,7 +171,11 @@ export default function OnboardingPage() {
                 </span>
               </div>
 
-              <FadeUp key={`button-${step}`} delay={0.55} className="md:max-w-sm">
+              <FadeUp
+                key={`button-${step}`}
+                delay={0.55}
+                className="md:max-w-sm"
+              >
                 <button
                   type="button"
                   onClick={next}
