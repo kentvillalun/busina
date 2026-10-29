@@ -34,7 +34,8 @@ export default function TabsLayout() {
     <Tabs>
       <TabSlot />
       <TabList asChild>
-        <View style={[pill, { bottom: insets.bottom + 12 }]}>
+        {/* one object, not an array: Slot throws on an array style in its child */}
+        <View style={{ ...pill, bottom: insets.bottom + 12 }}>
           <TabTrigger name="home" href="/home" asChild>
             <BottomNavItem
               label="Home"
