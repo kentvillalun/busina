@@ -17,6 +17,7 @@
   --color-uncertain-bg: #eef1f4; /* background when a bus lost its signal */
   --breakpoint-xs: 300px;
   --breakpoint-mobile: 400px;
+  --color-accent: #B5D1E9;
 }
 
 /* `inline` because the variables come from next/font on <html> (see layout.js). */
@@ -44,4 +45,14 @@ body {
   .gradient-button {
     @apply mt-6 h-14 w-full rounded-[18px] bg-linear-to-b from-primary-light to-primary-dark font-bold text-white;
   }
+}
+
+/* OpenStreetMap tiles toned down to the app's pale blue. */
+.map-tiles {
+  filter: saturate(0.3) hue-rotate(-8deg) brightness(1.06) contrast(0.9);
+}
+
+/* Geoapify positron has a warm grey ground; this pushes it toward the app's pale blue. */
+.map-tiles-light {
+  filter: sepia(0.45) hue-rotate(176deg) saturate(0.8) brightness(0.98);
 }
