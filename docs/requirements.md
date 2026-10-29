@@ -35,6 +35,7 @@ second place. No mock toggle system. One requirement per branch.
 | FR10 | Let the commuter tap "I'm here, waiting" so the driver sees them | 3 | Todo |
 | FR13 | Let a driver sign in with bus code and PIN | 3 | Todo |
 | FR14 | Show the driver the passengers waiting ahead on the route | 3 | Todo |
+| FR15 | Let a commuter sign in and reserve a seat on a bus | stretch, after Level 3 | Not planned yet |
 | FR11 | Handle location off, blocked and alerts denied gracefully | cut first | Todo |
 | FR12 | Settings screen (direction, spot, permissions) | cut first | Todo |
 | FR0 | Onboarding, location permission, launch gate | | Done |
@@ -46,7 +47,9 @@ second place. No mock toggle system. One requirement per branch.
 - **FR3:** with the simulator running, the app's data changes within a few seconds with no user action; with the API
   stopped, the app shows an error state and recovers when the API returns; polling pauses when the app is in the background.
 - **FR4:** the list shows each active bus for the selected direction with bus number, seats free and last-seen time;
-  switching direction changes the list; an empty direction shows an empty state.
+  switching direction changes the list; an empty direction shows an empty state. The closest bus (straight-line distance
+  from the commuter) is first and buses without signal are last; this is a placeholder until FR8 ranks by ETA to the spot,
+  because a bus that already passed the commuter can be the closest without "coming to" them.
 - **FR5:** the seat map matches the `seats` array of the bus; on-board and standing counts match the API.
 - **FR6:** a bus whose `stale` is true shows "signal lost" and does not show seat data as live.
 - **FR8:** the ETA is a range; it is computed from route progress and speed; a stopped bus does not divide by zero;
@@ -67,6 +70,11 @@ second place. No mock toggle system. One requirement per branch.
 6. FR11 and FR12 only if time is left.
 
 ## Open decisions
+
+- **Commuter accounts and seat reservation (FR15):** wanted later, only if time is left after the core features.
+  It would replace the current decision that commuters are anonymous (AGENTS.md section 1, PROJECT_SPEC section 3), so
+  those docs and the security design (commuter login, roles, reservation rules and expiry) must be updated first.
+  Not started before Levels 1 to 3 are done.
 
 - **FR3 transport:** polling `GET /buses` every 3 to 5 seconds (proposed) or WebSocket.
 - **FR4 view:** list first, map later (proposed). A map needs a map library and a development build.

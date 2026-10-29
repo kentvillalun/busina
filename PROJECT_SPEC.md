@@ -247,7 +247,7 @@ Stretch work (assistant, operator web, insights) only if the must-haves are soli
 
 **Done**
 - `apps/mobile`: Expo SDK 57, Expo Router, NativeWind 4.2.7 (Tailwind 3, `darkMode: "class"`), JS only. Renders "Busina" in blue on web; Android emulator `Pixel_7` (Android 15, Google Play, 4 GB data partition, 2 GB RAM) boots.
-- `apps/api`: Express 5, Prisma 7 + `@prisma/adapter-pg`, `GET /health`, retrying DB connect, graceful shutdown. Connected to Neon (project `busina`, Singapore). `npm run dev` (Node `--watch`), fallback `npm run dev:nodemon`.
+- `server`: Express 5, Prisma 7 + `@prisma/adapter-pg`, `GET /health`, retrying DB connect, graceful shutdown. Connected to Neon (project `busina`, Singapore). `npm run dev` (Node `--watch`), fallback `npm run dev:nodemon`.
 - Prisma schema is a one-model placeholder (`Ping`). No migration has been run.
 - `apps/operator-web` is an empty folder (stretch goal).
 

@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Busina design system. The names match the old React Native theme, so classes like
+   bg-primary or text-navy carry over from the app. */
+@theme {
+  --color-primary: #1f73bd;
+  --color-primary-light: #3a8fd6; /* top of the main button gradient */
+  --color-primary-dark: #165a98; /* bottom of the main button gradient */
+  --color-navy: #103b60;
+  --color-ink: #0f2233; /* headings */
+  --color-muted: #4a5b6b; /* secondary text */
+  --color-secondary: #4a5b6b; /* same value as muted */
+  --color-line: #c9d6e2; /* borders and dividers */
+  --color-stage: #e7f0f8; /* page background */
+  --color-success: #2a7230; /* seats free */
+  --color-uncertain: #5a6b78; /* text when a bus lost its signal */
+  --color-uncertain-bg: #eef1f4; /* background when a bus lost its signal */
+  --breakpoint-xs: 300px;
+  --breakpoint-mobile: 400px;
+}
+
+/* `inline` because the variables come from next/font on <html> (see layout.js). */
+@theme inline {
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+/* Headings are Bricolage Grotesque ExtraBold: font-display sets the family and the weight. */
+@utility font-display {
+  font-family: var(--font-bricolage), system-ui, sans-serif;
+  font-weight: 800;
+}
+
+body {
+  background: var(--color-stage);
+  color: var(--color-ink);
+}
+
+html,
+body {
+  overscroll-behavior: none;
+}
+
+@layer components {
+  .gradient-button {
+    @apply mt-6 h-14 w-full rounded-[18px] bg-linear-to-b from-primary-light to-primary-dark font-bold text-white;
+  }
+}

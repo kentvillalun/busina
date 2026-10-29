@@ -1,5 +1,10 @@
 # Busina: guide for AI coding agents
 
+> **Direction change (Oct 30):** Busina is now a **PWA built with Next.js in `client/`**, and the Express API lives in
+> `server/`. The React Native app was archived (git tag `rn-final`) and removed from the repo. Sections 4 to 8 and 12
+> below still describe the old mobile app and will be rewritten for the web app. Section 9 (API) still applies, with
+> the folder now called `server/`.
+
 Read this file fully before changing anything. It describes the project, the stack, the patterns we already
 established, and the rules to follow. `PROJECT_SPEC.md` has the long version (features, decisions, plan).
 
@@ -52,7 +57,7 @@ There is **no** `.git` inside `apps/*`. If a generator (`create-expo-app`, `npm 
 - Tested on an Android emulator (Pixel 7, Android 15, Google Play image). Expo Go is SDK 57; the Play Store
   version of Expo Go may be newer and will not open this project.
 
-**API (`apps/api`)** (JavaScript, ES modules)
+**API (`server`)** (JavaScript, ES modules)
 - Node 22, **Express 5**, **Prisma 7** with `@prisma/adapter-pg`, Postgres on **Neon** (Singapore), `dotenv`
 - Dev: `node --watch` (`npm run dev`); fallback `npm run dev:nodemon`
 - Planned: WebSocket (`ws`), `zod` validation, `helmet`, `express-rate-limit`, JWT + `bcryptjs`, `@turf/*`
@@ -67,8 +72,8 @@ npm install
 npx expo start --clear        # then press "a" for the Android emulator
 npx expo install <package>    # ALWAYS use this to add packages (never plain npm install <pkg>)
 
-# api (needs apps/api/.env, see section 9)
-cd apps/api
+# api (needs server/.env, see section 9)
+cd server
 npm install
 npm run dev
 ```
@@ -137,11 +142,20 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
 | `src/components/StepTransition.jsx` | Fade/slide-in when `stepKey` changes. `kind="fade"` or default slide |
 | `src/components/PulseRing.jsx` | Looping ripple animation (Reanimated) |
 | `src/components/BottomNavItem.jsx` | One button of the floating bottom nav: solid icon and label when active, outline icon when not. Used by `app/(tabs)/_layout.jsx` |
+| `src/components/BusCard.jsx` | One bus card (Figma S1b): number badge, seats, ETA, on-board line. `selected` highlights it; has a signal-lost variant. `<BusCard bus serverTime selected />` |
+| `src/components/DirectionTab.jsx` | One half of the Northbound / Southbound switch. `<DirectionTab item selected onPress />` |
+| `src/components/LiveStatus.jsx` | The "Live 8s" pill with a pulsing dot. `<LiveStatus seconds />` |
+| `src/components/BottomSheet.jsx` | Draggable bottom sheet with two snap points (peeking and open). `onExpandedChange(open)` tells the screen which one |
 | `src/components/HeroCard.jsx` | Card that shrinks to the space it is given and scales its scene to fit |
 | `src/components/HeroIllustration.jsx`, `HeroLocation.jsx`, `HeroAlerts.jsx`, `heroParts.jsx` | Onboarding scenes (O1, O2, O3) and shared pieces (`RoadBase`, `BusMarker`, `YouDot`, `Halo`, `shadow`) |
 | `src/components/svg/*` | `Logo`, `AppIcon`, `HeroBg`, `RoadBg`, and the nav icons `IconHomeSolid`, `IconHomeOutline`, `IconSettingsSolid`, `IconSettingsOutline` (generated from `assets/images/*.svg`; colored with the `color` prop) |
 | `src/lib/storage.js` | AsyncStorage wrapper (`getOnboardingDone`, `setOnboardingDone`, `resetOnboarding`) |
-| `src/lib/permissions.js` | `askLocation`, `askAlerts`, `getLocationPermission`, `getAlertsPermission`, `openAppSettings` |
+| `src/lib/permissions.js` | `askLocation`, `askAlerts`, `getLocationPermission`, `getAlertsPermission`, `getCurrentPosition`, `openAppSettings` |
+| `src/hooks/useFetch.js` | `useFetch({ url, refetchCount })` returns `{ isLoading, isError, errorCount, data, error }`. Same idea as Ecoaid's hook, without cookies; `errorCount` is the number of failed requests in a row. Change `refetchCount` to fetch again (home bumps it every 4 s and stops after 2 failures, then shows a "Try again" button). The API address comes from `EXPO_PUBLIC_API_URL`, default `http://10.0.2.2:4000` (the emulator) |
+| `src/lib/time.js` | `secondsSince(serverTime, time)` and `ago(serverTime, time)` ("8s ago", "3 min ago") |
+| `src/lib/geo.js` | `distanceM(a, b)`: straight-line meters between two `{ lat, lng }` points |
+| `src/lib/styles.js` | `noPad`: the `includeFontPadding: false` style for Android text |
+| `src/mock/buses.js` | `MOCK_BUSES`: fake data in the exact shape of `GET /buses`. Used until the screen is wired to the API |
 
 ## 8. Design source (Figma) and assets
 
@@ -158,7 +172,7 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
 - **Write files without a BOM.** On Windows PowerShell, `Set-Content -Encoding utf8` adds a BOM that breaks
   NativeWind's CSS parser. VS Code's default UTF-8 is fine.
 
-## 9. API conventions (`apps/api`)
+## 9. API conventions (`server`)
 
 - Layout: `src/server.js`, `src/config/` (`db.js`, later `env.js`), `src/routes/*.route.js`,
   later `controllers/`, `middlewares/`, `services/`, `utils/`.
@@ -212,7 +226,7 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
   from its window or with `adb emu kill`.
 - Do not edit `android/` or `ios/` by hand (they are generated); configure native behavior in `app.json` and plugins.
 - Do not commit secrets, `.env` files, `node_modules`, or generated folders.
-- Do not touch `app/onboarding`, `src/lib`, `apps/api` or the Tailwind theme unless the task says so.
+- Do not touch `app/onboarding`, `src/lib`, `server` or the Tailwind theme unless the task says so.
 
 ## 12. Where things stand
 

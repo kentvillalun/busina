@@ -3,7 +3,7 @@
 See PROJECT_SPEC.md for the full spec.
 
 - apps/mobile: Expo (Android), commuter and driver roles
-- apps/api: Express (JS) backend
+- server: Express (JS) backend
 - apps/operator-web: empty, dropped from the MVP
 
 ## Read first
@@ -19,8 +19,8 @@ cd apps/mobile
 npm install
 npx expo start --clear     # press "a" for the Android emulator
 
-# API (needs apps/api/.env with DATABASE_URL; ask the owner, never commit it)
-cd apps/api
+# API (needs server/.env with DATABASE_URL; ask the owner, never commit it)
+cd server
 npm install
 npm run dev
 ```
