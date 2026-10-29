@@ -26,7 +26,7 @@ const fadeVariants = {
 // The root of a scene. `active` turns true when the slide is reached, which starts the entrance.
 export const Scene = ({ active = true, children }) => (
   <motion.div
-    className="relative h-[380px] w-[350px]"
+    className="relative h-95 w-87.5"
     variants={sceneVariants}
     initial="hidden"
     animate={active ? "show" : "hidden"}
@@ -77,13 +77,13 @@ export const RoadBase = () => (
 
 // The blue bar from you to the bus. `style` places and turns it (left, top, width, rotate).
 export const RouteBar = ({ style }) => (
-  <Pop className="absolute h-[7px] rounded-[3.5px] bg-primary" style={style} />
+  <Pop className="absolute h-1.75 rounded-[3.5px] bg-primary" style={style} />
 );
 
 // The blue "214" pill used on the road.
 export const BusMarker = ({ left, top, label = "214" }) => (
   <Pop
-    className={`absolute rounded-[12px] border-[3px] border-white bg-primary px-3 py-[7px] text-[15px] font-bold text-white ${cardShadow}`}
+    className={`absolute rounded-xl border-[3px] border-white bg-primary px-3 py-1.75 text-[15px] font-bold text-white ${cardShadow}`}
     style={{ left, top }}
   >
     {label}
@@ -93,7 +93,7 @@ export const BusMarker = ({ left, top, label = "214" }) => (
 // "You" dot: blue circle inside a white ring, centred on (x, y).
 export const YouDot = ({ x, y }) => (
   <Pop
-    className="absolute h-[30px] w-[30px] rounded-full border-4 border-white bg-primary"
+    className="absolute h-7.5 w-7.5 rounded-full border-4 border-white bg-primary z-50"
     style={{ left: x - 15, top: y - 15 }}
   />
 );
@@ -101,7 +101,7 @@ export const YouDot = ({ x, y }) => (
 // The small navy "You" label next to the dot.
 export const YouPill = ({ left, top }) => (
   <Pop
-    className="absolute flex h-[26px] w-[42px] items-center justify-center rounded-full bg-navy text-[12px] font-bold text-white"
+    className="absolute flex h-6.5 w-10.5 items-center justify-center rounded-full bg-navy text-[12px] font-bold text-white"
     style={{ left, top }}
   >
     You
