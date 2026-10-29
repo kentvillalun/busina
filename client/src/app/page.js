@@ -1,69 +1,49 @@
-import Image from "next/image";
+// PLACEHOLDER: a preview of the design tokens. The real home page replaces this.
+const COLORS = [
+  { name: "primary", hex: "#1f73bd", className: "bg-primary" },
+  { name: "primary-light", hex: "#3a8fd6", className: "bg-primary-light" },
+  { name: "primary-dark", hex: "#165a98", className: "bg-primary-dark" },
+  { name: "navy", hex: "#103b60", className: "bg-navy" },
+  { name: "ink", hex: "#0f2233", className: "bg-ink" },
+  { name: "muted", hex: "#4a5b6b", className: "bg-muted" },
+  { name: "line", hex: "#c9d6e2", className: "bg-line" },
+  { name: "stage", hex: "#e7f0f8", className: "bg-stage" },
+  { name: "success", hex: "#2a7230", className: "bg-success" },
+  { name: "uncertain", hex: "#5a6b78", className: "bg-uncertain" },
+  { name: "uncertain-bg", hex: "#eef1f4", className: "bg-uncertain-bg" },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="mx-auto w-full max-w-md p-6">
+      <h1 className="font-display text-[26px] text-ink">Design system</h1>
+      <p className="mt-1 text-[14px] text-muted">Busina tokens. This page is replaced by the home screen.</p>
+
+      <section className="mt-6 grid grid-cols-2 gap-3">
+        {COLORS.map((color) => (
+          <div key={color.name} className="flex items-center gap-3 rounded-xl border border-line bg-white p-2">
+            <div className={`h-10 w-10 shrink-0 rounded-lg border border-line ${color.className}`} />
+            <div>
+              <p className="text-[13px] font-semibold text-ink">{color.name}</p>
+              <p className="text-[12px] text-muted">{color.hex}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-line bg-white p-4">
+        <p className="font-display text-[22px] text-navy">font-display: 4 min</p>
+        <p className="mt-2 text-[15px]">font-sans: 9 of 40 seats free</p>
+        <p className="text-[15px] font-medium">font-medium: 9 of 40 seats free</p>
+        <p className="text-[15px] font-semibold">font-semibold: Sample Line Express</p>
+        <p className="text-[15px] font-bold">font-bold: Northbound</p>
+        <p className="mt-2 text-[13px] font-medium text-success">text-success: 9 of 40 seats free</p>
+        <p className="text-[13px] font-medium text-uncertain">text-uncertain: Signal lost</p>
+      </section>
+
+      <button className="mt-6 h-14 w-full rounded-[18px] bg-linear-to-b from-primary-light to-primary-dark font-bold text-white">
+        Continue
+      </button>
+    </main>
   );
 }

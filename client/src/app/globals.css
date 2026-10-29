@@ -1,26 +1,34 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Busina design system. The names match the old React Native theme, so classes like
+   bg-primary or text-navy carry over from the app. */
+@theme {
+  --color-primary: #1f73bd;
+  --color-primary-light: #3a8fd6; /* top of the main button gradient */
+  --color-primary-dark: #165a98; /* bottom of the main button gradient */
+  --color-navy: #103b60;
+  --color-ink: #0f2233; /* headings */
+  --color-muted: #4a5b6b; /* secondary text */
+  --color-secondary: #4a5b6b; /* same value as muted */
+  --color-line: #c9d6e2; /* borders and dividers */
+  --color-stage: #e7f0f8; /* page background */
+  --color-success: #2a7230; /* seats free */
+  --color-uncertain: #5a6b78; /* text when a bus lost its signal */
+  --color-uncertain-bg: #eef1f4; /* background when a bus lost its signal */
 }
 
+/* `inline` because the variables come from next/font on <html> (see layout.js). */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Headings are Bricolage Grotesque ExtraBold: font-display sets the family and the weight. */
+@utility font-display {
+  font-family: var(--font-bricolage), system-ui, sans-serif;
+  font-weight: 800;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-stage);
+  color: var(--color-ink);
 }
