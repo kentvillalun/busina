@@ -5,6 +5,8 @@
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Page } from "@/components/layout/Page";
+import { PageContent } from "@/components/layout/PageContent";
 import AlertsScene from "@/components/onboarding/AlertsScene";
 import BusNearScene from "@/components/onboarding/BusNearScene";
 import SceneStage from "@/components/onboarding/SceneStage";
@@ -74,7 +76,10 @@ const Dots = ({ step }) => (
         key={i}
         className="h-[6px] rounded-full"
         initial={false}
-        animate={{ width: i === step ? 22 : 6, backgroundColor: i === step ? "#1f73bd" : "#c9d6e2" }}
+        animate={{
+          width: i === step ? 22 : 6,
+          backgroundColor: i === step ? "#1f73bd" : "#c9d6e2",
+        }}
         transition={{ duration: 0.25 }}
       />
     ))}
@@ -99,76 +104,98 @@ export default function OnboardingPage() {
   };
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white">
-      <header className="flex items-center justify-between px-6 pt-4">
-        <img src="/logo.svg" alt="Busina" width={132} height={43} />
-        <button
-          type="button"
-          onClick={() => {
-            haptic.light();
-            finish();
-          }}
-          className={`${isLast ? "invisible" : ""} text-[15px] font-medium text-muted`}
-        >
-          Skip
-        </button>
-      </header>
+    <Page className="bg-stage">
+      {/* Full-screen scroll area with no top bar and no sidebar. On phones the white column fills it;
+          on tablets and desktops it becomes a centered card. If the screen is very short, it scrolls. */}
+      <PageContent
+        top="top-0"
+        withBottomNav={false}
+        className="h-dvh items-center gap-0 p-0 md:h-dvh md:justify-center md:pl-0"
+      >
+        <div className="flex min-h-[600px] w-full max-w-[430px] flex-1 flex-col bg-white md:my-8 md:h-[min(860px,calc(100dvh-4rem))] md:flex-none md:rounded-[32px] md:shadow-[0_20px_60px_rgba(16,59,96,0.15)]">
+          <header className="flex items-center justify-between px-6 pt-[max(1rem,env(safe-area-inset-top))]">
+            <img src="/logo.svg" alt="Busina" width={132} height={43} />
+            <button
+              type="button"
+              onClick={() => {
+                haptic.light();
+                finish();
+              }}
+              className={`${isLast ? "invisible" : ""} py-2 pl-4 text-[15px] font-medium text-muted`}
+            >
+              Skip
+            </button>
+          </header>
 
-      {/* All the slides sit side by side; the track slides left as the step grows. */}
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <motion.div
-          className="flex h-full"
-          animate={{ x: `${-step * 100}%` }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        >
-          {steps.map((item, i) => (
-            <div key={i} className="flex h-full min-w-full flex-col pb-4">
-              <SceneStage className="mx-6 mt-4 max-h-[380px] min-h-[160px] flex-1">
-                <item.Scene />
-              </SceneStage>
+          {/* All the slides sit side by side; the track slides left as the step grows. */}
+          <div className="min-h-[370px] flex-1 overflow-hidden">
+            <motion.div
+              className="flex h-full"
+              animate={{ x: `${-step * 100}%` }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {steps.map((item, i) => (
+                <div key={i} className="flex h-full min-w-full flex-col justify-center pb-4">
+                  <SceneStage className="mx-6 mt-4 max-h-[380px] min-h-[160px] flex-1">
+                    <item.Scene />
+                  </SceneStage>
 
-              <div className="mt-7 min-h-[150px] px-6">
-                {step === i && (
-                  <>
-                    <FadeUp delay={0.35}>
-                      <h1 className="font-display text-[32px] leading-[38px] text-ink">{item.heading}</h1>
-                    </FadeUp>
-                    <FadeUp delay={0.45}>
-                      <p className="mt-3 text-base leading-6 text-muted">{item.body}</p>
-                    </FadeUp>
-                  </>
-                )}
-              </div>
+                  <div className="mt-7 min-h-[150px] px-6">
+                    {step === i && (
+                      <>
+                        <FadeUp delay={0.35}>
+                          <h1 className="font-display text-[clamp(26px,8vw,32px)] leading-[1.2] text-ink">
+                            {item.heading}
+                          </h1>
+                        </FadeUp>
+                        <FadeUp delay={0.45}>
+                          <p className="mt-3 text-[15px] leading-6 text-muted">
+                            {item.body}
+                          </p>
+                        </FadeUp>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          <footer className="px-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="flex items-center gap-3">
+              <Dots step={step} />
+              <span
+                className={`text-xs font-bold ${isLast ? "text-primary" : "text-muted"}`}
+              >
+                {current.label}
+              </span>
             </div>
-          ))}
-        </motion.div>
-      </div>
 
-      <footer className="px-6 pb-4">
-        <div className="flex items-center gap-3">
-          <Dots step={step} />
-          <span className={`text-xs font-bold ${isLast ? "text-primary" : "text-muted"}`}>
-            {current.label}
-          </span>
+            <FadeUp key={`button-${step}`} delay={0.55}>
+              <button
+                type="button"
+                onClick={next}
+                className="gradient-button active:opacity-80"
+              >
+                {current.primary}
+              </button>
+              
+              {current.secondary ? (
+                <button
+                  type="button"
+                  onClick={next}
+                  className="mt-3 w-full py-2 text-center text-[15px] font-bold text-muted"
+                >
+                  {current.secondary}
+                </button>
+              ) : (
+                <div className="h-[38.5px]" />
+              )}
+            </FadeUp>
+          </footer>
         </div>
-
-        <FadeUp key={`button-${step}`} delay={0.55}>
-          <button type="button" onClick={next} className="gradient-button active:opacity-80">
-            {current.primary}
-          </button>
-        </FadeUp>
-
-        {current.secondary && (
-          <button
-            type="button"
-            onClick={next}
-            className="mt-3 w-full py-2 text-center text-[15px] font-bold text-muted"
-          >
-            {current.secondary}
-          </button>
-        )}
-      </footer>
-    </main>
+      </PageContent>
+    </Page>
   );
 }
 
@@ -209,7 +236,7 @@ export default function OnboardingPage() {
 //           className="flex flex-col items-center justify-between min-w-full pt-6 "
 //         >
 //           <div className="w-full flex flex-col items-center gap-3.5 min-h-18.75">
-            
+
 //             <LogoWithName logoSize="max-w-8" nameSize="text-3xl" className="justify-center"/>
 //             <div
 //               className={`${step === 3 ? "hidden" : "flex"} items-center justify-end w-full pr-4 md:px-15`}
@@ -248,7 +275,6 @@ export default function OnboardingPage() {
 //                       loading="eager"
 //                       className="z-50"
 //                     />
-                    
 
 //                     <div
 //                       className="xs:w-45 xs:h-45 mobile:w-55 mobile:h-55 md:w-70 md:h-70 bg-success/25 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
