@@ -6,20 +6,20 @@ import { useEffect, useRef, useState } from "react";
 const STAGE_W = 350;
 const STAGE_H = 380;
 
-// A card that takes whatever space it is given (so it can shrink on short phones) and scales the
-// scene down to fit, never up.
-const SceneStage = ({ children, className = "" }) => {
+// A card that takes whatever space it is given and scales the scene to fit: down on short phones,
+// and up to `maxScale` on big screens (1 = never up).
+const SceneStage = ({ children, className = "", maxScale = 1 }) => {
   const ref = useRef(null);
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setScale(Math.min(1, height / STAGE_H, width / (STAGE_W - 10)));
+      setScale(Math.min(maxScale, height / STAGE_H, width / (STAGE_W - 10)));
     });
     observer.observe(ref.current);
     return () => observer.disconnect();
-  }, []);
+  }, [maxScale]);
 
   return (
     <div ref={ref} className={`relative overflow-hidden rounded-[28px] bg-stage ${className}`}>

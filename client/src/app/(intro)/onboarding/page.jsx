@@ -4,7 +4,7 @@
 
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Page } from "@/components/layout/Page";
 import { PageContent } from "@/components/layout/PageContent";
 import AlertsScene from "@/components/onboarding/AlertsScene";
@@ -97,6 +97,8 @@ export default function OnboardingPage() {
   // TODO (you): remember that onboarding was seen before leaving, and decide where to go.
   const finish = () => router.replace("/home");
 
+  useEffect
+
   const next = () => {
     haptic.light();
     if (isLast) finish();
@@ -104,16 +106,15 @@ export default function OnboardingPage() {
   };
 
   return (
-    <Page className="bg-stage">
-      {/* Full-screen scroll area with no top bar and no sidebar. On phones the white column fills it;
-          on tablets and desktops it becomes a centered card. If the screen is very short, it scrolls. */}
+    <Page className="bg-white">
+      {/* Full-screen scroll area with no top bar and no sidebar. If the screen is very short, it scrolls. */}
       <PageContent
         top="top-0"
         withBottomNav={false}
-        className="h-dvh items-center gap-0 p-0 md:h-dvh md:justify-center md:pl-0"
+        className="h-dvh items-center gap-0 p-0 md:h-dvh md:pl-0"
       >
-        <div className="flex min-h-[600px] w-full max-w-[430px] flex-1 flex-col bg-white md:my-8 md:h-[min(860px,calc(100dvh-4rem))] md:flex-none md:rounded-[32px] md:shadow-[0_20px_60px_rgba(16,59,96,0.15)]">
-          <header className="flex items-center justify-between px-6 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div className="flex min-h-[600px] w-full max-w-[430px] flex-1 flex-col md:max-w-5xl">
+          <header className="flex items-center justify-between px-6 pt-[max(1rem,env(safe-area-inset-top))] md:px-10 md:pt-8">
             <img src="/logo.svg" alt="Busina" width={132} height={43} />
             <button
               type="button"
@@ -127,72 +128,76 @@ export default function OnboardingPage() {
             </button>
           </header>
 
-          {/* All the slides sit side by side; the track slides left as the step grows. */}
-          <div className="min-h-[370px] flex-1 overflow-hidden">
-            <motion.div
-              className="flex h-full"
-              animate={{ x: `${-step * 100}%` }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              {steps.map((item, i) => (
-                <div key={i} className="flex h-full min-w-full flex-col justify-center pb-4">
-                  <SceneStage className="mx-6 mt-4 max-h-[380px] min-h-[160px] flex-1">
-                    <item.Scene />
-                  </SceneStage>
+          {/* Phone: the scene on top, then the text, then the buttons at the bottom.
+              Medium screens and up: two columns, the scene on the left and the text and buttons on the right. */}
+          <div className="flex min-h-0 flex-1 flex-col md:grid md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:content-center md:items-center md:gap-x-10 lg:gap-x-14 md:px-10">
+            {/* On phones this centers the scene and the text between the header and the buttons;
+                on medium screens it disappears so its children join the grid. */}
+            <div className="flex flex-1 flex-col justify-center md:contents">
+              {/* All the scenes sit side by side; the track slides left as the step grows. */}
+              <div className="max-h-[396px] min-h-[176px] flex-1 overflow-hidden md:col-start-1 md:row-span-2 md:h-[min(520px,70dvh)] md:max-h-none md:flex-none">
+                <motion.div
+                  className="flex h-full"
+                  animate={{ x: `${-step * 100}%` }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  {steps.map((item, i) => (
+                    <div key={i} className="h-full min-w-full px-6 pt-4 md:p-0">
+                      <SceneStage maxScale={1.3} className="h-full w-full">
+                        <item.Scene />
+                      </SceneStage>
+                    </div>
+                  ))}
+                </motion.div>
+              </div>
 
-                  <div className="mt-7 min-h-[150px] px-6">
-                    {step === i && (
-                      <>
-                        <FadeUp delay={0.35}>
-                          <h1 className="font-display text-[clamp(26px,8vw,32px)] leading-[1.2] text-ink">
-                            {item.heading}
-                          </h1>
-                        </FadeUp>
-                        <FadeUp delay={0.45}>
-                          <p className="mt-3 text-[15px] leading-6 text-muted">
-                            {item.body}
-                          </p>
-                        </FadeUp>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          <footer className="px-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <div className="flex items-center gap-3">
-              <Dots step={step} />
-              <span
-                className={`text-xs font-bold ${isLast ? "text-primary" : "text-muted"}`}
-              >
-                {current.label}
-              </span>
+              <div className="mt-7 min-h-[150px] px-6 md:col-start-2 md:row-start-1 md:mt-0 md:min-h-0 md:self-end md:px-0 md:pb-8">
+                <FadeUp key={`title-${step}`} delay={0.35}>
+                  <h1 className="font-display text-[clamp(26px,8vw,32px)] leading-[1.2] text-ink md:text-[34px] md:leading-[1.15] lg:text-[44px] lg:leading-[1.1]">
+                    {current.heading}
+                  </h1>
+                </FadeUp>
+                <FadeUp key={`body-${step}`} delay={0.45}>
+                  <p className="mt-3 text-[15px] leading-6 text-muted md:mt-4 md:max-w-md md:text-lg md:leading-7">
+                    {current.body}
+                  </p>
+                </FadeUp>
+              </div>
             </div>
 
-            <FadeUp key={`button-${step}`} delay={0.55}>
-              <button
-                type="button"
-                onClick={next}
-                className="gradient-button active:opacity-80"
-              >
-                {current.primary}
-              </button>
-              
-              {current.secondary ? (
+            <footer className="px-6 pb-[max(1rem,env(safe-area-inset-bottom))] md:col-start-2 md:row-start-2 md:self-start md:px-0 md:pb-0">
+              <div className="flex items-center gap-3">
+                <Dots step={step} />
+                <span
+                  className={`text-xs font-bold ${isLast ? "text-primary" : "text-muted"}`}
+                >
+                  {current.label}
+                </span>
+              </div>
+
+              <FadeUp key={`button-${step}`} delay={0.55} className="md:max-w-sm">
                 <button
                   type="button"
                   onClick={next}
-                  className="mt-3 w-full py-2 text-center text-[15px] font-bold text-muted"
+                  className="gradient-button active:opacity-80"
                 >
-                  {current.secondary}
+                  {current.primary}
                 </button>
-              ) : (
-                <div className="h-[38.5px]" />
-              )}
-            </FadeUp>
-          </footer>
+
+                {current.secondary ? (
+                  <button
+                    type="button"
+                    onClick={next}
+                    className="mt-3 w-full py-2 text-center text-[15px] font-bold text-muted"
+                  >
+                    {current.secondary}
+                  </button>
+                ) : (
+                  <div className="h-[38.5px]" />
+                )}
+              </FadeUp>
+            </footer>
+          </div>
         </div>
       </PageContent>
     </Page>
