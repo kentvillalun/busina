@@ -36,6 +36,21 @@ export const askLocation = () =>
     );
   });
 
+// The user's position as { lat, lng }, or null. It never shows a prompt: if location was not
+// allowed (or the browser cannot tell), the page just works without "closest bus".
+export const getCurrentPosition = async () => {
+  const { granted } = await getLocationPermission();
+  if (!granted) return null;
+
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({ lat: coords.latitude, lng: coords.longitude }),
+      () => resolve(null),
+      { timeout: 10000, maximumAge: 60000 },
+    );
+  });
+};
+
 // --- Notifications --------------------------------------------------------
 
 export const getAlertsPermission = async () => {
