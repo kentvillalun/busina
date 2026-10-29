@@ -4,12 +4,12 @@ import { Pressable, Text } from "react-native";
 
 // The blue gradient button used for the main action on every screen.
 // Usage: <PrimaryButton title="Continue" onPress={...} />
-export default function PrimaryButton({
+const PrimaryButton = ({
   title,
   onPress,
   disabled = false,
   className = "",
-}) {
+}) => {
   return (
     <Pressable
       accessibilityRole="button"
@@ -34,4 +34,6 @@ export default function PrimaryButton({
       </LinearGradient>
     </Pressable>
   );
-}
+};
+
+export default PrimaryButton;

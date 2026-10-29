@@ -5,7 +5,7 @@ import { BusMarker, Halo, RoadBase, YouDot, shadow } from "./heroParts";
 // O2 "Know how long you'll wait": you in the middle of two halos, bus 214 up the road.
 const YOU = { x: 175, y: 195 };
 
-export default function HeroLocation() {
+const HeroLocation = () => {
   return (
     <View className="h-[380px] w-[350px]">
       <RoadBase />
@@ -84,4 +84,6 @@ export default function HeroLocation() {
       </View>
     </View>
   );
-}
+};
+
+export default HeroLocation;

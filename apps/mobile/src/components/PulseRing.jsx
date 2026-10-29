@@ -10,13 +10,13 @@ import Animated, {
 
 // A circle that grows and fades out on repeat (a ripple).
 // `delay` lets several rings overlap so they read as a wave.
-export default function PulseRing({
+const PulseRing = ({
   size = 96,
   delay = 0,
   duration = 2200,
   color = "rgba(31, 115, 189, 0.35)",
   style,
-}) {
+}) => {
   // 0 -> 1 over `duration`, then jumps back to 0 and repeats forever.
   const progress = useSharedValue(0);
 
@@ -52,4 +52,6 @@ export default function PulseRing({
       ]}
     />
   );
-}
+};
+
+export default PulseRing;
