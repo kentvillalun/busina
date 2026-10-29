@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "bzzz": "^0.1.1",
+    "ios-haptics": "^3.3.0",
     "motion": "^14.7.1",
     "next": "16.4.3",
     "react": "19.3.0",

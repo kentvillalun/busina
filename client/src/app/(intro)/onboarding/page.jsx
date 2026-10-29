@@ -11,7 +11,7 @@ import AlertsScene from "@/components/onboarding/AlertsScene";
 import BusNearScene from "@/components/onboarding/BusNearScene";
 import SceneStage from "@/components/onboarding/SceneStage";
 import WaitScene from "@/components/onboarding/WaitScene";
-import { haptic } from "@/lib/haptics";
+import { haptic, hapticTrigger } from "@/lib/haptics";
 import { askAlerts, askLocation } from "@/lib/permissions";
 
 const steps = [
@@ -151,9 +151,10 @@ export default function OnboardingPage() {
               type="button"
               onClick={() => {
                 haptic.light();
-                localStorage.setItem("hasSeenOnboarding", "true")
+                localStorage.setItem("hasSeenOnboarding", "true");
                 finish();
               }}
+              ref={hapticTrigger}
               className={`${isLast ? "invisible" : ""} py-2 pl-4 text-[15px] font-medium text-muted`}
             >
               Skip
@@ -209,7 +210,13 @@ export default function OnboardingPage() {
               >
                 <button
                   type="button"
-                  onClick={handlePrimary}
+                  onClick={() => {
+                    if (step === 2) {
+                      localStorage.setItem("hasSeenOnboarding", "true");
+                    }
+                    handlePrimary();
+                  }}
+                  ref={hapticTrigger}
                   disabled={busy}
                   className="gradient-button active:opacity-80 disabled:opacity-50"
                 >
@@ -219,7 +226,13 @@ export default function OnboardingPage() {
                 {current.secondary ? (
                   <button
                     type="button"
-                    onClick={next}
+                    onClick={() => {
+                      if (step === 2) {
+                        localStorage.setItem("hasSeenOnboarding", "true");
+                      }
+                      next();
+                    }}
+                    ref={hapticTrigger}
                     className="mt-3 w-full py-2 text-center text-[15px] font-bold text-muted"
                   >
                     {current.secondary}
