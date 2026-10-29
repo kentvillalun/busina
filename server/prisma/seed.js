@@ -1,8 +1,8 @@
 // Demo data for development: one company, one test route, one bus and one operator.
-// Run with `npm run seed` (it loads apps/api/.env). Safe to run more than once.
+// Run with `npm run seed` (it loads server/.env). Safe to run more than once.
 //
 // Secrets: the device key and the operator password are random, hashed before they reach the
-// database, and written to apps/api/.env (git-ignored). They are never printed or committed.
+// database, and written to server/.env (git-ignored). They are never printed or committed.
 import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
@@ -115,7 +115,7 @@ async function main() {
   console.log(`  user    : ${operator.username} (${operator.role})`);
   console.log(
     saved.length > 0
-      ? `  new secrets saved to apps/api/.env: ${saved.join(", ")}`
+      ? `  new secrets saved to server/.env: ${saved.join(", ")}`
       : "  no new secrets (the bus key and operator password already exist)",
   );
 }

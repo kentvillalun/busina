@@ -16,7 +16,7 @@ const prisma = new PrismaClient({
 // Neon may be asleep on the first connection, so retry a few times before giving up.
 const connectDB = async (attempts = 5, delayMs = 3000) => {
   if (!process.env.DATABASE_URL) {
-    console.error("DATABASE_URL is empty. Add your Neon pooled connection string to apps/api/.env");
+    console.error("DATABASE_URL is empty. Add your Neon pooled connection string to server/.env");
     return false;
   }
   for (let i = 1; i <= attempts; i++) {

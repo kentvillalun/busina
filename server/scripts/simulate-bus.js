@@ -11,7 +11,7 @@ const INTERVAL_S = 3; // seconds between pings
 
 const { DEVICE_ID, DEVICE_KEY } = process.env;
 if (!DEVICE_ID || !DEVICE_KEY) {
-  console.error("DEVICE_ID and DEVICE_KEY are missing from apps/api/.env. Run `npm run seed` first.");
+  console.error("DEVICE_ID and DEVICE_KEY are missing from server/.env. Run `npm run seed` first.");
   process.exit(1);
 }
 
