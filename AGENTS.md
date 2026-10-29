@@ -137,11 +137,20 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
 | `src/components/StepTransition.jsx` | Fade/slide-in when `stepKey` changes. `kind="fade"` or default slide |
 | `src/components/PulseRing.jsx` | Looping ripple animation (Reanimated) |
 | `src/components/BottomNavItem.jsx` | One button of the floating bottom nav: solid icon and label when active, outline icon when not. Used by `app/(tabs)/_layout.jsx` |
+| `src/components/BusCard.jsx` | One bus card (Figma S1b): number badge, seats, ETA, on-board line. `selected` highlights it; has a signal-lost variant. `<BusCard bus serverTime selected />` |
+| `src/components/DirectionTab.jsx` | One half of the Northbound / Southbound switch. `<DirectionTab item selected onPress />` |
+| `src/components/LiveStatus.jsx` | The "Live 8s" pill with a pulsing dot. `<LiveStatus seconds />` |
+| `src/components/BottomSheet.jsx` | Draggable bottom sheet with two snap points (peeking and open). `onExpandedChange(open)` tells the screen which one |
 | `src/components/HeroCard.jsx` | Card that shrinks to the space it is given and scales its scene to fit |
 | `src/components/HeroIllustration.jsx`, `HeroLocation.jsx`, `HeroAlerts.jsx`, `heroParts.jsx` | Onboarding scenes (O1, O2, O3) and shared pieces (`RoadBase`, `BusMarker`, `YouDot`, `Halo`, `shadow`) |
 | `src/components/svg/*` | `Logo`, `AppIcon`, `HeroBg`, `RoadBg`, and the nav icons `IconHomeSolid`, `IconHomeOutline`, `IconSettingsSolid`, `IconSettingsOutline` (generated from `assets/images/*.svg`; colored with the `color` prop) |
 | `src/lib/storage.js` | AsyncStorage wrapper (`getOnboardingDone`, `setOnboardingDone`, `resetOnboarding`) |
-| `src/lib/permissions.js` | `askLocation`, `askAlerts`, `getLocationPermission`, `getAlertsPermission`, `openAppSettings` |
+| `src/lib/permissions.js` | `askLocation`, `askAlerts`, `getLocationPermission`, `getAlertsPermission`, `getCurrentPosition`, `openAppSettings` |
+| `src/hooks/useFetch.js` | `useFetch({ url, refetchCount })` returns `{ isLoading, isError, errorCount, data, error }`. Same idea as Ecoaid's hook, without cookies; `errorCount` is the number of failed requests in a row. Change `refetchCount` to fetch again (home bumps it every 4 s and stops after 2 failures, then shows a "Try again" button). The API address comes from `EXPO_PUBLIC_API_URL`, default `http://10.0.2.2:4000` (the emulator) |
+| `src/lib/time.js` | `secondsSince(serverTime, time)` and `ago(serverTime, time)` ("8s ago", "3 min ago") |
+| `src/lib/geo.js` | `distanceM(a, b)`: straight-line meters between two `{ lat, lng }` points |
+| `src/lib/styles.js` | `noPad`: the `includeFontPadding: false` style for Android text |
+| `src/mock/buses.js` | `MOCK_BUSES`: fake data in the exact shape of `GET /buses`. Used until the screen is wired to the API |
 
 ## 8. Design source (Figma) and assets
 
