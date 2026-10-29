@@ -11,8 +11,15 @@ const SvgIconHomeOutline = (props) => (
     <Path
       stroke="currentColor"
       strokeLinejoin="round"
-      strokeWidth={1.8}
-      d="M4.2 10.2 12 3.9l7.8 6.3V19a1.1 1.1 0 0 1-1.1 1.1H15v-5.6a.9.9 0 0 0-.9-.9H9.9a.9.9 0 0 0-.9.9v5.6H5.3A1.1 1.1 0 0 1 4.2 19z"
+      strokeWidth={2}
+      d="M4 10.6 12 4l8 6.6V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"
+    />
+    <Path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9.8 20.5v-5a1 1 0 0 1 1-1h2.4a1 1 0 0 1 1 1v5"
     />
   </Svg>
 );
