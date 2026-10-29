@@ -1,201 +1,72 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PulseRing from "../../src/components/PulseRing";
+import BottomSheet from "../../src/components/BottomSheet";
+import BusCard from "../../src/components/BusCard";
+import DirectionTab from "../../src/components/DirectionTab";
+import LiveStatus from "../../src/components/LiveStatus";
 import TextButton from "../../src/components/TextButton";
+import { useFetch } from "../../src/hooks/useFetch";
+import { distanceM } from "../../src/lib/geo";
+import { getCurrentPosition } from "../../src/lib/permissions";
 import { resetOnboarding } from "../../src/lib/storage";
+import { noPad } from "../../src/lib/styles";
+import { secondsSince } from "../../src/lib/time";
 
-const noPad = { includeFontPadding: false };
-
-const makeSeats = (occupied) => Array.from({ length: 40 }, (_, i) => (i < occupied ? 1 : 0));
-
-// MOCK: same shape as GET /buses. FR3 replaces this with the real response.
-const MOCK = {
-  serverTime: "2026-10-30T02:00:00.000Z",
-  buses: [
-    {
-      id: "b1",
-      busNumber: "214",
-      name: "Sample Line Express",
-      seatCount: 40,
-      stale: false,
-      state: {
-        direction: "NORTHBOUND",
-        seats: makeSeats(31),
-        occupied: 31,
-        seatsFree: 9,
-        onBoard: 31,
-        standing: 0,
-        lastPingAt: "2026-10-30T01:59:52.000Z",
-      },
-    },
-    {
-      id: "b2",
-      busNumber: "087",
-      name: "Sample Line Ordinary",
-      seatCount: 40,
-      stale: true,
-      state: {
-        direction: "NORTHBOUND",
-        seats: makeSeats(18),
-        occupied: 18,
-        seatsFree: 22,
-        onBoard: 18,
-        standing: 0,
-        lastPingAt: "2026-10-30T01:56:40.000Z",
-      },
-    },
-    {
-      id: "b3",
-      busNumber: "305",
-      name: "Sample Line Aircon",
-      seatCount: 40,
-      stale: false,
-      state: {
-        direction: "NORTHBOUND",
-        seats: makeSeats(40),
-        occupied: 40,
-        seatsFree: 0,
-        onBoard: 46,
-        standing: 6,
-        lastPingAt: "2026-10-30T01:59:57.000Z",
-      },
-    },
-    {
-      id: "b4",
-      busNumber: "112",
-      name: "Sample Line Express",
-      seatCount: 40,
-      stale: false,
-      state: {
-        direction: "SOUTHBOUND",
-        seats: makeSeats(12),
-        occupied: 12,
-        seatsFree: 28,
-        onBoard: 12,
-        standing: 0,
-        lastPingAt: "2026-10-30T01:59:50.000Z",
-      },
-    },
-  ],
-};
+// The Android emulator reaches this computer at 10.0.2.2. On a real phone, set
+// EXPO_PUBLIC_API_URL in apps/mobile/.env.local (and restart Metro with --clear).
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://10.0.2.2:4000";
+const POLL_MS = 4000;
+const MAX_FAILURES = 2; // after this many failed requests in a row, stop polling
 
 const DIRECTIONS = [
   { key: "NORTHBOUND", title: "Northbound", hint: "toward Laoag" },
   { key: "SOUTHBOUND", title: "Southbound", hint: "toward Vigan" },
 ];
 
-const secondsSince = (serverTime, time) =>
-  Math.max(0, Math.round((new Date(serverTime) - new Date(time)) / 1000));
-
-const ago = (serverTime, lastPingAt) => {
-  const seconds = secondsSince(serverTime, lastPingAt);
-  return seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds / 60)} min ago`;
-};
-
-const DirectionTab = ({ item, selected, onPress }) => {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      className="h-[60px] flex-1 items-center justify-center overflow-hidden rounded-[14px]"
-    >
-      {selected && (
-        <LinearGradient colors={["#3a8fd6", "#165a98"]} style={StyleSheet.absoluteFill} />
-      )}
-      <Text
-        className={`font-sans-bold text-[15px] ${selected ? "text-white" : "text-muted"}`}
-        style={noPad}
-      >
-        {item.title}
-      </Text>
-      <Text
-        className={`font-sans-medium text-[12px] ${selected ? "text-white" : "text-muted"}`}
-        style={noPad}
-      >
-        {item.hint}
-      </Text>
-    </Pressable>
-  );
-};
-
-const BusCard = ({ bus, serverTime }) => {
-  const { state, stale } = bus;
-  const full = state.seatsFree === 0;
-
-  return (
-    <View className="flex-row items-center gap-3">
-      <View
-        className={`rounded-[10px] px-[10px] py-2 ${stale ? "bg-[#eef1f4]" : "bg-primary"}`}
-      >
-        <Text
-          className={`font-display text-[18px] ${stale ? "text-[#5a6b78]" : "text-white"}`}
-          style={noPad}
-        >
-          {bus.busNumber}
-        </Text>
-      </View>
-
-      <View className="flex-1 gap-[2px]">
-        <Text className="font-sans-medium text-[15px] text-ink" style={noPad} numberOfLines={1}>
-          {bus.name}
-        </Text>
-        {stale ? (
-          <Text className="font-sans-medium text-[13px] text-muted" style={noPad}>
-            Signal lost
-          </Text>
-        ) : (
-          <Text
-            className={`font-sans-medium text-[13px] ${full ? "text-muted" : "text-success"}`}
-            style={noPad}
-          >
-            {full
-              ? `Full, ${state.standing} standing`
-              : `${state.seatsFree} of ${bus.seatCount} seats free`}
-          </Text>
-        )}
-      </View>
-
-      <View className="items-end">
-        <Text className="font-sans-medium text-[11px] text-muted" style={noPad}>
-          {stale ? "Last seen" : "Live"}
-        </Text>
-        <Text className="font-sans-bold text-[13px] text-navy" style={noPad}>
-          {ago(serverTime, state.lastPingAt)}
-        </Text>
-      </View>
-    </View>
-  );
-};
-
-// `seconds` is the age of the freshest ping across all buses.
-const LiveStatus = ({ seconds }) => {
-  return (
-    <View className="flex-row items-center gap-[6px] rounded-full bg-white py-[6px] pl-[10px] pr-3">
-      <View className="h-4 w-4 items-center justify-center">
-        <PulseRing size={16} duration={1600} />
-        <View className="h-2 w-2 rounded-full bg-primary" />
-      </View>
-      <Text className="font-sans-bold text-[12px] text-navy" style={noPad}>
-        Live
-      </Text>
-      <Text className="font-sans-medium text-[12px] text-muted" style={noPad}>
-        {seconds}s
-      </Text>
-    </View>
-  );
-};
-
 export default function HomeScreen() {
   const [direction, setDirection] = useState("NORTHBOUND");
+  const [expanded, setExpanded] = useState(false); // sheet open = full list, collapsed = closest bus only
+  const [userPos, setUserPos] = useState(null); // { lat, lng }, or null while unknown / location off
+  const [refetchCount, setRefetchCount] = useState(0);
 
-  const buses = MOCK.buses.filter((bus) => bus.state?.direction === direction);
-  const freshest = Math.min(
-    ...MOCK.buses.map((bus) => secondsSince(MOCK.serverTime, bus.state.lastPingAt)),
-  );
+  const { data, errorCount } = useFetch({ url: `${API_URL}/buses`, refetchCount });
+  const gaveUp = errorCount >= MAX_FAILURES;
+
+  // useFetch asks the API again whenever refetchCount changes, so bump it every few seconds.
+  // After repeated failures we stop, so a server that is down is not hit again and again;
+  // the "Try again" button asks once more and polling restarts if that works.
+  useEffect(() => {
+    if (gaveUp) return;
+    const timer = setInterval(() => setRefetchCount((count) => count + 1), POLL_MS);
+    return () => clearInterval(timer);
+  }, [gaveUp]);
+
+  useEffect(() => {
+    getCurrentPosition().then(setUserPos);
+  }, []);
+
+  // A bus that has never pinged has no state yet, so it cannot be shown.
+  const allBuses = (data?.buses ?? []).filter((bus) => bus.state);
+
+  // Closest bus first. A bus that lost its signal has an old position, so it always goes last.
+  // Without the user's location the order stays as the API sent it.
+  const buses = allBuses
+    .filter((bus) => bus.state.direction === direction)
+    .sort((a, b) => {
+      if (a.stale !== b.stale) return a.stale ? 1 : -1;
+      if (!userPos) return 0;
+      return distanceM(userPos, a.state) - distanceM(userPos, b.state);
+    });
+
+  const freshest =
+    allBuses.length > 0
+      ? Math.min(...allBuses.map((bus) => secondsSince(data.serverTime, bus.state.lastPingAt)))
+      : null;
+
+  let emptyText = "No buses going this direction right now.";
+  if (!data) emptyText = gaveUp ? "No buses to show." : "Loading buses...";
 
   return (
     <SafeAreaView className="flex-1 bg-stage">
@@ -203,7 +74,20 @@ export default function HomeScreen() {
         <Text className="font-display text-[22px] text-ink" style={noPad}>
           busina
         </Text>
-        <LiveStatus seconds={freshest} />
+        {gaveUp ? (
+          <TextButton
+            title="Can't connect. Try again"
+            onPress={() => setRefetchCount((count) => count + 1)}
+          />
+        ) : (
+          freshest !== null && <LiveStatus seconds={freshest} />
+        )}
+      </View>
+
+      <View className="flex-col mx-6 mt-4">
+        <Text className="text-[13px] font-sans-medium text-secondary" style={noPad}>Sunday, October 11</Text>
+        <Text className="text-[26px] font-display text-ink" style={noPad}>Good morning</Text>
+        <Text className="text-[14px] font-sans-semi-bold text-navy" style={noPad} >Bus 214 reaches you in ~4 min</Text>
       </View>
 
       <View className="mx-4 mt-4 flex-row gap-1 rounded-[18px] border border-line bg-white p-1">
@@ -217,7 +101,7 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* <View className="mt-6 flex-1 px-4">
+      <BottomSheet onExpandedChange={setExpanded}>
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="font-display text-[18px] text-ink" style={noPad}>
             Buses coming to you
@@ -228,15 +112,14 @@ export default function HomeScreen() {
         </View>
 
         <FlatList
-          data={buses}
+          style={{ flex: 1 }}
+          data={expanded ? buses : buses.slice(0, 1)}
           keyExtractor={(bus) => bus.id}
-          renderItem={({ item }) => <BusCard bus={item} serverTime={MOCK.serverTime} />}
+          renderItem={({ item, index }) => (
+            <BusCard bus={item} serverTime={data.serverTime} selected={index === 0 && !item.stale} />
+          )}
           ItemSeparatorComponent={() => <View className="h-5" />}
-          ListEmptyComponent={
-            <Text className="font-sans text-[14px] text-muted">
-              No buses going this direction right now.
-            </Text>
-          }
+          ListEmptyComponent={<Text className="font-sans text-[14px] text-muted">{emptyText}</Text>}
           ListFooterComponent={
             __DEV__ ? (
               <TextButton
@@ -249,9 +132,9 @@ export default function HomeScreen() {
               />
             ) : null
           }
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingBottom: 120 }}
         />
-      </View> */}
+      </BottomSheet>
     </SafeAreaView>
   );
 }

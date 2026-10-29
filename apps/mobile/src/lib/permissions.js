@@ -22,6 +22,21 @@ export async function getLocationPermission() {
   return { granted: res.granted, canAskAgain: res.canAskAgain };
 }
 
+// Where the commuter is right now, or null when location is off, not allowed, or the read fails.
+export async function getCurrentPosition() {
+  const { granted } = await getLocationPermission();
+  if (!granted) return null;
+
+  try {
+    const { coords } = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    return { lat: coords.latitude, lng: coords.longitude };
+  } catch {
+    return null;
+  }
+}
+
 // --- Notifications --------------------------------------------------------
 
 // expo-notifications has native code that Expo Go does not include, so importing it at

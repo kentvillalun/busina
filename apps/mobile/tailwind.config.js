@@ -9,6 +9,7 @@ module.exports = {
         sans: ["DMSans_400Regular"],
         "sans-medium": ["DMSans_500Medium"],
         "sans-bold": ["DMSans_700Bold"],
+        "sans-semi-bold": ["DMSans_600SemiBold"],
         display: ["BricolageGrotesque_800ExtraBold"],
       },
       colors: {
@@ -19,6 +20,7 @@ module.exports = {
         line: "#c9d6e2",
         stage: "#e7f0f8",
         success: "#2a7230",
+        secondary: "#4A5B6B"
       },
     },
   },
