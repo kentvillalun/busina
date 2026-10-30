@@ -1,5 +1,7 @@
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
+import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
+import { title } from "motion/react-client";
 
 // Both are variable fonts, so every weight comes from one file.
 const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"] });
@@ -12,6 +14,9 @@ export const metadata = {
   title: "Busina",
   description:
     "See where your bus is, how many seats are free, and when to leave.",
+  appleWebApp: {
+    title: "Busina"
+  }
 };
 
 export const viewport = {
@@ -26,7 +31,10 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${dmSans.variable} ${bricolage.variable} h-full antialiased bg-[#f4f8fb] simulator-touch`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }
