@@ -15,6 +15,8 @@
   --color-success: #2a7230; /* seats free */
   --color-uncertain: #5a6b78; /* text when a bus lost its signal */
   --color-uncertain-bg: #eef1f4; /* background when a bus lost its signal */
+  --color-success-tint: #e4f1e5; /* background of a free seat and of the seats-free chip */
+  --color-fault: #b3402b; /* the Signal lost chip */
   --breakpoint-xs: 300px;
   --breakpoint-mobile: 400px;
   --color-accent: #B5D1E9;

@@ -15,7 +15,7 @@ const items = [
 const spring = { type: "spring", stiffness: 500, damping: 38 };
 
 // Routes under (commuters) that should not show the nav, e.g. a full-screen bus details page.
-const hiddenOn = [];
+const hiddenOn = ["/bus"];
 
 export const BottomNav = () => {
   const pathname = usePathname();
