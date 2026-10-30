@@ -44,7 +44,7 @@ const LocationBanner = ({ permission, onTurnOn, onCheckAgain }) => {
       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-stage text-navy">
         <IconLocationOff />
       </span>
-      <p className="min-w-0 flex-1 text-[13px] leading-[18px] text-ink">{text}</p>
+      <p className="min-w-0 flex-1 text-[13px] leading-4.5 text-ink">{text}</p>
       {action && (
         <button
           type="button"

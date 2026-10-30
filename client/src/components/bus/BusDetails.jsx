@@ -275,7 +275,7 @@ const BusDetails = ({ id }) => {
               )}
             </Card>
 
-            <div className="fixed inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 bg-linear-to-t from-[#f5f8fb] via-[#f5f8fb]/90 to-transparent px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-6 md:static md:col-span-2 md:bg-none md:p-0">
+            <div className="fixed inset-x-0  bottom-0 z-20 flex flex-col items-center gap-2 bg-linear-to-t from-[#f5f8fb] via-[#f5f8fb]/90 to-transparent px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-6 md:static md:col-span-2 md:bg-none md:p-0">
               {note && <p className="max-w-107.5 text-center text-xs text-muted md:max-w-none">{note}</p>}
               <button
                 type="button"
@@ -284,7 +284,7 @@ const BusDetails = ({ id }) => {
                   haptic.medium();
                   notify();
                 }}
-                className={`h-11.5 w-full max-w-107.5 rounded-[14px] text-[15px] font-bold md:max-w-none ${
+                className={`h-11.5 w-full max-w-107.5 rounded-[14px] text-[15px] font-bold md:max-w-none mb-5 ${
                   stale || !state
                     ? "border-[1.5px] border-primary bg-white text-navy"
                     : "bg-linear-to-b from-primary-light to-primary-dark text-white"
