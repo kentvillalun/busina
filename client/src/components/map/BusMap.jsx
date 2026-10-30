@@ -3,7 +3,8 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Fragment, useEffect, useState } from "react";
-import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
+import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { LANDMARKS } from "@/lib/landmarks";
 
 // Geoapify "positron" tinted toward the app's pale blue (.map-tiles-light in globals.css).
 // Without a key we fall back to plain OpenStreetMap tiles (.map-tiles filter).
@@ -47,6 +48,33 @@ const busIcon = (bus, selected) => {
       </div>`,
     });
   });
+};
+
+// A place name written on the map: plain text with a white halo, no pin, so it never looks like a bus.
+const landmarkIcon = (name) =>
+  cached(`landmark-${name}`, () =>
+    L.divIcon({
+      className: "",
+      iconSize: [0, 0],
+      html: `<span class="pointer-events-none block -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[11px] font-semibold text-muted [text-shadow:0_0_2px_#fff,0_0_2px_#fff,0_0_3px_#fff,0_0_3px_#fff]">${name}</span>`,
+    }),
+  );
+
+// The labels of LANDMARKS that fit the current zoom: few when zoomed out, more as you zoom in.
+const Landmarks = () => {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+  useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
+  return LANDMARKS.filter((place) => zoom >= place.minZoom).map((place) => (
+    <Marker
+      key={place.name}
+      position={[place.lat, place.lng]}
+      icon={landmarkIcon(place.name)}
+      interactive={false}
+      keyboard={false}
+      zIndexOffset={-1000}
+    />
+  ));
 };
 
 // "You are here": the dot sits exactly on the position, with a soft pulse and a label above it.
@@ -110,6 +138,7 @@ const LeafletMap = ({ buses, routes, ahead, me, selectedId, center, focus, onSel
     />
     <Recenter center={center} />
     <FlyToBus buses={buses} focus={focus} />
+    <Landmarks />
     <AttributionControl prefix={false} position="topright" />
     {routes.map((route) => {
       // The API sends [lng, lat]; Leaflet wants [lat, lng]. Pins sit in a higher pane, so they stay on top of the line.
