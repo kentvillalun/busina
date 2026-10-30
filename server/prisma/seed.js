@@ -26,9 +26,12 @@ const OPERATOR = { username: "operator", firstName: "Demo", lastName: "Operator"
 
 // The roads from the Laoag terminal to the Vigan terminal (Puregold, Vigan), from OSRM through scripts/fetch-route.js.
 // Points are [lng, lat] (GeoJSON order), ordered Laoag to Vigan, so "distance along the route" grows toward Vigan.
-// Northbound buses leave Vigan by the Vigan City Diversion Road, so they have their own line. It was made with
-//   node scripts/fetch-route.js out.json "120.38508,17.56731" "120.38865,17.55996" "120.39555,17.57368" "120.40057,17.58252" "120.59080,18.19606"
-// (Vigan terminal, south end of the diversion, its middle, where it rejoins the highway at Bantay, Laoag) and then reversed.
+// Buses in both directions take the Vigan City Diversion Road instead of the roads of Bantay and Vigan town, each on its
+// own carriageway, so there is one line per direction. Both were made by forcing OSRM through stops on the diversion:
+//   southbound (Laoag, where the diversion starts at Bantay, two stops on it, its south end, Vigan terminal):
+//     node scripts/fetch-route.js out.json "120.59080,18.19606" "120.40049,17.58248" "120.39576,17.57661" "120.39439,17.56981" "120.38870,17.56006" "120.38506,17.56731"
+//   northbound (Vigan terminal, south end of the diversion, its middle, where it rejoins the highway at Bantay, Laoag), then reversed:
+//     node scripts/fetch-route.js out.json "120.38508,17.56731" "120.38865,17.55996" "120.39555,17.57368" "120.40057,17.58252" "120.59080,18.19606"
 // shortcut: the Laoag end is the RCJ terminal on F.R. Castro St until the PITCO terminal is confirmed.
 const readRoad = (file) => JSON.parse(readFileSync(new URL(`./routes/${file}`, import.meta.url), "utf8"));
 const ROUTE_POINTS = readRoad("laoag-vigan.json");
