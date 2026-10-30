@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <meta name="theme-color" content="#0F2233" />
     <title>Busina is offline</title>
     <style>
@@ -21,6 +24,12 @@
         font-family: system-ui, sans-serif;
         background: #f4f8fb;
         color: #0f2233;
+        overscroll-behavior: none;
+        touch-action: pan-x pan-y;
+      }
+      html {
+        overscroll-behavior: none;
+        touch-action: pan-x pan-y;
       }
       h1 {
         margin: 0;
@@ -45,7 +54,10 @@
   </head>
   <body>
     <h1>You're offline</h1>
-    <p>Busina needs a connection to show where your bus is. Check your signal and try again.</p>
+    <p>
+      Busina needs a connection to show where your bus is. Check your signal and
+      try again.
+    </p>
     <button onclick="location.reload()">Try again</button>
   </body>
 </html>
