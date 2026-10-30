@@ -1,5 +1,10 @@
 # Busina: guide for AI coding agents
 
+> **Direction change (Oct 30):** Busina is now a **PWA built with Next.js in `client/`**, and the Express API lives in
+> `server/`. The React Native app was archived (git tag `rn-final`) and removed from the repo. Sections 4 to 8 and 12
+> below still describe the old mobile app and will be rewritten for the web app. Section 9 (API) still applies, with
+> the folder now called `server/`.
+
 Read this file fully before changing anything. It describes the project, the stack, the patterns we already
 established, and the rules to follow. `PROJECT_SPEC.md` has the long version (features, decisions, plan).
 
@@ -52,7 +57,7 @@ There is **no** `.git` inside `apps/*`. If a generator (`create-expo-app`, `npm 
 - Tested on an Android emulator (Pixel 7, Android 15, Google Play image). Expo Go is SDK 57; the Play Store
   version of Expo Go may be newer and will not open this project.
 
-**API (`apps/api`)** (JavaScript, ES modules)
+**API (`server`)** (JavaScript, ES modules)
 - Node 22, **Express 5**, **Prisma 7** with `@prisma/adapter-pg`, Postgres on **Neon** (Singapore), `dotenv`
 - Dev: `node --watch` (`npm run dev`); fallback `npm run dev:nodemon`
 - Planned: WebSocket (`ws`), `zod` validation, `helmet`, `express-rate-limit`, JWT + `bcryptjs`, `@turf/*`
@@ -67,8 +72,8 @@ npm install
 npx expo start --clear        # then press "a" for the Android emulator
 npx expo install <package>    # ALWAYS use this to add packages (never plain npm install <pkg>)
 
-# api (needs apps/api/.env, see section 9)
-cd apps/api
+# api (needs server/.env, see section 9)
+cd server
 npm install
 npm run dev
 ```
@@ -80,15 +85,22 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
 
 **Structure**
 - `app/`: **only screens and layouts** (every file there becomes a route). Files starting with `_` or `+` are
-  special (`_layout.js`). Route groups use parentheses, e.g. `(tabs)`.
+  special (`_layout.jsx`). Route groups use parentheses, e.g. `(tabs)`.
 - `src/components/`: reusable components. `src/components/svg/`: SVGs converted to components (generated, see 8).
 - `src/lib/`: non-UI helpers (`storage.js`, `permissions.js`). Keep Expo API calls behind these helpers.
-- Files are `.js` (not `.jsx`, not `.ts`). Components are default exports, `PascalCase.js`; helpers `camelCase.js`.
+- No TypeScript. Every file with JSX is `.jsx`: components in `src/components/` (`PascalCase.jsx`) and screens and
+  layouts in `app/`. **Components** are arrow functions (`const Card = ({ title }) => { ... };`) with
+  `export default Card;` at the bottom. **Screens** in `app/` are plain `export default function HomeScreen()`.
+  A small component used by only one screen may live in that screen file until a second screen needs it.
+  Helpers in `src/lib/` have no JSX, so they stay `camelCase.js`.
 
 **Navigation**
-- Expo Router. `app/index.js` is the launch gate: it reads the `busina:onboardingDone` flag from AsyncStorage and
+- Expo Router. `app/index.jsx` is the launch gate: it reads the `busina:onboardingDone` flag from AsyncStorage and
   redirects to `/home` or `/onboarding`. Use `router.replace()` (not `push`) when leaving a flow for good.
-- Onboarding is **one screen driven by a `step` state** (`app/onboarding/index.js`), not three routes.
+- Onboarding is **one screen driven by a `step` state** (`app/onboarding/index.jsx`), not three routes.
+- The main screens live in the `(tabs)` group (the name is not part of the URL): `app/(tabs)/_layout.jsx` is a headless
+  `Tabs` layout from `expo-router/ui` that draws the floating pill nav, with `home.jsx` (`/home`) and `settings.jsx`
+  (`/settings`). `TabList` must be a direct child of `Tabs`, and the `TabTrigger`s direct children of what `TabList` renders.
 
 **Styling (NativeWind)**
 - Use `className` for layout and tokens. Theme colors/fonts are in `tailwind.config.js`:
@@ -101,7 +113,7 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
   whole-number sizes.
 - `LinearGradient` and Reanimated animated styles take `style`, not `className`.
 - Android text: set `style={{ includeFontPadding: false }}` on `Text` to match Figma line heights.
-- Shadows on Android come from `elevation`; use the shared `shadow` object in `src/components/heroParts.js`.
+- Shadows on Android come from `elevation`; use the shared `shadow` object in `src/components/heroParts.jsx`.
 
 **React Native rules (differences from web)**
 - No HTML. Use `View`, `Text`, `Pressable`, `Image`, `FlatList`, `ScrollView`.
@@ -124,16 +136,26 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
 
 | File | What it is |
 |---|---|
-| `src/components/PrimaryButton.js` | Gradient main button, light haptic on press. `<PrimaryButton title onPress disabled />` |
-| `src/components/TextButton.js` | Quiet text action ("Not now", "Skip"), selection haptic. `bold={false}` for medium weight |
-| `src/components/ProgressDots.js` | Animated step dots. `<ProgressDots step total />` |
-| `src/components/StepTransition.js` | Fade/slide-in when `stepKey` changes. `kind="fade"` or default slide |
-| `src/components/PulseRing.js` | Looping ripple animation (Reanimated) |
-| `src/components/HeroCard.js` | Card that shrinks to the space it is given and scales its scene to fit |
-| `src/components/HeroIllustration.js`, `HeroLocation.js`, `HeroAlerts.js`, `heroParts.js` | Onboarding scenes (O1, O2, O3) and shared pieces (`RoadBase`, `BusMarker`, `YouDot`, `Halo`, `shadow`) |
-| `src/components/svg/*` | `Logo`, `AppIcon`, `HeroBg`, `RoadBg` (generated from `assets/images/*.svg`) |
+| `src/components/PrimaryButton.jsx` | Gradient main button, light haptic on press. `<PrimaryButton title onPress disabled />` |
+| `src/components/TextButton.jsx` | Quiet text action ("Not now", "Skip"), selection haptic. `bold={false}` for medium weight |
+| `src/components/ProgressDots.jsx` | Animated step dots. `<ProgressDots step total />` |
+| `src/components/StepTransition.jsx` | Fade/slide-in when `stepKey` changes. `kind="fade"` or default slide |
+| `src/components/PulseRing.jsx` | Looping ripple animation (Reanimated) |
+| `src/components/BottomNavItem.jsx` | One button of the floating bottom nav: solid icon and label when active, outline icon when not. Used by `app/(tabs)/_layout.jsx` |
+| `src/components/BusCard.jsx` | One bus card (Figma S1b): number badge, seats, ETA, on-board line. `selected` highlights it; has a signal-lost variant. `<BusCard bus serverTime selected />` |
+| `src/components/DirectionTab.jsx` | One half of the Northbound / Southbound switch. `<DirectionTab item selected onPress />` |
+| `src/components/LiveStatus.jsx` | The "Live 8s" pill with a pulsing dot. `<LiveStatus seconds />` |
+| `src/components/BottomSheet.jsx` | Draggable bottom sheet with two snap points (peeking and open). `onExpandedChange(open)` tells the screen which one |
+| `src/components/HeroCard.jsx` | Card that shrinks to the space it is given and scales its scene to fit |
+| `src/components/HeroIllustration.jsx`, `HeroLocation.jsx`, `HeroAlerts.jsx`, `heroParts.jsx` | Onboarding scenes (O1, O2, O3) and shared pieces (`RoadBase`, `BusMarker`, `YouDot`, `Halo`, `shadow`) |
+| `src/components/svg/*` | `Logo`, `AppIcon`, `HeroBg`, `RoadBg`, and the nav icons `IconHomeSolid`, `IconHomeOutline`, `IconSettingsSolid`, `IconSettingsOutline` (generated from `assets/images/*.svg`; colored with the `color` prop) |
 | `src/lib/storage.js` | AsyncStorage wrapper (`getOnboardingDone`, `setOnboardingDone`, `resetOnboarding`) |
-| `src/lib/permissions.js` | `askLocation`, `askAlerts`, `getLocationPermission`, `getAlertsPermission`, `openAppSettings` |
+| `src/lib/permissions.js` | `askLocation`, `askAlerts`, `getLocationPermission`, `getAlertsPermission`, `getCurrentPosition`, `openAppSettings` |
+| `src/hooks/useFetch.js` | `useFetch({ url, refetchCount })` returns `{ isLoading, isError, errorCount, data, error }`. Same idea as Ecoaid's hook, without cookies; `errorCount` is the number of failed requests in a row. Change `refetchCount` to fetch again (home bumps it every 4 s and stops after 2 failures, then shows a "Try again" button). The API address comes from `EXPO_PUBLIC_API_URL`, default `http://10.0.2.2:4000` (the emulator) |
+| `src/lib/time.js` | `secondsSince(serverTime, time)` and `ago(serverTime, time)` ("8s ago", "3 min ago") |
+| `src/lib/geo.js` | `distanceM(a, b)`: straight-line meters between two `{ lat, lng }` points |
+| `src/lib/styles.js` | `noPad`: the `includeFontPadding: false` style for Android text |
+| `src/mock/buses.js` | `MOCK_BUSES`: fake data in the exact shape of `GET /buses`. Used until the screen is wired to the API |
 
 ## 8. Design source (Figma) and assets
 
@@ -144,12 +166,13 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
 - Dropped (do not build): S4 Assistant, S5 company dashboard, S6 operator insights, O1b/O2b.
 - Frames are 390x844. Do not copy absolute positions blindly; use flex and compare against the Figma screenshot.
 - SVG assets: put the `.svg` in `apps/mobile/assets/images/`, then
-  `npx @svgr/cli --native --out-dir src/components/svg -- assets/images` to generate the component.
+  `npx @svgr/cli --native --out-dir src/components/svg -- assets/images` to generate the component, then rename the
+  generated component files to `.jsx` and delete the generated `index.js` (we import each icon directly).
   Remove stray background rectangles that Figma exports with the node.
 - **Write files without a BOM.** On Windows PowerShell, `Set-Content -Encoding utf8` adds a BOM that breaks
   NativeWind's CSS parser. VS Code's default UTF-8 is fine.
 
-## 9. API conventions (`apps/api`)
+## 9. API conventions (`server`)
 
 - Layout: `src/server.js`, `src/config/` (`db.js`, later `env.js`), `src/routes/*.route.js`,
   later `controllers/`, `middlewares/`, `services/`, `utils/`.
@@ -203,7 +226,7 @@ After installing any package, **restart Metro with `--clear`**. Metro caches its
   from its window or with `adb emu kill`.
 - Do not edit `android/` or `ios/` by hand (they are generated); configure native behavior in `app.json` and plugins.
 - Do not commit secrets, `.env` files, `node_modules`, or generated folders.
-- Do not touch `app/onboarding`, `src/lib`, `apps/api` or the Tailwind theme unless the task says so.
+- Do not touch `app/onboarding`, `src/lib`, `server` or the Tailwind theme unless the task says so.
 
 ## 12. Where things stand
 
@@ -213,11 +236,11 @@ Next (owner): live bus backend (Route/Bus/BusState, device ping endpoint, `GET /
 ETA and "time to leave", driver sign-in, deploy, development build.
 
 **Good tasks for a second developer** (new files only, fake data first, one branch each):
-1. `src/components/SeatMap.js`: 40 seats from an array of 0/1 (taken/free), legend. Figma S2.
-2. `src/components/BusCard.js`: bus list card (number, line name, seats free, ETA, "Live 8s ago", stale variant). Figma S1.
-3. `app/bus/[id].js`: S2 Bus details (live) with fake data, using `SeatMap`. Figma S2.
+1. `src/components/SeatMap.jsx`: 40 seats from an array of 0/1 (taken/free), legend. Figma S2.
+2. `src/components/BusCard.jsx`: bus list card (number, line name, seats free, ETA, "Live 8s ago", stale variant). Figma S1.
+3. `app/bus/[id].jsx`: S2 Bus details (live) with fake data, using `SeatMap`. Figma S2.
 4. Same screen, stale variant ("Seats unavailable", "Signal lost"). Figma S3.
-5. `app/settings.js`: S12 Settings, static UI. Figma S12.
+5. `app/(tabs)/settings.jsx`: S12 Settings, static UI. Figma S12.
 
 Definition of done for any task: runs on the Pixel 7 emulator and on a 360x640 screen, matches the Figma frame,
 uses the existing theme and components, touches no unrelated files, and the pull request explains what changed

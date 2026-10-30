@@ -247,7 +247,7 @@ Stretch work (assistant, operator web, insights) only if the must-haves are soli
 
 **Done**
 - `apps/mobile`: Expo SDK 57, Expo Router, NativeWind 4.2.7 (Tailwind 3, `darkMode: "class"`), JS only. Renders "Busina" in blue on web; Android emulator `Pixel_7` (Android 15, Google Play, 4 GB data partition, 2 GB RAM) boots.
-- `apps/api`: Express 5, Prisma 7 + `@prisma/adapter-pg`, `GET /health`, retrying DB connect, graceful shutdown. Connected to Neon (project `busina`, Singapore). `npm run dev` (Node `--watch`), fallback `npm run dev:nodemon`.
+- `server`: Express 5, Prisma 7 + `@prisma/adapter-pg`, `GET /health`, retrying DB connect, graceful shutdown. Connected to Neon (project `busina`, Singapore). `npm run dev` (Node `--watch`), fallback `npm run dev:nodemon`.
 - Prisma schema is a one-model placeholder (`Ping`). No migration has been run.
 - `apps/operator-web` is an empty folder (stretch goal).
 
@@ -266,15 +266,15 @@ Stretch work (assistant, operator web, insights) only if the must-haves are soli
 - `react-native-svg` clips to its box on Android and `overflow="visible"` does not help; use a wider canvas (`viewBox`) instead.
 - Never force-kill the Android emulator (it leaves crash records that block the next start behind a crash dialog; clear `%TEMP%\AndroidEmulator`). Close it with the window or `adb emu kill`.
 - AVDs live in `D:\AndroidAVD` (junction from `C:\Users\LENOVO\.android\avd`) because C: is tight.
-- Onboarding scenes: `HeroIllustration` (O1), `HeroLocation` (O2), `HeroAlerts` (O3), shown inside `HeroCard` (scales to fit short screens); shared pieces in `heroParts.js`; `PrimaryButton`, `PulseRing` are reusable.
+- Onboarding scenes: `HeroIllustration` (O1), `HeroLocation` (O2), `HeroAlerts` (O3), shown inside `HeroCard` (scales to fit short screens); shared pieces in `heroParts.jsx`; `PrimaryButton`, `PulseRing` are reusable.
 
 - **`expo-notifications` does not work in Expo Go (SDK 57):** importing it crashes with `Cannot find native module 'ExpoTopicSubscriptionModule'`. `src/lib/permissions.js` checks the native modules first (`requireOptionalNativeModule`) and returns `available: false`, so the app still runs in Expo Go. Alerts need a **development build** (`eas build --profile development` or `npx expo run:android`), which we need anyway for push (FCM). Schedule it early.
 - Permissions are asked in onboarding steps 2 (location, foreground only) and 3 (notifications); the answer never blocks the flow. Read-only helpers (`getLocationPermission`, `getAlertsPermission`) and `openAppSettings` are ready for the S8 / S9 / S10 states.
 - Testing permission dialogs: revoke first with `adb shell pm revoke host.exp.exponent android.permission.ACCESS_FINE_LOCATION` (and COARSE), otherwise no dialog appears.
 
 **Status (end of Oct 27) — onboarding is done**
-- Onboarding O1 to O3 is one screen driven by a `step` state (`app/onboarding/index.js`): scenes, animated dots, haptic buttons, Android back handling, permissions (location asked for real; notifications unavailable in Expo Go).
-- Launch gate: `app/index.js` reads `busina:onboardingDone` from AsyncStorage (`src/lib/storage.js`) and redirects to `/home` (done) or `/onboarding` (first time). Finishing or skipping onboarding saves the flag and `router.replace("/home")`. `app/home.js` is a placeholder with a dev-only "Reset onboarding" button.
+- Onboarding O1 to O3 is one screen driven by a `step` state (`app/onboarding/index.jsx`): scenes, animated dots, haptic buttons, Android back handling, permissions (location asked for real; notifications unavailable in Expo Go).
+- Launch gate: `app/index.jsx` reads `busina:onboardingDone` from AsyncStorage (`src/lib/storage.js`) and redirects to `/home` (done) or `/onboarding` (first time). Finishing or skipping onboarding saves the flag and `router.replace("/home")`. `app/home.jsx` was a placeholder with a dev-only "Reset onboarding" button.
 - Tested on the Pixel 7 emulator: first launch shows onboarding, finish goes home, relaunch goes straight home, reset shows onboarding again. Haptics and notifications are untested (need a real phone / dev build).
 
 **Next**
@@ -303,7 +303,7 @@ Day counting: it is past midnight but the user's day has not ended, so the next 
 
 **(Older plan, done) onboarding O1**
 - Theme tokens from the O1 design: primary `#1f73bd`, navy `#103b60`, heading text `#0f2233`, muted text `#4a5b6b`, inactive dot `#c9d6e2`, hero bg `#e7f0f8`, green `#2a7230`, button gradient `#3a8fd6` to `#165a98`. Fonts: Bricolage Grotesque ExtraBold (headings), DM Sans Regular/Medium/Bold (body).
-- Steps: install `expo-font @expo-google-fonts/dm-sans @expo-google-fonts/bricolage-grotesque`; add colors and font names to `tailwind.config.js`; load fonts in `app/_layout.js`; build O1 (heading, paragraph, progress dots, Continue, Skip, then the hero card). Ignore the iPhone status bar in the mockup. The logo is a complex vector: export it from Figma as one asset (Figma file key `AZW4pIVAs60FO20tNjwbCJ`, node `145:236`).
+- Steps: install `expo-font @expo-google-fonts/dm-sans @expo-google-fonts/bricolage-grotesque`; add colors and font names to `tailwind.config.js`; load fonts in `app/_layout.jsx`; build O1 (heading, paragraph, progress dots, Continue, Skip, then the hero card). Ignore the iPhone status bar in the mockup. The logo is a complex vector: export it from Figma as one asset (Figma file key `AZW4pIVAs60FO20tNjwbCJ`, node `145:236`).
 
 **Then**
 1. Run `npx expo start` in `apps/mobile`, press `a`, confirm the app shows in the emulator.
