@@ -6,7 +6,7 @@ import { disconnectDB, prisma } from "../src/config/db.js";
 import { distanceM } from "../src/utils/geo.js";
 
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
-const SPEED_KMH = 25;
+const SPEED_KMH = Number(process.env.SPEED_KMH ?? 25); // SPEED_KMH=300 npm run simulate to cross 82 km in minutes
 const INTERVAL_S = 3; // seconds between pings
 
 const { DEVICE_ID, DEVICE_KEY } = process.env;

@@ -1,4 +1,4 @@
-// Demo data for development: one company, one test route, one bus and one operator.
+// Demo data for development: one company, the Laoag to Vigan route, one bus and one operator.
 // Run with `npm run seed` (it loads server/.env). Safe to run more than once.
 //
 // Secrets: the device key and the operator password are random, hashed before they reach the
@@ -13,7 +13,7 @@ const ENV_PATH = new URL("../.env", import.meta.url);
 
 // ---- demo values (change these freely) ----
 const COMPANY_NAME = "PITCO (Demo)";
-const ROUTE_NAME = "Laoag - Vigan (test)";
+const ROUTE_NAME = "Laoag - Vigan";
 const BUS = {
   busNumber: "0015",
   plateNumber: "DEMO-0015",
@@ -24,21 +24,11 @@ const BUS = {
 };
 const OPERATOR = { username: "operator", firstName: "Demo", lastName: "Operator" };
 
-// Placeholder road: about 2 km, NOT a real road geometry. Points are [lng, lat] (GeoJSON order),
-// ordered north to south, so "distance along the route" grows toward Vigan (southbound).
-const ROUTE_POINTS = [
-  [120.5936, 18.1978],
-  [120.5932, 18.196],
-  [120.5928, 18.1942],
-  [120.5921, 18.1924],
-  [120.5915, 18.1906],
-  [120.5908, 18.1888],
-  [120.5902, 18.187],
-  [120.5895, 18.1852],
-  [120.5889, 18.1834],
-  [120.5883, 18.1816],
-  [120.5877, 18.1798],
-];
+// The road from the Laoag terminal to the Vigan terminal (Puregold, Vigan), from OSRM through scripts/fetch-route.js.
+// Points are [lng, lat] (GeoJSON order), ordered Laoag to Vigan, so "distance along the route" grows toward Vigan (southbound).
+// shortcut: the Laoag end is the RCJ terminal on F.R. Castro St until the PITCO terminal is confirmed, and northbound buses
+// that take the diversion near Bantay are up to about 280 m from this line for 1 to 2 km; update when the diversion is known.
+const ROUTE_POINTS = JSON.parse(readFileSync(new URL("./routes/laoag-vigan.json", import.meta.url), "utf8"));
 
 // A long random key is safe to store as a plain SHA-256 hash (bcrypt is for short, guessable passwords).
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
