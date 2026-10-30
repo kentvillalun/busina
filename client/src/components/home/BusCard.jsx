@@ -1,5 +1,6 @@
 import Link from "next/link";
 import IconChevron from "@/components/icons/IconChevron";
+import { formatEta } from "@/lib/eta";
 import { haptic, hapticTrigger } from "@/lib/haptics";
 import { ago } from "@/lib/time";
 
@@ -19,15 +20,15 @@ const BusCard = ({ bus, serverTime, selected, onSelect, locationOff = false, cla
     seatsColor = "text-uncertain";
   }
 
-  // The API has no ETA yet (FR8), so a live bus can have none.
-  const hasEta = !stale && !locationOff && bus.etaMin != null;
+  // `bus.eta` comes from etaFor; it is missing without a location, off the route or without signal.
+  const hasEta = !stale && !locationOff && !!bus.eta && !bus.eta.passed;
   let etaText = "-";
   let etaNote = "ETA coming soon";
   if (stale) etaNote = "no live ETA";
   else if (locationOff) etaNote = "location off";
-  if (hasEta) {
-    etaText = `${bus.etaMin} min`;
-    etaNote = "to your spot";
+  else if (bus.eta) {
+    etaText = formatEta(bus.eta);
+    etaNote = bus.eta.passed ? "already passed you" : "to your spot";
   }
 
   return (

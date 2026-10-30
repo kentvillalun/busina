@@ -13,8 +13,9 @@ import LiveStatus from "@/components/home/LiveStatus";
 import TopGradient from "@/components/layout/TopGradient";
 import IconLocationOff from "@/components/icons/IconLocationOff";
 import { useBuses } from "@/hooks/useBuses";
-import { useFetch } from "@/hooks/useFetch";
-import { distanceM, formatDistance } from "@/lib/geo";
+import { useRoutes } from "@/hooks/useRoutes";
+import { etaFor, etaOrder } from "@/lib/eta";
+import { distanceM, formatDistance, routeBetween } from "@/lib/geo";
 import {
   askAlerts,
   askLocation,
@@ -71,7 +72,7 @@ export default function HomePage() {
   const [focus, setFocus] = useState(null); // { id, n }: tells the map to fly to a bus
 
   const { data, isLoading, gaveUp, retry } = useBuses();
-  const { data: routeData } = useFetch({ url: "/api/routes" }); // roads change rarely: fetched once
+  const routes = useRoutes();
 
   // What the browser says about location (null until checked, so the banner does not flash).
   const [permission, setPermission] = useState(null);
@@ -122,12 +123,14 @@ export default function HomePage() {
   // A bus that has never pinged has no state yet, so it cannot be shown.
   const allBuses = (data?.buses ?? []).filter((bus) => bus.state);
 
-  // Closest bus first. A bus that lost its signal has an old position, so it goes last.
-  // Without the user's location the order stays as the API sent it.
+  // Soonest bus first. A bus that lost its signal has an old position, so it goes last.
+  // Without an ETA we fall back to the closest; without the user's location the order stays as the API sent it.
   const buses = allBuses
     .filter((bus) => bus.state.direction === direction)
+    .map((bus) => ({ ...bus, eta: etaFor(bus, routes.find((route) => route.id === bus.route.id), userPos) }))
     .sort((a, b) => {
       if (a.stale !== b.stale) return a.stale ? 1 : -1;
+      if (a.eta && b.eta) return etaOrder(a.eta) - etaOrder(b.eta);
       if (!userPos) return 0;
       return distanceM(userPos, a.state) - distanceM(userPos, b.state);
     });
@@ -146,6 +149,14 @@ export default function HomePage() {
   const selectedId = buses.some((bus) => bus.id === pickedId)
     ? pickedId
     : next?.id;
+
+  // The road between the selected bus and you, drawn as the solid blue bar.
+  const selectedBus = buses.find((bus) => bus.id === selectedId);
+  const selectedRoute = routes.find((route) => route.id === selectedBus?.route.id);
+  const ahead =
+    selectedBus?.eta && !selectedBus.eta.passed && selectedRoute
+      ? routeBetween(selectedRoute.polyline, selectedBus.state.progressM, selectedBus.eta.spotM)
+      : [];
 
   // Tapping a card or a pin shows that bus on the map; on a phone the sheet closes so the map is visible.
   const findBus = (id) => {
@@ -198,7 +209,8 @@ export default function HomePage() {
         <div className="absolute inset-0 z-0">
           <BusMap
             buses={buses}
-            routes={(routeData?.routes ?? []).filter((route) => allBuses.some((bus) => bus.route.id === route.id))}
+            ahead={ahead}
+            routes={routes.filter((route) => allBuses.some((bus) => bus.route.id === route.id))}
             me={userPos}
             selectedId={selectedId}
             focus={focus}

@@ -10,6 +10,8 @@ import { Page } from "@/components/layout/Page";
 import TopGradient from "@/components/layout/TopGradient";
 import SeatMap from "@/components/bus/SeatMap";
 import { useBuses } from "@/hooks/useBuses";
+import { useRoutes } from "@/hooks/useRoutes";
+import { etaFor, formatEta } from "@/lib/eta";
 import { distanceM, formatDistance } from "@/lib/geo";
 import { haptic, hapticTrigger } from "@/lib/haptics";
 import { askAlerts, getAlertsPermission, getCurrentPosition } from "@/lib/permissions";
@@ -50,6 +52,7 @@ const Skeleton = () => (
 
 const BusDetails = ({ id }) => {
   const { data, isLoading, gaveUp, retry } = useBuses();
+  const routes = useRoutes();
   const [userPos, setUserPos] = useState(null);
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
@@ -62,6 +65,7 @@ const BusDetails = ({ id }) => {
   }, []);
 
   const bus = data?.buses.find((item) => item.id === id);
+  const eta = bus ? etaFor(bus, routes.find((route) => route.id === bus.route.id), userPos) : null;
   const state = bus?.state ?? null;
   const stale = bus ? bus.stale : false;
   const serverTime = data?.serverTime;
@@ -181,10 +185,10 @@ const BusDetails = ({ id }) => {
                       </span>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="font-display text-[26px] leading-8">
-                        {bus.etaMin != null ? `${bus.etaMin} min` : "-"}
+                      <span className="font-display text-[26px] leading-8">{eta ? formatEta(eta) : "-"}</span>
+                      <span className="text-xs">
+                        {eta ? (eta.passed ? "already passed you" : "to your spot") : userPos ? "ETA coming soon" : "location off"}
                       </span>
-                      <span className="text-xs">{bus.etaMin != null ? "to your spot" : "ETA coming soon"}</span>
                     </div>
                   </div>
                 </div>

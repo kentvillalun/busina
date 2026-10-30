@@ -2,7 +2,7 @@
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
 
 // Geoapify "positron" tinted toward the app's pale blue (.map-tiles-light in globals.css).
@@ -93,8 +93,8 @@ const FlyToBus = ({ buses, focus }) => {
   return null;
 };
 
-// `center` is [lat, lng]; `routes` come from GET /routes. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
-const LeafletMap = ({ buses, routes, me, selectedId, center, focus, onSelect }) => (
+// `center` is [lat, lng]; `routes` come from GET /routes; `ahead` is the [lat, lng] stretch from the selected bus to you. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
+const LeafletMap = ({ buses, routes, ahead, me, selectedId, center, focus, onSelect }) => (
   <MapContainer
     center={center}
     zoom={15}
@@ -111,14 +111,20 @@ const LeafletMap = ({ buses, routes, me, selectedId, center, focus, onSelect }) 
     <Recenter center={center} />
     <FlyToBus buses={buses} focus={focus} />
     <AttributionControl prefix={false} position="topright" />
-    {routes.map((route) => (
+    {routes.map((route) => {
       // The API sends [lng, lat]; Leaflet wants [lat, lng]. Pins sit in a higher pane, so they stay on top of the line.
-      <Polyline
-        key={route.id}
-        positions={route.polyline.map(([lng, lat]) => [lat, lng])}
-        pathOptions={{ color: "#1f73bd", weight: 5, opacity: 0.75 }}
-      />
-    ))}
+      // Like the onboarding road: a white road with a thin edge, and a dashed blue line down the middle.
+      const positions = route.polyline.map(([lng, lat]) => [lat, lng]);
+      return (
+        <Fragment key={route.id}>
+          <Polyline positions={positions} pathOptions={{ color: "#c9d6e2", weight: 16, opacity: 0.9 }} />
+          <Polyline positions={positions} pathOptions={{ color: "#ffffff", weight: 13, opacity: 1 }} />
+          <Polyline positions={positions} pathOptions={{ color: "#3a8fd6", weight: 2.5, dashArray: "8 10", lineCap: "butt" }} />
+        </Fragment>
+      );
+    })}
+    {/* The stretch between the selected bus and you: the solid blue bar of the onboarding. */}
+    {ahead.length > 1 && <Polyline positions={ahead} pathOptions={{ color: "#1f73bd", weight: 6, opacity: 0.95 }} />}
     {buses.map((bus) => (
       <Marker
         key={bus.id}
