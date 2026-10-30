@@ -94,7 +94,7 @@ const FlyToBus = ({ buses, focus }) => {
 };
 
 // `center` is [lat, lng]; `routes` come from GET /routes; `ahead` is the [lat, lng] stretch from the selected bus to you. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
-const LeafletMap = ({ buses, routes, ahead, me, selectedId, center, focus, onSelect }) => (
+const LeafletMap = ({ buses, routes = [], ahead = [], me, selectedId, center, focus, onSelect, onCenterChange }) => (
   <MapContainer
     center={center}
     zoom={15}

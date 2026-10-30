@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import IconChevron from "@/components/icons/IconChevron";
 import { Page } from "@/components/layout/Page";
@@ -19,11 +20,11 @@ const Section = ({ title, note, children }) => (
   </section>
 );
 
-const Row = ({ label, hint, value, accent = false, right }) => {
-  const Tag = right ? "div" : "button"; // a switch inside a button would nest buttons
+const Row = ({ label, hint, value, accent = false, right, href }) => {
+  const Tag = right ? "div" : Link; // a switch inside a link would nest interactive elements
   return (
     <Tag
-      {...(!right && { type: "button" })}
+      {...(!right && { href })}
       className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left"
     >
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -89,11 +90,13 @@ export default function SettingsPage() {
 
           <Section title="Permissions">
             <Row
+              href="/settings/location"
               label="Location"
               hint="Only while the app is open"
               value="On"
             />
             <Row
+              href="/settings/alerts"
               label="Alerts"
               hint="Warns you when a bus is near"
               value="Turn on"
@@ -106,11 +109,12 @@ export default function SettingsPage() {
             note="Alerts use your boarding spot to warn you before a bus arrives."
           >
             <Row
+              href="/settings/boarding-spot"
               label="Boarding spot"
               hint="Where you wait for the bus"
               value="Not set"
             />
-            <Row label="Direction" value="Toward Laoag" />
+            <Row href="/settings/direction" label="Direction" value="Toward Laoag" />
           </Section>
 
           <Section
@@ -134,7 +138,7 @@ export default function SettingsPage() {
             title="About"
             note="Seat outlook and passenger counts are estimates."
           >
-            <Row label="How estimates work" />
+            <Row href="/settings/estimates" label="How estimates work" />
           </Section>
         </div>
       </PageContent>
