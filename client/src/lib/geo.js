@@ -10,4 +10,8 @@ const distanceM = (a, b) => {
   return 2 * R * Math.asin(Math.sqrt(h));
 };
 
-export { distanceM };
+// "350 m" under a kilometre, "1.8 km" above.
+const formatDistance = (meters) =>
+  meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
+
+export { distanceM, formatDistance };
