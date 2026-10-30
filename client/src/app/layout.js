@@ -1,7 +1,6 @@
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
-import { title } from "motion/react-client";
 
 // Both are variable fonts, so every weight comes from one file.
 const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"] });
