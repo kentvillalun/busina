@@ -7,6 +7,10 @@ const SLOW = 0.8; // 20% slower: the late end
 const PASSED_AFTER_M = 30; // this far beyond the spot counts as passed; closer reads as arriving
 const MAX_SPOT_FROM_ROUTE_M = 1000; // farther than this the user is not on this bus's route
 
+// The road a bus follows: northbound buses take the diversion when the route has one.
+const roadFor = (route, direction) =>
+  direction === "NORTHBOUND" && route.polylineNorthbound ? route.polylineNorthbound : route.polyline;
+
 // ETA of a bus to the user's position, as { passed: true, spotM } or { passed: false, minMin, maxMin, spotM },
 // where spotM is the user's distance along the route,
 // or null when there is nothing honest to say (no location, signal lost, off the route, user far from the route).
@@ -15,7 +19,7 @@ const etaFor = (bus, route, userPos) => {
   if (!userPos || !route || !state || bus.stale || state.offRoute) return null;
   if (state.progressM == null || !state.direction) return null;
 
-  const spot = snapToRoute(userPos, route.polyline);
+  const spot = snapToRoute(userPos, roadFor(route, state.direction));
   if (!spot || spot.distanceFromRouteM > MAX_SPOT_FROM_ROUTE_M) return null;
 
   // progressM grows toward Vigan, so a southbound bus still has to cover (spot - bus) and a northbound one the opposite.
@@ -39,4 +43,4 @@ const formatEta = (eta) => {
 // For sorting: the sooner the bus, the smaller; a bus that has passed goes last.
 const etaOrder = (eta) => (eta.passed ? 1e9 : eta.minMin);
 
-export { etaFor, etaOrder, formatEta };
+export { etaFor, etaOrder, formatEta, roadFor };

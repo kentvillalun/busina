@@ -111,12 +111,14 @@ const LeafletMap = ({ buses, routes, ahead, me, selectedId, center, focus, onSel
     <Recenter center={center} />
     <FlyToBus buses={buses} focus={focus} />
     <AttributionControl prefix={false} position="topright" />
-    {routes.map((route) => {
+    {routes.flatMap((route) => [route.polyline, route.polylineNorthbound]).map((polyline, i) => {
+      if (!polyline) return null;
       // The API sends [lng, lat]; Leaflet wants [lat, lng]. Pins sit in a higher pane, so they stay on top of the line.
       // Like the onboarding road: a white road with a thin edge, and a dashed blue line down the middle.
-      const positions = route.polyline.map(([lng, lat]) => [lat, lng]);
+      // The southbound and northbound roads are the same one almost everywhere; they part only at the Vigan diversion.
+      const positions = polyline.map(([lng, lat]) => [lat, lng]);
       return (
-        <Fragment key={route.id}>
+        <Fragment key={i}>
           <Polyline positions={positions} pathOptions={{ color: "#c9d6e2", weight: 16, opacity: 0.9 }} />
           <Polyline positions={positions} pathOptions={{ color: "#ffffff", weight: 13, opacity: 1 }} />
           <Polyline positions={positions} pathOptions={{ color: "#3a8fd6", weight: 2.5, dashArray: "8 10", lineCap: "butt" }} />

@@ -17,37 +17,47 @@ if (!DEVICE_ID || !DEVICE_KEY) {
 
 const bus = await prisma.bus.findUnique({
   where: { deviceId: DEVICE_ID },
-  select: { busNumber: true, seatCount: true, route: { select: { polyline: true } } },
+  select: {
+    busNumber: true,
+    seatCount: true,
+    route: { select: { polyline: true, polylineNorthbound: true } },
+  },
 });
 if (!bus) {
   console.error(`No bus has the device id "${DEVICE_ID}". Run \`npm run seed\`.`);
   process.exit(1);
 }
 
-// The road: a list of [lng, lat] points, and how far along the road each point is (in meters).
-const points = bus.route.polyline;
-const distanceAtPoint = [0];
-for (let i = 1; i < points.length; i++) {
-  distanceAtPoint.push(distanceAtPoint[i - 1] + distanceM(points[i - 1], points[i]));
-}
-const roadLength = distanceAtPoint[distanceAtPoint.length - 1];
-
-// The [lng, lat] position that is `distance` meters along the road.
-const positionAt = (distance) => {
+// A road: a list of [lng, lat] points, how far along the road each point is (in meters), and a way to find
+// the position that is `distance` meters along it.
+const buildRoad = (points) => {
+  const distanceAtPoint = [0];
   for (let i = 1; i < points.length; i++) {
-    if (distance <= distanceAtPoint[i]) {
-      const share = (distance - distanceAtPoint[i - 1]) / (distanceAtPoint[i] - distanceAtPoint[i - 1]);
-      return [
-        points[i - 1][0] + (points[i][0] - points[i - 1][0]) * share,
-        points[i - 1][1] + (points[i][1] - points[i - 1][1]) * share,
-      ];
-    }
+    distanceAtPoint.push(distanceAtPoint[i - 1] + distanceM(points[i - 1], points[i]));
   }
-  return points[points.length - 1];
+  const length = distanceAtPoint[distanceAtPoint.length - 1];
+
+  const positionAt = (distance) => {
+    for (let i = 1; i < points.length; i++) {
+      if (distance <= distanceAtPoint[i]) {
+        const share = (distance - distanceAtPoint[i - 1]) / (distanceAtPoint[i] - distanceAtPoint[i - 1]);
+        return [
+          points[i - 1][0] + (points[i][0] - points[i - 1][0]) * share,
+          points[i - 1][1] + (points[i][1] - points[i - 1][1]) * share,
+        ];
+      }
+    }
+    return points[points.length - 1];
+  };
+  return { length, positionAt };
 };
+// Northbound buses may take another road (the diversion); both roads run from Laoag to Vigan.
+const southRoad = buildRoad(bus.route.polyline);
+const northRoad = buildRoad(bus.route.polylineNorthbound ?? bus.route.polyline);
 
 // The simulated bus.
-let distance = 0; // meters from the north end (Laoag)
+let road = southRoad;
+let distance = 0; // meters from the north end (Laoag), along the current road
 let heading = 1; // 1 = toward Vigan (southbound), -1 = toward Laoag (northbound)
 const seats = Array.from({ length: bus.seatCount }, () => (Math.random() < 0.3 ? 1 : 0));
 let doorIn = seats.filter(Boolean).length; // people already on board came through the door
@@ -64,10 +74,12 @@ console.log(`Simulating bus ${bus.busNumber}: ${SPEED_KMH} km/h, a ping every ${
 while (true) {
   // Move along the road, and turn around at each end.
   distance += heading * (SPEED_KMH / 3.6) * INTERVAL_S;
-  if (distance >= roadLength) {
-    distance = roadLength;
+  if (distance >= road.length) {
+    road = northRoad;
+    distance = road.length;
     heading = -1;
   } else if (distance <= 0) {
+    road = southRoad;
     distance = 0;
     heading = 1;
   }
@@ -80,7 +92,7 @@ while (true) {
     else doorOut += 1;
   }
 
-  const [lng, lat] = positionAt(distance);
+  const [lng, lat] = road.positionAt(distance);
   const body = {
     deviceId: DEVICE_ID,
     lat: Number(lat.toFixed(6)),
