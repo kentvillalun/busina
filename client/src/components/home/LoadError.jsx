@@ -2,7 +2,7 @@ import { haptic, hapticTrigger } from "@/lib/haptics";
 
 // Shown in the sheet when the buses could not be loaded at all.
 const LoadError = ({ onRetry }) => (
-  <div className="flex flex-col items-start gap-1 rounded-2xl border border-line bg-white p-4">
+  <div className="flex flex-col items-center gap-1 px-4 py-6 text-center">
     <p className="text-[15px] font-semibold text-ink">Can&apos;t load buses</p>
     <p className="text-[13px] leading-4.5 text-muted">
       Check your connection, then try again.

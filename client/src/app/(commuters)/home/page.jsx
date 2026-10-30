@@ -71,7 +71,7 @@ export default function HomePage() {
   const [pickedId, setPickedId] = useState(null); // a bus the user tapped; null = the closest one
   const [focus, setFocus] = useState(null); // { id, n }: tells the map to fly to a bus
 
-  const { data, errorCount } = useFetch({ url: "/api/buses", refetchCount });
+  const { data, errorCount, isLoading } = useFetch({ url: "/api/buses", refetchCount });
   const gaveUp = errorCount >= MAX_FAILURES;
 
   // useFetch asks again whenever refetchCount changes. After repeated failures we stop, so a server
@@ -175,8 +175,9 @@ export default function HomePage() {
         : `Bus ${next.busNumber} is on its way`;
 
   const retry = () => setRefetchCount((count) => count + 1);
-  const loading = !data && !gaveUp; // first fetch still running
-  const failed = !data && gaveUp; // nothing to show and the server did not answer
+  // Loading covers the first fetch and a retry: while it runs, only the skeleton is shown.
+  const loading = !data && (!gaveUp || isLoading);
+  const failed = !data && gaveUp && !isLoading; // nothing to show and the server did not answer
   const connectionLost = !!data && gaveUp; // we still have the last update
 
   const hour = now?.getHours() ?? 12;
