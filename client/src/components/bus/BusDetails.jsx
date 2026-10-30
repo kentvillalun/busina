@@ -40,7 +40,7 @@ const OfflinePill = ({ minutes }) => (
 );
 
 const Skeleton = () => (
-  <div aria-hidden="true" className="flex animate-pulse flex-col gap-2.5">
+  <div aria-hidden="true" className="flex animate-pulse flex-col gap-2.5 md:col-span-2">
     <div className="h-18 rounded-2xl bg-stage" />
     <div className="h-30 rounded-2xl bg-white" />
     <div className="h-64 rounded-2xl bg-white" />
@@ -102,8 +102,8 @@ const BusDetails = ({ id }) => {
     <Page className="bg-[#f5f8fb]">
       <TopGradient className="h-72" />
 
-      <div className="relative flex w-full max-w-107.5 flex-col gap-2.5 px-4 pb-36 pt-4">
-        <div className="flex items-center gap-2.5 py-1.5">
+      <div className="relative flex w-full max-w-107.5 flex-col gap-2.5 px-4 pb-36 pt-4 md:grid md:max-w-4xl md:grid-cols-2 md:content-start md:gap-4 md:pb-12">
+        <div className="flex items-center gap-2.5 py-1.5 md:col-span-2">
           <Link
             href="/home"
             ref={hapticTrigger}
@@ -124,12 +124,12 @@ const BusDetails = ({ id }) => {
 
         {loading && <Skeleton />}
         {failed && (
-          <Card>
+          <Card className="md:col-span-2">
             <LoadError onRetry={retry} />
           </Card>
         )}
         {notFound && (
-          <Card className="text-center">
+          <Card className="text-center md:col-span-2">
             <p className="text-[15px] font-semibold text-ink">We can&apos;t find this bus</p>
             <p className="mt-1 text-[13px] text-muted">It may be off the road right now.</p>
             <Link href="/home" className="mt-3 inline-block text-[13px] font-bold text-primary">
@@ -140,71 +140,96 @@ const BusDetails = ({ id }) => {
 
         {bus && (
           <>
-            {stale || !state ? (
-              <div className="rounded-2xl border border-line bg-uncertain-bg p-3.5">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-line bg-white px-2.5 py-1.25 text-xs font-semibold text-fault">
-                    Signal lost
-                  </span>
-                  {lastSeen && <span className="text-[13px] font-medium text-uncertain">{lastSeen}</span>}
+            <div className="contents md:col-start-1 md:row-start-2 md:flex md:flex-col md:gap-2.5">
+              {stale || !state ? (
+                <div className="rounded-2xl border border-line bg-uncertain-bg p-3.5 md:flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full border border-line bg-white px-2.5 py-1.25 text-xs font-semibold text-fault">
+                      Signal lost
+                    </span>
+                    {lastSeen && <span className="text-[13px] font-medium text-uncertain">{lastSeen}</span>}
+                  </div>
+                  <p className="mt-2.5 text-sm leading-5 text-ink">
+                    {state
+                      ? "We have not heard from this bus. What you see is the last known position, not live."
+                      : "We have not heard from this bus yet."}
+                  </p>
                 </div>
-                <p className="mt-2.5 text-sm leading-5 text-ink">
-                  {state
-                    ? "We have not heard from this bus. What you see is the last known position, not live."
-                    : "We have not heard from this bus yet."}
-                </p>
-              </div>
-            ) : null}
+              ) : null}
 
-            {stale || !state ? (
-              <Card>
-                <div className="flex items-center gap-2.5">
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-[15px] font-semibold text-ink">{bus.name}</span>
-                    <span className="text-[13px] text-muted">{heading}</span>
+              {stale || !state ? (
+                <Card className="md:flex-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate text-[15px] font-semibold text-ink">{bus.name}</span>
+                      <span className="text-[13px] text-muted">{heading}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="font-display text-[26px] leading-8 text-uncertain">-</span>
+                      <span className="text-xs text-muted">no live ETA</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="font-display text-[26px] leading-8 text-uncertain">-</span>
-                    <span className="text-xs text-muted">no live ETA</span>
+                </Card>
+              ) : (
+                <div className="rounded-2xl bg-linear-to-b from-primary-light to-primary-dark p-3.5 text-white md:flex-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate text-[15px] font-semibold">{bus.name}</span>
+                      <span className="text-[13px]">
+                        {heading}
+                        {away != null && ` · ${formatDistance(away)} from you`}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="font-display text-[26px] leading-8">
+                        {bus.etaMin != null ? `${bus.etaMin} min` : "-"}
+                      </span>
+                      <span className="text-xs">{bus.etaMin != null ? "to your spot" : "ETA coming soon"}</span>
+                    </div>
                   </div>
                 </div>
+              )}
+
+              {seatOutlook && (
+                <div className="rounded-2xl border border-primary bg-white p-3.5 md:flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-stage px-2.5 py-1.25 text-xs font-semibold text-navy">
+                      Estimate
+                    </span>
+                    <span className="text-[13px] font-medium text-muted">Seat outlook</span>
+                  </div>
+                  <p className="mt-1.5 font-display text-lg text-ink">{seatOutlook.title}</p>
+                  <p className="mt-1.5 text-[13px] leading-4.75 text-muted">
+                    {seatOutlook.text} People get on and off along the way, so this can change.
+                  </p>
+                </div>
+              )}
+
+              <Card className="flex flex-col gap-1.5 max-md:order-2 md:flex-1">
+                {stale || !state ? (
+                  <>
+                    <h2 className="font-display text-[17px] text-ink">On board</h2>
+                    <p className="text-[13px] leading-4.75 text-muted">
+                      Passenger count unavailable while the signal is lost.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center">
+                      <h2 className="font-display text-[17px] text-ink">On board</h2>
+                      <span className="flex-1" />
+                      <span className="font-display text-2xl text-ink">~{state.onBoard}</span>
+                    </div>
+                    <p className="text-[11px] leading-3.75 text-muted">
+                      Estimated from the door counter. Includes standing riders, so it can be higher than the
+                      seats taken.
+                    </p>
+                  </>
+                )}
               </Card>
-            ) : (
-              <div className="rounded-2xl bg-linear-to-b from-primary-light to-primary-dark p-3.5 text-white">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-[15px] font-semibold">{bus.name}</span>
-                    <span className="text-[13px]">
-                      {heading}
-                      {away != null && ` · ${formatDistance(away)} from you`}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="font-display text-[26px] leading-8">
-                      {bus.etaMin != null ? `${bus.etaMin} min` : "-"}
-                    </span>
-                    <span className="text-xs">{bus.etaMin != null ? "to your spot" : "ETA coming soon"}</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
 
-            {seatOutlook && (
-              <div className="rounded-2xl border border-primary bg-white p-3.5">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-stage px-2.5 py-1.25 text-xs font-semibold text-navy">
-                    Estimate
-                  </span>
-                  <span className="text-[13px] font-medium text-muted">Seat outlook</span>
-                </div>
-                <p className="mt-1.5 font-display text-lg text-ink">{seatOutlook.title}</p>
-                <p className="mt-1.5 text-[13px] leading-4.75 text-muted">
-                  {seatOutlook.text} People get on and off along the way, so this can change.
-                </p>
-              </div>
-            )}
-
-            <Card className="flex flex-col gap-2.5">
+            <Card className="flex flex-col gap-2.5 max-md:order-1 md:col-start-2 md:row-start-2">
               <div className="flex items-center gap-2">
                 <h2 className="font-display text-[17px] text-ink">Seats now</h2>
                 <span className="flex-1" />
@@ -250,52 +275,27 @@ const BusDetails = ({ id }) => {
               )}
             </Card>
 
-            <Card className="flex flex-col gap-1.5">
-              {stale || !state ? (
-                <>
-                  <h2 className="font-display text-[17px] text-ink">On board</h2>
-                  <p className="text-[13px] leading-4.75 text-muted">
-                    Passenger count unavailable while the signal is lost.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center">
-                    <h2 className="font-display text-[17px] text-ink">On board</h2>
-                    <span className="flex-1" />
-                    <span className="font-display text-2xl text-ink">~{state.onBoard}</span>
-                  </div>
-                  <p className="text-[11px] leading-3.75 text-muted">
-                    Estimated from the door counter. Includes standing riders, so it can be higher than the
-                    seats taken.
-                  </p>
-                </>
-              )}
-            </Card>
+            <div className="fixed inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 bg-linear-to-t from-[#f5f8fb] via-[#f5f8fb]/90 to-transparent px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-6 md:static md:col-span-2 md:bg-none md:p-0">
+              {note && <p className="max-w-107.5 text-center text-xs text-muted md:max-w-none">{note}</p>}
+              <button
+                type="button"
+                ref={hapticTrigger}
+                onClick={() => {
+                  haptic.medium();
+                  notify();
+                }}
+                className={`h-11.5 w-full max-w-107.5 rounded-[14px] text-[15px] font-bold md:max-w-none ${
+                  stale || !state
+                    ? "border-[1.5px] border-primary bg-white text-navy"
+                    : "bg-linear-to-b from-primary-light to-primary-dark text-white"
+                }`}
+              >
+                {stale || !state ? "Notify me if signal returns" : "Notify me when it is near"}
+              </button>
+            </div>
           </>
         )}
       </div>
-
-      {bus && (
-        <div className="fixed inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 bg-linear-to-t from-[#f5f8fb] via-[#f5f8fb]/90 to-transparent px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-6">
-          {note && <p className="max-w-107.5 text-center text-xs text-muted">{note}</p>}
-          <button
-            type="button"
-            ref={hapticTrigger}
-            onClick={() => {
-              haptic.medium();
-              notify();
-            }}
-            className={`h-11.5 w-full max-w-107.5 rounded-[14px] text-[15px] font-bold ${
-              stale || !state
-                ? "border-[1.5px] border-primary bg-white text-navy"
-                : "bg-linear-to-b from-primary-light to-primary-dark text-white"
-            }`}
-          >
-            {stale || !state ? "Notify me if signal returns" : "Notify me when it is near"}
-          </button>
-        </div>
-      )}
 
       <AlertsSheet
         open={showAlerts}
