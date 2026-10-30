@@ -18,7 +18,7 @@ const useIsWide = () =>
 // On a phone: a sheet with two stops. Closed shows the first child of the list, open shows
 // everything. Drag the handle or the title, or tap the handle. On md and up it is a plain
 // panel that always shows everything.
-const BottomSheet = ({ title, meta, expanded, onExpandedChange, children }) => {
+const BottomSheet = ({ title, meta, notice, expanded, onExpandedChange, children }) => {
   const wide = useIsWide();
   const y = useMotionValue(0);
   const controls = useDragControls();
@@ -102,6 +102,7 @@ const BottomSheet = ({ title, meta, expanded, onExpandedChange, children }) => {
           <h2 className="font-display text-lg text-ink">{title}</h2>
           <span className="text-xs font-medium text-muted">{meta}</span>
         </div>
+        {notice && <div className="mb-3 px-1">{notice}</div>}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-4">

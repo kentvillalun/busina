@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import AlertsSheet from "@/components/home/AlertsSheet";
 import BusCard from "@/components/home/BusCard";
+import BusCardSkeleton from "@/components/home/BusCardSkeleton";
+import LoadError from "@/components/home/LoadError";
 import DirectionTab from "@/components/home/DirectionTab";
 import LiveStatus from "@/components/home/LiveStatus";
 import LocationBanner from "@/components/home/LocationBanner";
@@ -127,11 +129,23 @@ export default function DevStates() {
         <AlertsSheet open={alertsOpen} onAllow={() => setAlertsOpen(false)} onDismiss={() => setAlertsOpen(false)} />
       </Section>
 
+      <Section title="Loading and error in the sheet">
+        <p className="mb-1 text-xs font-medium text-muted">Loading (a closed sheet shows the first, an open one all three)</p>
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => <BusCardSkeleton key={i} />)}
+        </div>
+        <p className="mb-1 mt-4 text-xs font-medium text-muted">Could not load at all</p>
+        <LoadError onRetry={() => {}} />
+        <p className="mb-1 mt-4 text-xs font-medium text-muted">Connection lost after data (notice above the list)</p>
+        <div className="flex items-center justify-between gap-2 rounded-xl bg-uncertain-bg px-3 py-2 text-xs text-uncertain">
+          <span>Connection lost. Showing the last update.</span>
+          <span className="shrink-0 font-bold text-primary">Try again</span>
+        </div>
+      </Section>
+
       <Section title="Messages in the sheet">
         <div className="flex flex-col gap-2 rounded-2xl bg-white p-4 text-sm text-muted">
-          <p>Loading buses...</p>
           <p>No buses going this direction right now.</p>
-          <p>No buses to show.</p>
         </div>
       </Section>
     </main>

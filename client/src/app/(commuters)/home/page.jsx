@@ -5,7 +5,9 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import AlertsSheet from "@/components/home/AlertsSheet";
 import BottomSheet from "@/components/home/BottomSheet";
 import BusCard from "@/components/home/BusCard";
+import BusCardSkeleton from "@/components/home/BusCardSkeleton";
 import DirectionTab from "@/components/home/DirectionTab";
+import LoadError from "@/components/home/LoadError";
 import LocationBanner from "@/components/home/LocationBanner";
 import LiveStatus from "@/components/home/LiveStatus";
 import TopGradient from "@/components/layout/TopGradient";
@@ -172,8 +174,10 @@ export default function HomePage() {
         ? `Bus ${next.busNumber} is ${away < 1000 ? `${Math.round(away)} m` : `${(away / 1000).toFixed(1)} km`} away`
         : `Bus ${next.busNumber} is on its way`;
 
-  let emptyText = "No buses going this direction right now.";
-  if (!data) emptyText = gaveUp ? "No buses to show." : "Loading buses...";
+  const retry = () => setRefetchCount((count) => count + 1);
+  const loading = !data && !gaveUp; // first fetch still running
+  const failed = !data && gaveUp; // nothing to show and the server did not answer
+  const connectionLost = !!data && gaveUp; // we still have the last update
 
   const hour = now?.getHours() ?? 12;
   const greeting =
@@ -208,7 +212,7 @@ export default function HomePage() {
             {gaveUp ? (
               <button
                 type="button"
-                onClick={() => setRefetchCount((count) => count + 1)}
+                onClick={retry}
                 className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-primary shadow-sm"
               >
                 Can&apos;t connect. Try again
@@ -262,12 +266,25 @@ export default function HomePage() {
 
         <BottomSheet
           title="Buses coming to you"
-          meta={`${buses.length} ${buses.length === 1 ? "bus" : "buses"}`}
+          meta={loading || failed ? "" : `${buses.length} ${buses.length === 1 ? "bus" : "buses"}`}
+          notice={
+            connectionLost && (
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-uncertain-bg px-3 py-2 text-xs text-uncertain">
+                <span>Connection lost. Showing the last update.</span>
+                <button type="button" onClick={retry} className="shrink-0 font-bold text-primary">
+                  Try again
+                </button>
+              </div>
+            )
+          }
           expanded={expanded}
           onExpandedChange={setExpanded}
         >
-          {buses.length === 0 && (
-            <p className="px-1 text-sm text-muted">{emptyText}</p>
+          {/* One placeholder is all a closed sheet shows; an open one shows three. */}
+          {loading && [0, 1, 2].map((i) => <BusCardSkeleton key={i} />)}
+          {failed && <LoadError onRetry={retry} />}
+          {data && buses.length === 0 && (
+            <p className="px-1 text-sm text-muted">No buses going this direction right now.</p>
           )}
           {buses.map((bus) => (
             <BusCard
