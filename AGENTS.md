@@ -16,8 +16,11 @@ It is an entry for the UMAK ITSO 2026 "Application Development using Android Pro
 **IoT category**. The competition is on **Nov 4, 2026**. Judging: Innovation, Effective use of the Android
 platform, Security, Functionality, User Experience (20% each).
 
-- Commuters are **anonymous** (no login). Drivers sign in later with **bus code + PIN**.
-- The operator web dashboard, the AI assistant and the insights page are **dropped** from the MVP.
+- Commuters use the app **without an account** (an anonymous device id); signing in with Google is **optional** and comes late.
+  Staff use **one staff area** with two roles: a driver signs in with **bus code + PIN** and sees only their bus, an operator
+  with username + password also sees the whole fleet.
+- The AI assistant and the insights page are **dropped**. **Seat reservation and payments are out of scope**.
+  The decisions and their reasons are in `docs/requirements.md` (section Decisions).
 - Estimates (ETA) use plain kinematics (speed over the route), **no machine learning**, with a safety margin.
 
 ## 2. Who you are working with (important)

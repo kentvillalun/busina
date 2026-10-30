@@ -36,6 +36,8 @@ Busina shows commuters where the bus is, how many seats are free, and tells them
 
 **Decision: commuters are anonymous.** They only view buses and seats, so there is no login. On first launch the app generates a random device id (kept in `expo-secure-store`) and registers it with the server together with its push token; the server returns a short-lived signed token with role `commuter`. Boarding spots and alerts are tied to the device id. The driver has a real login. The server enforces roles on every protected route. A subscription or account can be added later by linking a device id to an account (free for now).
 
+> **Update, Oct 30:** commuter sign-in stays optional (Google, if it is built) and is linked to the device id; reservation and payments are out of scope; drivers and operators share one staff area. See `docs/requirements.md`, section Decisions.
+
 **Wow feature: "start moving" alert.** Tells the commuter when to leave for their boarding spot so they wait less on the roadside (section 6 and 7). Free for now; framed as a potential premium feature in the roadmap, not built as billing.
 
 ## 4. Screens
