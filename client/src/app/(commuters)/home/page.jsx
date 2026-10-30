@@ -22,6 +22,7 @@ import {
   getLocationPermission,
 } from "@/lib/permissions";
 import { secondsSince } from "@/lib/time";
+import { useRouter } from "next/navigation";
 
 // Leaflet touches `window`, so it can only load in the browser.
 const BusMap = dynamic(() => import("@/components/map/BusMap"), { ssr: false });
@@ -76,6 +77,7 @@ export default function HomePage() {
     setPermission(result);
     setUserPos(pos);
   };
+  const router = useRouter()
 
   // Check on load and whenever the user comes back to the tab, e.g. from the browser's site settings.
   useEffect(() => {
@@ -179,6 +181,13 @@ export default function HomePage() {
     month: "long",
     day: "numeric",
   });
+
+  useEffect(() => {
+    if (!localStorage.getItem("hasSeenOnboarding")) {
+      router.replace("/onboarding");
+      return
+    }
+  }, [])
 
   return (
     <>
