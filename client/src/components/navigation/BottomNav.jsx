@@ -38,7 +38,9 @@ export const BottomNav = () => {
               key={href}
               href={href}
               ref={hapticTrigger}
-              onClick={haptic.light}
+              onClick={() => {
+                haptic.light()
+              }}
               aria-current={active ? "page" : undefined}
               className={`relative flex h-11 items-center justify-center rounded-full px-3.5 transition-colors active:opacity-70 ${
                 active ? "text-navy" : "text-muted"
