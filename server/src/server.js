@@ -8,6 +8,7 @@ import { generalLimiter } from "./middlewares/rateLimit.js";
 import busRoute from "./routes/bus.route.js";
 import deviceRoute from "./routes/device.route.js";
 import healthRoute from "./routes/health.route.js";
+import routesRoute from "./routes/routes.route.js";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(generalLimiter);
 app.use("/", healthRoute);
 app.use("/device", deviceRoute);
 app.use("/buses", busRoute);
+app.use("/routes", routesRoute);
 
 app.use(notFound);
 app.use(errorHandler);

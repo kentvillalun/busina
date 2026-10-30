@@ -13,6 +13,7 @@ import LiveStatus from "@/components/home/LiveStatus";
 import TopGradient from "@/components/layout/TopGradient";
 import IconLocationOff from "@/components/icons/IconLocationOff";
 import { useBuses } from "@/hooks/useBuses";
+import { useFetch } from "@/hooks/useFetch";
 import { distanceM, formatDistance } from "@/lib/geo";
 import {
   askAlerts,
@@ -70,6 +71,7 @@ export default function HomePage() {
   const [focus, setFocus] = useState(null); // { id, n }: tells the map to fly to a bus
 
   const { data, isLoading, gaveUp, retry } = useBuses();
+  const { data: routeData } = useFetch({ url: "/api/routes" }); // roads change rarely: fetched once
 
   // What the browser says about location (null until checked, so the banner does not flash).
   const [permission, setPermission] = useState(null);
@@ -196,6 +198,7 @@ export default function HomePage() {
         <div className="absolute inset-0 z-0">
           <BusMap
             buses={buses}
+            routes={(routeData?.routes ?? []).filter((route) => allBuses.some((bus) => bus.route.id === route.id))}
             me={userPos}
             selectedId={selectedId}
             focus={focus}

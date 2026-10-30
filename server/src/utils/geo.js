@@ -21,4 +21,40 @@ const pathLengthM = (points) => {
   return Math.round(total);
 };
 
-export { distanceM, pathLengthM };
+// The point of the route nearest to `point`, and how far along the route (from its first point) that is.
+// Returns { lng, lat, progressM, distanceFromRouteM }, or null when the route has fewer than two points.
+const snapToRoute = ([lng, lat], polyline) => {
+  // Flat x/y in meters around the point: exact enough for segments of a few hundred meters.
+  const mPerDegLat = 111320;
+  const mPerDegLng = 111320 * Math.cos((lat * Math.PI) / 180);
+
+  let best = null;
+  let alongStartM = 0; // route length before the current segment
+  for (let i = 1; i < polyline.length; i++) {
+    const [aLng, aLat] = polyline[i - 1];
+    const [bLng, bLat] = polyline[i];
+    const ax = (aLng - lng) * mPerDegLng;
+    const ay = (aLat - lat) * mPerDegLat;
+    const dx = (bLng - aLng) * mPerDegLng;
+    const dy = (bLat - aLat) * mPerDegLat;
+
+    // How far along the segment (0 to 1) the nearest point is. The bus is at (0, 0).
+    const lengthSq = dx * dx + dy * dy;
+    const t = lengthSq === 0 ? 0 : Math.min(1, Math.max(0, -(ax * dx + ay * dy) / lengthSq));
+    const distanceFromRouteM = Math.hypot(ax + t * dx, ay + t * dy);
+    const segmentM = distanceM(polyline[i - 1], polyline[i]);
+
+    if (!best || distanceFromRouteM < best.distanceFromRouteM) {
+      best = {
+        lng: aLng + (bLng - aLng) * t,
+        lat: aLat + (bLat - aLat) * t,
+        progressM: alongStartM + segmentM * t,
+        distanceFromRouteM,
+      };
+    }
+    alongStartM += segmentM;
+  }
+  return best;
+};
+
+export { distanceM, pathLengthM, snapToRoute };

@@ -3,7 +3,7 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
-import { AttributionControl, MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
+import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
 
 // Geoapify "positron" tinted toward the app's pale blue (.map-tiles-light in globals.css).
 // Without a key we fall back to plain OpenStreetMap tiles (.map-tiles filter).
@@ -93,8 +93,8 @@ const FlyToBus = ({ buses, focus }) => {
   return null;
 };
 
-// `center` is [lat, lng]. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
-const LeafletMap = ({ buses, me, selectedId, center, focus, onSelect }) => (
+// `center` is [lat, lng]; `routes` come from GET /routes. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
+const LeafletMap = ({ buses, routes, me, selectedId, center, focus, onSelect }) => (
   <MapContainer
     center={center}
     zoom={15}
@@ -111,6 +111,14 @@ const LeafletMap = ({ buses, me, selectedId, center, focus, onSelect }) => (
     <Recenter center={center} />
     <FlyToBus buses={buses} focus={focus} />
     <AttributionControl prefix={false} position="topright" />
+    {routes.map((route) => (
+      // The API sends [lng, lat]; Leaflet wants [lat, lng]. Pins sit in a higher pane, so they stay on top of the line.
+      <Polyline
+        key={route.id}
+        positions={route.polyline.map(([lng, lat]) => [lat, lng])}
+        pathOptions={{ color: "#1f73bd", weight: 5, opacity: 0.75 }}
+      />
+    ))}
     {buses.map((bus) => (
       <Marker
         key={bus.id}
