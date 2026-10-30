@@ -133,3 +133,34 @@ Each entry has the date and the reason, so nobody has to ask again.
   close the Google Cloud billing account (or delete the project) to claim the refund.
 - **Open risks:** cookies across the client host and the API host (the `/api` rewrite should keep them same-origin);
   Web Push on iPhone needs the app added to the Home Screen; the hardware and its go-signal are with the coach.
+
+### Decisions added Oct 31
+
+- **Competition rules (Oct 31).** The ITSO PDF does not forbid a PWA packaged as an APK. The risk is the criterion
+  "Effective use of the Android platform", which names the Android SDK. We argue it through GPS, push notifications,
+  vibration, install, offline and the APK. The criterion "Security" names secure user authentication, so the staff
+  sign-in (FR13) must not be cut early: keep it above FR10 and the optional items. Registration needs an abstract of
+  100 to 150 words, hardware and software requirements, features and screenshots as a PDF; say "PWA packaged as an
+  Android APK", not React Native.
+- **Each bus has its own route (Oct 31).** `Bus.routeId` already exists. The pitch uses the real Laoag to Vigan route; the
+  live demo uses a short demo route in Makati, because that is where the competition is. The simulator replays along
+  the route (a faster-than-real-time option is needed so an alert fires within a few minutes), because GPS indoors is
+  not reliable. A walk outside with the device can be shown as a video.
+- **Snap the bus to its route (Oct 31).** A pure function `snapToRoute(point, polyline)` returns the snapped lat and lng,
+  `progressM` (meters along the route) and `distanceFromRouteM`. It runs on the server in `GET /buses`, so every screen and
+  the alert engine agree, and it needs no schema change. `progressM` is what the ETA uses (no straight-line distance).
+  Over about 100 m from the route the bus is not snapped and is marked `offRoute`, so the map never shows a bus on a road
+  it is not on. Laoag to Vigan is one line without branches, so direction only means `progressM` rising (southbound) or
+  falling (northbound).
+- **One row per bus (Oct 31).** `BusState` is upserted on every ping; there is no history. A trip replay would need a
+  separate append-only table, which is not planned.
+- **Resting and stopovers (Oct 31).** Silence that the driver announced is different from silence that nobody
+  announced. `Bus.status` is `RUNNING`, `ON_BREAK` or `OFF_DUTY`, with an optional `Bus.resumeAt`. The driver or conductor
+  sets it on their phone in the staff area (FR13), so it works even when the ESP32 is off; it lives on `Bus`, not
+  `BusState`, so a ping cannot overwrite it. The 30 second `stale` rule applies to `RUNNING` buses only.
+  A bus on break stays on the map with a "Stopped" chip, its last seats framed as "as of 12 min ago" (not as live; the
+  seats are usually unchanged while resting, and the next live ping replaces them), and an ETA of the remaining rest
+  plus the travel time. Without `resumeAt` the ETA says "departure time not set". With a `resumeAt`, alerts still work;
+  without it there is no alert. Unannounced silence stays "signal lost": no seats, no ETA.
+- **Manifest screenshots come last (Oct 31).** Device-framed images from the final screens; see
+  `docs/pwa-platform-notes.md` section 8.
