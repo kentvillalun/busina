@@ -7,12 +7,12 @@ import { roadFor } from "@/lib/eta";
 import { LANDMARKS } from "@/lib/landmarks";
 import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
-// Geoapify "positron" tinted toward the app's pale blue (.map-tiles-light in globals.css).
+// Geoapify "osm-bright-grey" (it names places and streets anywhere, so a new route needs no label list) tinted toward the app's pale blue (.map-tiles-light in globals.css).
 // Without a key we fall back to plain OpenStreetMap tiles (.map-tiles filter).
 const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_KEY;
 const tiles = GEOAPIFY_KEY
   ? {
-      url: `https://maps.geoapify.com/v1/tile/positron/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_KEY}`,
+      url: `https://maps.geoapify.com/v1/tile/osm-bright-grey/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_KEY}`,
       attribution: "© Geoapify © OpenMapTiles © OpenStreetMap contributors",
       className: "map-tiles-light",
     }
