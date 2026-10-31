@@ -38,6 +38,43 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Live map and arrival time"
+    },
+    {
+      "src": "/screenshots/bus-details.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Free seats and passengers on board"
+    },
+    {
+      "src": "/screenshots/signal-lost.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Clear message when the bus signal is lost"
+    },
+    {
+      "src": "/screenshots/boarding-spot.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Pick your boarding spot on the map"
+    },
+    {
+      "src": "/screenshots/settings.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Alerts, location and trip settings"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Live buses",
