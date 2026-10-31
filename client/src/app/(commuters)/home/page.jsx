@@ -13,6 +13,7 @@ import LiveStatus from "@/components/home/LiveStatus";
 import TopGradient from "@/components/layout/TopGradient";
 import IconLocationOff from "@/components/icons/IconLocationOff";
 import { useBuses } from "@/hooks/useBuses";
+import useNearBusAlert, { ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { etaFor, etaOrder, roadFor } from "@/lib/eta";
@@ -137,6 +138,9 @@ export default function HomePage() {
       if (!target) return 0;
       return distanceM(target, a.state) - distanceM(target, b.state);
     });
+
+  const [alertMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
+  useNearBusAlert(buses, alertMinutes);
 
   const freshest =
     allBuses.length > 0
