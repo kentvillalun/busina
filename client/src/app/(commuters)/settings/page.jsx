@@ -7,6 +7,7 @@ import { Page } from "@/components/layout/Page";
 import TopGradient from "@/components/layout/TopGradient";
 import { PageContent } from "@/components/layout/PageContent";
 import useSavedSetting from "@/hooks/useSavedSetting";
+import { spotLabel } from "@/lib/geocode";
 import { getAlertsPermission, getLocationPermission, permissionLabel } from "@/lib/permissions";
 
 // The permission values are real; the "My trip" values are placeholders until the trip choices are saved.
@@ -122,8 +123,8 @@ export default function SettingsPage() {
             <Row
               href="/settings/boarding-spot"
               label="Boarding spot"
-              hint="Where you wait for the bus"
-              value={spot ? "Set" : "Not set"}
+              hint={spot ? spotLabel(spot) : "Where you wait for the bus"}
+              value={spot ? "Change" : "Not set"}
               accent={!!spot}
             />
             <Row href="/settings/direction" label="Direction" value="Toward Laoag" />

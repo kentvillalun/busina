@@ -11,6 +11,7 @@ import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { MAX_SPOT_FROM_ROUTE_M } from "@/lib/eta";
 import { formatDistance, snapToRoute } from "@/lib/geo";
+import { placeName } from "@/lib/geocode";
 import { getCurrentPosition } from "@/lib/permissions";
 
 const BusMap = dynamic(() => import("@/components/map/BusMap"), { ssr: false });
@@ -23,7 +24,8 @@ export default function BoardingSpotPage() {
   const { data } = useBuses();
   const routes = useRoutes();
   const router = useRouter();
-  const [, saveSpot] = useSavedSetting("busina:spot", null);
+  const [saved, saveSpot] = useSavedSetting("busina:spot", null); // { lat, lng, name }
+  const [saving, setSaving] = useState(false);
   const [userPos, setUserPos] = useState(null);
   const [spot, setSpot] = useState(null); // { lat, lng } under the pin; null until the map has moved once
 
@@ -31,7 +33,8 @@ export default function BoardingSpotPage() {
     getCurrentPosition().then(setUserPos);
   }, []);
 
-  const start = userPos ?? LAOAG;
+  // The map opens where the spot was saved, then on the user, then on Laoag.
+  const start = saved ?? userPos ?? LAOAG;
   const buses = (data?.buses ?? []).filter((bus) => bus.state);
 
   // How far the pin is from the nearest road. A bus can only reach the road, and the ETA needs the spot within
@@ -52,8 +55,9 @@ export default function BoardingSpotPage() {
     else hint = `${formatDistance(fromRoadM)} from the road. We'll alert you for the nearest point on it.`;
   }
 
-  const confirm = () => {
-    saveSpot(pin);
+  const confirm = async () => {
+    setSaving(true);
+    saveSpot({ lat: pin.lat, lng: pin.lng, name: await placeName(pin) });
     router.push("/settings");
   };
 
@@ -102,10 +106,10 @@ export default function BoardingSpotPage() {
         <button
           type="button"
           onClick={confirm}
-          disabled={tooFar}
+          disabled={tooFar || saving}
           className="mt-auto h-14 rounded-[18px] bg-linear-to-b from-primary-light to-primary-dark text-base font-bold text-white disabled:opacity-50"
         >
-          Confirm spot
+          {saving ? "Saving..." : "Confirm spot"}
         </button>
       </section>
     </main>
