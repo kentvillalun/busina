@@ -15,7 +15,8 @@ const items = [
 const spring = { type: "spring", stiffness: 500, damping: 38 };
 
 // Routes under (commuters) that should not show the nav, e.g. a full-screen bus details page.
-const hiddenOn = ["/bus", "/settings/boarding-spot"];
+// "/settings/" (with the slash) is every screen that opens from Settings, but not Settings itself.
+const hiddenOn = ["/bus", "/settings/"];
 
 export const BottomNav = () => {
   const pathname = usePathname();
