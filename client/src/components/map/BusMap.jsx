@@ -4,7 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Fragment, useEffect, useState } from "react";
 import { roadFor } from "@/lib/eta";
-import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
+import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 // Geoapify "positron" tinted toward the app's pale blue (.map-tiles-light in globals.css).
 // Without a key we fall back to plain OpenStreetMap tiles (.map-tiles filter).
@@ -94,6 +94,12 @@ const FlyToBus = ({ buses, focus }) => {
   return null;
 };
 
+// Tells the boarding spot picker where the middle of the map is each time the map stops moving.
+const CenterReporter = ({ onChange }) => {
+  const map = useMapEvents({ moveend: () => onChange(map.getCenter()) });
+  return null;
+};
+
 // `center` is [lat, lng]; `routes` come from GET /routes; `direction` draws only that way's road (both when left out); `ahead` is the [lat, lng] stretch from the selected bus to you. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
 const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, selectedId, center, focus, onSelect, onCenterChange }) => (
   <MapContainer
@@ -111,6 +117,7 @@ const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, selectedId,
     />
     <Recenter center={center} />
     <FlyToBus buses={buses} focus={focus} />
+    {onCenterChange && <CenterReporter onChange={onCenterChange} />}
     <AttributionControl prefix={false} position="topright" />
     {routes.flatMap((route) => (direction ? [roadFor(route, direction)] : [route.polyline, route.polylineNorthbound])).map((polyline, i) => {
       if (!polyline) return null;
