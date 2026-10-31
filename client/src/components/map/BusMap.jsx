@@ -108,6 +108,16 @@ const meIcon = L.divIcon({
   </div>`,
 });
 
+// The boarding spot: the pin of the spot picker, its tip on the position, with a label above it.
+const spotIcon = L.divIcon({
+  className: "",
+  iconSize: [0, 0],
+  html: `<div class="relative -translate-x-1/2 -translate-y-full w-11 h-14">
+    <span class="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary bg-white px-3 py-1 text-xs font-medium text-navy shadow-sm">Your spot</span>
+    <img src="/spot/pin.svg" alt="" class="block max-w-none" width="44" height="56" />
+  </div>`,
+});
+
 // MapContainer only reads `center` once, so this moves the view when it changes (the user's location arrives late).
 const Recenter = ({ center }) => {
   const map = useMap();
@@ -146,8 +156,8 @@ const CenterReporter = ({ onChange }) => {
   return null;
 };
 
-// `center` is [lat, lng]; `routes` come from GET /routes; `direction` draws only that way's road (both when left out); `ahead` is the [lat, lng] stretch from the selected bus to you. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
-const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, selectedId, center, focus, onSelect, onCenterChange }) => (
+// `center` is [lat, lng]; `routes` come from GET /routes; `direction` draws only that way's road (both when left out); `ahead` is the [lat, lng] stretch from the selected bus to you; `spot` is the saved boarding spot ({ lat, lng }). Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
+const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, selectedId, center, focus, onSelect, onCenterChange }) => (
   <MapContainer
     center={center}
     zoom={15}
@@ -191,6 +201,7 @@ const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, selectedId,
         eventHandlers={{ click: () => onSelect?.(bus.id) }}
       />
     ))}
+    {spot && <Marker position={[spot.lat, spot.lng]} icon={spotIcon} zIndexOffset={500} interactive={false} />}
     {me && <Marker position={[me.lat, me.lng]} icon={meIcon} />}
   </MapContainer>
 );

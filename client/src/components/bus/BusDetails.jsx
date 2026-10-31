@@ -11,6 +11,7 @@ import TopGradient from "@/components/layout/TopGradient";
 import SeatMap from "@/components/bus/SeatMap";
 import { useBuses } from "@/hooks/useBuses";
 import { useRoutes } from "@/hooks/useRoutes";
+import useSavedSetting from "@/hooks/useSavedSetting";
 import { etaFor, formatEta } from "@/lib/eta";
 import { distanceM, formatDistance } from "@/lib/geo";
 import { haptic, hapticTrigger } from "@/lib/haptics";
@@ -54,6 +55,8 @@ const BusDetails = ({ id }) => {
   const { data, isLoading, gaveUp, retry } = useBuses();
   const routes = useRoutes();
   const [userPos, setUserPos] = useState(null);
+  const [spot] = useSavedSetting("busina:spot", null); // the boarding spot from Settings
+  const target = spot ?? userPos; // the ETA is measured to the spot when there is one, else to the user
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const [askingAlerts, setAskingAlerts] = useState(false);
@@ -65,7 +68,7 @@ const BusDetails = ({ id }) => {
   }, []);
 
   const bus = data?.buses.find((item) => item.id === id);
-  const eta = bus ? etaFor(bus, routes.find((route) => route.id === bus.route.id), userPos) : null;
+  const eta = bus ? etaFor(bus, routes.find((route) => route.id === bus.route.id), target) : null;
   const state = bus?.state ?? null;
   const stale = bus ? bus.stale : false;
   const serverTime = data?.serverTime;
@@ -98,7 +101,7 @@ const BusDetails = ({ id }) => {
   const notFound = !!data && !bus;
 
   const title = bus ? `Bus ${bus.busNumber}` : "Bus details";
-  const away = state && userPos ? distanceM(userPos, state) : null;
+  const away = state && target ? distanceM(target, state) : null;
   const heading = state ? `Heading to ${TOWARD[state.direction] ?? "its terminal"}` : "Not heard from yet";
   const seatOutlook = state && !stale ? outlook(state.seatsFree) : null;
 
@@ -187,7 +190,7 @@ const BusDetails = ({ id }) => {
                     <div className="flex flex-col items-end">
                       <span className="font-display text-[26px] leading-8">{eta ? formatEta(eta) : "-"}</span>
                       <span className="text-xs">
-                        {eta ? (eta.passed ? "already passed you" : "to your spot") : userPos ? "ETA coming soon" : "location off"}
+                        {eta ? (eta.passed ? "already passed you" : "to your spot") : target ? "ETA coming soon" : "location off"}
                       </span>
                     </div>
                   </div>

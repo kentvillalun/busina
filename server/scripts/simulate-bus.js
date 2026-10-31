@@ -2,6 +2,14 @@
 // It sends the same request the real device will (POST /device/ping with the X-Device-Key header).
 //
 //   npm run simulate     (the API must be running, and `npm run seed` done once)
+//
+// Options (environment variables):
+//   API_URL      where to send the pings: http://localhost:4000 (default) or the deployed API
+//   SPEED_KMH    default 25; up to 200, which the API accepts
+//   START_KM     how far from Laoag the bus starts, in km (default 0)
+//   DIRECTION    "south" (toward Vigan, default) or "north" (toward Laoag)
+// For a demo: set a boarding spot in the app, then start the bus a few km before it, e.g. with PowerShell
+//   $env:API_URL="https://busina-fxrt.onrender.com"; $env:START_KM="20"; $env:SPEED_KMH="90"; npm run simulate
 import { disconnectDB, prisma } from "../src/config/db.js";
 import { distanceM } from "../src/utils/geo.js";
 
@@ -56,9 +64,9 @@ const southRoad = buildRoad(bus.route.polyline);
 const northRoad = buildRoad(bus.route.polylineNorthbound ?? bus.route.polyline);
 
 // The simulated bus.
-let road = southRoad;
-let distance = 0; // meters from the north end (Laoag), along the current road
-let heading = 1; // 1 = toward Vigan (southbound), -1 = toward Laoag (northbound)
+let heading = process.env.DIRECTION === "north" ? -1 : 1; // 1 = toward Vigan (southbound), -1 = toward Laoag (northbound)
+let road = heading === 1 ? southRoad : northRoad;
+let distance = Math.min(Math.max(Number(process.env.START_KM ?? 0) * 1000, 0), road.length); // meters from the north end (Laoag), along the current road
 const seats = Array.from({ length: bus.seatCount }, () => (Math.random() < 0.3 ? 1 : 0));
 let doorIn = seats.filter(Boolean).length; // people already on board came through the door
 let doorOut = 0;

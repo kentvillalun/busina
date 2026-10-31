@@ -14,6 +14,7 @@ import TopGradient from "@/components/layout/TopGradient";
 import IconLocationOff from "@/components/icons/IconLocationOff";
 import { useBuses } from "@/hooks/useBuses";
 import { useRoutes } from "@/hooks/useRoutes";
+import useSavedSetting from "@/hooks/useSavedSetting";
 import { etaFor, etaOrder, roadFor } from "@/lib/eta";
 import { distanceM, formatDistance, routeBetween } from "@/lib/geo";
 import {
@@ -68,6 +69,8 @@ export default function HomePage() {
   const now = minute === null ? null : new Date(minute * 60000);
 
   const [userPos, setUserPos] = useState(null); // { lat, lng }, or null while unknown or location is off
+  const [spot] = useSavedSetting("busina:spot", null); // the boarding spot from Settings
+  const target = spot ?? userPos; // the ETA is measured to the spot when there is one, else to the user
   const [pickedId, setPickedId] = useState(null); // a bus the user tapped; null = the closest one
   const [focus, setFocus] = useState(null); // { id, n }: tells the map to fly to a bus
 
@@ -127,12 +130,12 @@ export default function HomePage() {
   // Without an ETA we fall back to the closest; without the user's location the order stays as the API sent it.
   const buses = allBuses
     .filter((bus) => bus.state.direction === direction)
-    .map((bus) => ({ ...bus, eta: etaFor(bus, routes.find((route) => route.id === bus.route.id), userPos) }))
+    .map((bus) => ({ ...bus, eta: etaFor(bus, routes.find((route) => route.id === bus.route.id), target) }))
     .sort((a, b) => {
       if (a.stale !== b.stale) return a.stale ? 1 : -1;
       if (a.eta && b.eta) return etaOrder(a.eta) - etaOrder(b.eta);
-      if (!userPos) return 0;
-      return distanceM(userPos, a.state) - distanceM(userPos, b.state);
+      if (!target) return 0;
+      return distanceM(target, a.state) - distanceM(target, b.state);
     });
 
   const freshest =
@@ -172,7 +175,7 @@ export default function HomePage() {
       setShowAlerts(true);
     }
   };
-  const away = next && userPos ? distanceM(userPos, next.state) : null;
+  const away = next && target ? distanceM(target, next.state) : null;
   const headline = !next
     ? null
     : next.etaMin != null
@@ -213,6 +216,7 @@ export default function HomePage() {
             routes={routes.filter((route) => allBuses.some((bus) => bus.route.id === route.id))}
             direction={direction}
             me={userPos}
+            spot={spot}
             selectedId={selectedId}
             focus={focus}
             onSelect={findBus}
@@ -323,7 +327,7 @@ export default function HomePage() {
                 bus={bus}
                 serverTime={serverTime}
                 selected={bus.id === selectedId}
-                locationOff={locationOff}
+                locationOff={locationOff && !spot}
                 onSelect={() => findBus(bus.id)}
               />
             ))}
