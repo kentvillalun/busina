@@ -22,21 +22,23 @@ const listBuses = async (req, res) => {
       photoUrl: true,
       seatCount: true,
       company: { select: { name: true, shortName: true, logoUrl: true } },
-      route: { select: { id: true, name: true, polyline: true } },
+      route: { select: { id: true, name: true, polyline: true, polylineNorthbound: true } },
       state: true,
     },
   });
 
   const now = Date.now();
 
-  const data = buses.map(({ state, route: { polyline, ...route }, ...bus }) => {
+  const data = buses.map(({ state, route: { polyline, polylineNorthbound, ...route }, ...bus }) => {
     // A bus that has never pinged has no state yet.
     if (!state) {
       return { ...bus, route, stale: true, state: null };
     }
 
     // Draw the bus on its road, and tell the ETA how far along the road it is.
-    const snapped = snapToRoute([state.lng, state.lat], polyline);
+    // Northbound buses take the diversion road when the route has one.
+    const road = state.direction === "NORTHBOUND" && polylineNorthbound ? polylineNorthbound : polyline;
+    const snapped = snapToRoute([state.lng, state.lat], road);
     const offRoute = !snapped || snapped.distanceFromRouteM > OFF_ROUTE_AFTER_M;
 
     const onBoard = Math.max(0, state.doorInTotal - state.doorOutTotal);

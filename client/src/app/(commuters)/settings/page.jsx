@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import IconChevron from "@/components/icons/IconChevron";
 import { Page } from "@/components/layout/Page";
 import TopGradient from "@/components/layout/TopGradient";
 import { PageContent } from "@/components/layout/PageContent";
+import useSavedSetting from "@/hooks/useSavedSetting";
+import { spotLabel } from "@/lib/geocode";
+import { getAlertsPermission, getLocationPermission, permissionLabel } from "@/lib/permissions";
 
-// Values are placeholders until permissions and the trip choices are wired in.
+// The permission values are real; the "My trip" values are placeholders until the trip choices are saved.
 const Section = ({ title, note, children }) => (
   <section className="flex flex-col gap-1.5">
     <h2 className="pl-2 font-medium text-muted">{title}</h2>
@@ -19,11 +23,11 @@ const Section = ({ title, note, children }) => (
   </section>
 );
 
-const Row = ({ label, hint, value, accent = false, right }) => {
-  const Tag = right ? "div" : "button"; // a switch inside a button would nest buttons
+const Row = ({ label, hint, value, accent = false, right, href }) => {
+  const Tag = right ? "div" : Link; // a switch inside a link would nest interactive elements
   return (
     <Tag
-      {...(!right && { type: "button" })}
+      {...(!right && { href })}
       className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left"
     >
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -73,6 +77,14 @@ const Switch = ({ checked, onChange, label }) => (
 
 export default function SettingsPage() {
   const [background, setBackground] = useState(false);
+  const [spot] = useSavedSetting("busina:spot", null); // { lat, lng } from the picker
+  const [location, setLocation] = useState(null); // null while the permission is being read
+  const [alerts, setAlerts] = useState(null);
+
+  useEffect(() => {
+    getLocationPermission().then(setLocation);
+    getAlertsPermission().then(setAlerts);
+  }, []);
 
   return (
     <Page className="bg-[#f4f8fb]">
@@ -89,15 +101,18 @@ export default function SettingsPage() {
 
           <Section title="Permissions">
             <Row
+              href="/settings/location"
               label="Location"
               hint="Only while the app is open"
-              value="On"
+              value={permissionLabel(location)}
+              accent={location?.canAskAgain}
             />
             <Row
+              href="/settings/alerts"
               label="Alerts"
               hint="Warns you when a bus is near"
-              value="Turn on"
-              accent
+              value={permissionLabel(alerts)}
+              accent={alerts?.canAskAgain}
             />
           </Section>
 
@@ -106,11 +121,13 @@ export default function SettingsPage() {
             note="Alerts use your boarding spot to warn you before a bus arrives."
           >
             <Row
+              href="/settings/boarding-spot"
               label="Boarding spot"
-              hint="Where you wait for the bus"
-              value="Not set"
+              hint={spot ? spotLabel(spot) : "Where you wait for the bus"}
+              value={spot ? "Change" : "Not set"}
+              accent={!!spot}
             />
-            <Row label="Direction" value="Toward Laoag" />
+            <Row href="/settings/direction" label="Direction" value="Toward Laoag" />
           </Section>
 
           <Section
@@ -134,7 +151,7 @@ export default function SettingsPage() {
             title="About"
             note="Seat outlook and passenger counts are estimates."
           >
-            <Row label="How estimates work" />
+            <Row href="/settings/estimates" label="How estimates work" />
           </Section>
         </div>
       </PageContent>

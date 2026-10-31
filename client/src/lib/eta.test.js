@@ -1,7 +1,7 @@
 // Run with: node --test src/lib/eta.test.js
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { etaFor, formatEta } from "./eta.js";
+import { etaFor, formatEta, roadFor } from "./eta.js";
 
 // A road running due north for about 1.1 km. Points are [lng, lat]. progressM grows toward the north here.
 const route = { polyline: [[120, 18], [120, 18.01]] };
@@ -44,4 +44,16 @@ test("the text", () => {
   assert.equal(formatEta({ passed: false, minMin: 0.1, maxMin: 0.3 }), "Arriving");
   assert.equal(formatEta({ passed: false, minMin: 17.6, maxMin: 22.4 }), "18–22 min");
   assert.equal(formatEta({ passed: false, minMin: 5.1, maxMin: 5.4 }), "~5 min");
+});
+
+test("a northbound bus uses the northbound road when the route has one", () => {
+  // The northbound road is longer (a detour), so the same user sits farther along it.
+  const detour = { ...route, polylineNorthbound: [[120, 18], [120, 18.02]] };
+  assert.equal(roadFor(detour, "NORTHBOUND"), detour.polylineNorthbound);
+  assert.equal(roadFor(detour, "SOUTHBOUND"), detour.polyline);
+  assert.equal(roadFor(route, "NORTHBOUND"), route.polyline); // no detour: the one road
+
+  const north = etaFor(bus(1900, "NORTHBOUND"), detour, { lat: 18.015, lng: 120 });
+  const south = etaFor(bus(0, "SOUTHBOUND"), detour, { lat: 18.015, lng: 120 });
+  assert.ok(north.spotM > 1500 && south.spotM < 1200);
 });

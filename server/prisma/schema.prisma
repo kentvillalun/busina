@@ -60,7 +60,10 @@ model Route {
   company   Company @relation(fields: [companyId], references: [id])
 
   name     String
+  // Points are [lng, lat], ordered from the first terminal to the last. `polyline` is the road southbound buses take.
   polyline Json
+  // The road northbound buses take, when it differs (Vigan City Diversion Road). Same point order, own length.
+  polylineNorthbound Json?
   lengthM  Int
 
   createdAt DateTime @default(now())

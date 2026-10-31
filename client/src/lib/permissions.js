@@ -8,6 +8,14 @@
 
 const UNSUPPORTED = { granted: false, canAskAgain: false, supported: false };
 
+// The word to show for a permission, or "Checking..." while it is still being read (null).
+export const permissionLabel = (permission) => {
+  if (!permission) return "Checking...";
+  if (!permission.supported) return "Not available on this browser";
+  if (permission.granted) return "On";
+  return permission.canAskAgain ? "Off" : "Blocked";
+};
+
 // --- Location -------------------------------------------------------------
 
 // Read the current permission without showing a prompt.

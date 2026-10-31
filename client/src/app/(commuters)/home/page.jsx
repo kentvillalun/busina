@@ -14,7 +14,7 @@ import TopGradient from "@/components/layout/TopGradient";
 import IconLocationOff from "@/components/icons/IconLocationOff";
 import { useBuses } from "@/hooks/useBuses";
 import { useRoutes } from "@/hooks/useRoutes";
-import { etaFor, etaOrder } from "@/lib/eta";
+import { etaFor, etaOrder, roadFor } from "@/lib/eta";
 import { distanceM, formatDistance, routeBetween } from "@/lib/geo";
 import {
   askAlerts,
@@ -155,7 +155,7 @@ export default function HomePage() {
   const selectedRoute = routes.find((route) => route.id === selectedBus?.route.id);
   const ahead =
     selectedBus?.eta && !selectedBus.eta.passed && selectedRoute
-      ? routeBetween(selectedRoute.polyline, selectedBus.state.progressM, selectedBus.eta.spotM)
+      ? routeBetween(roadFor(selectedRoute, selectedBus.state.direction), selectedBus.state.progressM, selectedBus.eta.spotM)
       : [];
 
   // Tapping a card or a pin shows that bus on the map; on a phone the sheet closes so the map is visible.
@@ -211,6 +211,7 @@ export default function HomePage() {
             buses={buses}
             ahead={ahead}
             routes={routes.filter((route) => allBuses.some((bus) => bus.route.id === route.id))}
+            direction={direction}
             me={userPos}
             selectedId={selectedId}
             focus={focus}
