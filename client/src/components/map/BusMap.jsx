@@ -66,7 +66,7 @@ const Landmarks = () => {
   const map = useMap();
   const [zoom, setZoom] = useState(map.getZoom());
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
-  return LANDMARKS.filter((place) => zoom >= place.minZoom).map((place) => (
+  return LANDMARKS.filter((place) => zoom >= place.minZoom && zoom <= (place.maxZoom ?? Infinity)).map((place) => (
     <Marker
       key={place.name}
       position={[place.lat, place.lng]}
