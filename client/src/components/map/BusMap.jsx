@@ -3,6 +3,7 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Fragment, useEffect, useState } from "react";
+import { roadFor } from "@/lib/eta";
 import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
 
 // Geoapify "positron" tinted toward the app's pale blue (.map-tiles-light in globals.css).
@@ -93,8 +94,8 @@ const FlyToBus = ({ buses, focus }) => {
   return null;
 };
 
-// `center` is [lat, lng]; `routes` come from GET /routes; `ahead` is the [lat, lng] stretch from the selected bus to you. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
-const LeafletMap = ({ buses, routes = [], ahead = [], me, selectedId, center, focus, onSelect, onCenterChange }) => (
+// `center` is [lat, lng]; `routes` come from GET /routes; `direction` draws only that way's road (both when left out); `ahead` is the [lat, lng] stretch from the selected bus to you. Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
+const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, selectedId, center, focus, onSelect, onCenterChange }) => (
   <MapContainer
     center={center}
     zoom={15}
@@ -111,7 +112,7 @@ const LeafletMap = ({ buses, routes = [], ahead = [], me, selectedId, center, fo
     <Recenter center={center} />
     <FlyToBus buses={buses} focus={focus} />
     <AttributionControl prefix={false} position="topright" />
-    {routes.flatMap((route) => [route.polyline, route.polylineNorthbound]).map((polyline, i) => {
+    {routes.flatMap((route) => (direction ? [roadFor(route, direction)] : [route.polyline, route.polylineNorthbound])).map((polyline, i) => {
       if (!polyline) return null;
       // The API sends [lng, lat]; Leaflet wants [lat, lng]. Pins sit in a higher pane, so they stay on top of the line.
       // Like the onboarding road: a white road with a thin edge, and a dashed blue line down the middle.

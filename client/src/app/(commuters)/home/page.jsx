@@ -211,6 +211,7 @@ export default function HomePage() {
             buses={buses}
             ahead={ahead}
             routes={routes.filter((route) => allBuses.some((bus) => bus.route.id === route.id))}
+            direction={direction}
             me={userPos}
             selectedId={selectedId}
             focus={focus}
