@@ -43,7 +43,7 @@ export default function OperatorInsightsPage() {
                 {item.tag}
               </span>
               <p className="text-sm font-semibold text-ink">{item.title}</p>
-              <p className="text-xs leading-[18px] text-muted">{item.text}</p>
+              <p className="text-xs leading-4.5 text-muted">{item.text}</p>
             </div>
           ))}
         </section>
