@@ -3,10 +3,14 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import IconChevron from "@/components/icons/IconChevron";
 import { useBuses } from "@/hooks/useBuses";
 import { useRoutes } from "@/hooks/useRoutes";
+import useSavedSetting from "@/hooks/useSavedSetting";
+import { MAX_SPOT_FROM_ROUTE_M } from "@/lib/eta";
+import { formatDistance, snapToRoute } from "@/lib/geo";
 import { getCurrentPosition } from "@/lib/permissions";
 
 const BusMap = dynamic(() => import("@/components/map/BusMap"), { ssr: false });
@@ -18,6 +22,8 @@ const LAOAG = { lat: 18.1978, lng: 120.5936 }; // map center until the user's lo
 export default function BoardingSpotPage() {
   const { data } = useBuses();
   const routes = useRoutes();
+  const router = useRouter();
+  const [, saveSpot] = useSavedSetting("busina:spot", null);
   const [userPos, setUserPos] = useState(null);
   const [spot, setSpot] = useState(null); // { lat, lng } under the pin; null until the map has moved once
 
@@ -28,14 +34,33 @@ export default function BoardingSpotPage() {
   const start = userPos ?? LAOAG;
   const buses = (data?.buses ?? []).filter((bus) => bus.state);
 
-  // TODO(you): save `spot ?? start` (the point under the pin; localStorage is enough for now), then go back to
-  // Settings and show the place in the "Boarding spot" row. The alerts (FR9) will read it.
-  const confirm = () => {};
+  // How far the pin is from the nearest road. A bus can only reach the road, and the ETA needs the spot within
+  // MAX_SPOT_FROM_ROUTE_M of it; unknown (null) until the roads have loaded.
+  const pin = spot ?? start;
+  const roadDistances = routes
+    .flatMap((route) => [route.polyline, route.polylineNorthbound])
+    .filter(Boolean)
+    .map((polyline) => snapToRoute(pin, polyline)?.distanceFromRouteM)
+    .filter((distance) => distance != null);
+  const fromRoadM = roadDistances.length > 0 ? Math.min(...roadDistances) : null;
+  const tooFar = fromRoadM != null && fromRoadM > MAX_SPOT_FROM_ROUTE_M;
+
+  let hint = null;
+  if (fromRoadM != null) {
+    if (tooFar) hint = "Too far from any bus route, so there would be no estimates. Move the pin closer to the road.";
+    else if (fromRoadM <= 50) hint = "On the bus route.";
+    else hint = `${formatDistance(fromRoadM)} from the road. We'll alert you for the nearest point on it.`;
+  }
+
+  const confirm = () => {
+    saveSpot(pin);
+    router.push("/settings");
+  };
 
   return (
     <main className="fixed inset-0 isolate bg-stage">
-      {/* The map stops 200px above the bottom, so its middle is the middle of what you can see and the pin sits on it. */}
-      <div className="absolute inset-x-0 top-0 bottom-50 z-0">
+      {/* The map stops 240px above the bottom, so its middle is the middle of what you can see and the pin sits on it. */}
+      <div className="absolute inset-x-0 top-0 bottom-60 z-0">
         <BusMap
           buses={buses}
           routes={routes}
@@ -46,7 +71,7 @@ export default function BoardingSpotPage() {
       </div>
 
       {/* The tip of the pin is the exact middle of the map. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 bottom-50 z-10 flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-x-0 top-0 bottom-60 z-10 flex items-center justify-center">
         <Image src="/spot/pin-shadow.svg" alt="" width={26} height={9} className="absolute" />
         <Image src="/spot/pin.svg" alt="" width={44} height={56} className="relative -translate-y-7" />
       </div>
@@ -65,16 +90,20 @@ export default function BoardingSpotPage() {
         </div>
       </div>
 
-      <section className="absolute inset-x-0 bottom-0 z-20 mx-auto flex h-59 max-w-107.5 flex-col rounded-t-[32px] bg-white px-6 pb-6 pt-3 shadow-[0_-4px_14px_rgba(16,59,96,0.18)]">
+      <section className="absolute inset-x-0 bottom-0 z-20 mx-auto flex h-69 max-w-107.5 flex-col rounded-t-[32px] bg-white px-6 pb-6 pt-3 shadow-[0_-4px_14px_rgba(16,59,96,0.18)]">
         <span className="mx-auto h-1.25 w-10 rounded-full bg-line" />
         <h2 className="mt-4.5 font-display text-[22px] leading-7 text-ink">Your boarding spot</h2>
         <p className="mt-1 text-sm leading-5 text-muted">
           We&apos;ll alert you when a bus is close to this spot. Place the pin on the roadside where you usually wait.
         </p>
+        {hint && (
+          <p className={`mt-2 text-sm font-medium leading-5 ${tooFar ? "text-red-600" : "text-success"}`}>{hint}</p>
+        )}
         <button
           type="button"
           onClick={confirm}
-          className="mt-auto h-14 rounded-[18px] bg-linear-to-b from-primary-light to-primary-dark text-base font-bold text-white"
+          disabled={tooFar}
+          className="mt-auto h-14 rounded-[18px] bg-linear-to-b from-primary-light to-primary-dark text-base font-bold text-white disabled:opacity-50"
         >
           Confirm spot
         </button>

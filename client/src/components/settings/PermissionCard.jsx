@@ -1,15 +1,9 @@
 import { Body, Card } from "@/components/settings/DetailPage";
+import { permissionLabel } from "@/lib/permissions";
 
 // What a permission is for, where it stands now, and how to change it. `permission` is
 // { granted, canAskAgain, supported } from lib/permissions.js, or null while it is being read.
 const PermissionCard = ({ purpose, permission, onTurnOn, turningOn = false, setting }) => {
-  let status = "Checking...";
-  if (permission) {
-    if (!permission.supported) status = "Not available on this browser";
-    else if (permission.granted) status = "On";
-    else if (permission.canAskAgain) status = "Off";
-    else status = "Blocked";
-  }
   const blocked = permission?.supported && !permission.granted && !permission.canAskAgain;
 
   return (
@@ -17,7 +11,7 @@ const PermissionCard = ({ purpose, permission, onTurnOn, turningOn = false, sett
       <Card>
         <div className="flex items-center justify-between">
           <h2 className="font-medium text-ink">Status</h2>
-          <span className={`text-[15px] font-bold ${permission?.granted ? "text-success" : "text-muted"}`}>{status}</span>
+          <span className={`text-[15px] font-bold ${permission?.granted ? "text-success" : "text-muted"}`}>{permissionLabel(permission)}</span>
         </div>
         <Body>{purpose}</Body>
         {permission?.supported && !permission.granted && permission.canAskAgain && (

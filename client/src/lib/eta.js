@@ -43,4 +43,4 @@ const formatEta = (eta) => {
 // For sorting: the sooner the bus, the smaller; a bus that has passed goes last.
 const etaOrder = (eta) => (eta.passed ? 1e9 : eta.minMin);
 
-export { etaFor, etaOrder, formatEta, roadFor };
+export { etaFor, etaOrder, formatEta, MAX_SPOT_FROM_ROUTE_M, roadFor };
