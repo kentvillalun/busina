@@ -2,7 +2,7 @@
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { roadFor } from "@/lib/eta";
 import { LANDMARKS } from "@/lib/landmarks";
 import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
@@ -61,14 +61,32 @@ const landmarkIcon = (name) =>
     }),
   );
 
-// The labels of LANDMARKS that fit the current zoom: few when zoomed out, more as you zoom in.
+// The labels that fit at this zoom, like Google Maps: the most important (lowest rank) first, and a label is dropped
+// when it would sit on one already placed. Points are projected at the zoom level, not the screen, so panning
+// never makes a label pop in or out; only zooming does.
+const LABEL_PX_PER_CHAR = 6.5; // the label is 11px semibold text
+const LABEL_HEIGHT = 18; // text height plus a gap
+const labelsAt = (map, zoom) => {
+  const placed = [];
+  return LANDMARKS.filter((place) => zoom >= place.minZoom && zoom <= (place.maxZoom ?? Infinity))
+    .sort((a, b) => a.rank - b.rank)
+    .filter((place) => {
+      const { x, y } = map.project([place.lat, place.lng], zoom);
+      const half = (place.name.length * LABEL_PX_PER_CHAR) / 2 + 4;
+      const box = { x1: x - half, x2: x + half, y1: y - LABEL_HEIGHT / 2, y2: y + LABEL_HEIGHT / 2 };
+      const hidden = placed.some((b) => box.x1 < b.x2 && b.x1 < box.x2 && box.y1 < b.y2 && b.y1 < box.y2);
+      if (!hidden) placed.push(box);
+      return !hidden;
+    });
+};
+
 const Landmarks = () => {
   const map = useMap();
   const [zoom, setZoom] = useState(map.getZoom());
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
-  return LANDMARKS.filter((place) => zoom >= place.minZoom && zoom <= (place.maxZoom ?? Infinity)).map((place) => (
+  return useMemo(() => labelsAt(map, zoom), [map, zoom]).map((place) => (
     <Marker
-      key={place.name}
+      key={`${place.name}-${place.lat}`}
       position={[place.lat, place.lng]}
       icon={landmarkIcon(place.name)}
       interactive={false}
