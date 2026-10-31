@@ -20,6 +20,19 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// A tap on a notification opens the page it carries in `data.url`, in the open window if there is one.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url ?? "/home";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const open = windows[0];
+      if (!open) return self.clients.openWindow(url);
+      return open.navigate(url).then((client) => (client ?? open).focus());
+    }),
+  );
+});
+
 // Only page navigations are answered here. Everything else (/api, map tiles, scripts) is not handled,
 // so it goes to the network as if there were no service worker: bus data must never come from a cache.
 self.addEventListener("fetch", (event) => {
