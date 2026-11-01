@@ -3,6 +3,8 @@ import passport from "passport";
 import { checkState, finishLogin, googleStart, logout, me } from "../controllers/auth.controller.js";
 import { authenticateCommuter } from "../middlewares/auth.js";
 import { authLimiter } from "../middlewares/rateLimit.js";
+import { validate } from "../middlewares/validate.js";
+import { logoutSchema } from "../schemas/auth.schema.js";
 
 const router = Router();
 
@@ -16,7 +18,7 @@ router.get(
   finishLogin,
 );
 
-router.post("/logout", authLimiter, logout);
+router.post("/logout", validate(logoutSchema), authLimiter, logout);
 router.get("/me", authenticateCommuter, me);
 
 export default router;

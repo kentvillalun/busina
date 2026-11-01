@@ -24,4 +24,4 @@ const subscribeSchema = z.object({
 
 const unsubscribeSchema = z.object({ endpoint });
 
-export { subscribeSchema, unsubscribeSchema };
+export { endpoint, subscribeSchema, unsubscribeSchema };

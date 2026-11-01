@@ -47,15 +47,23 @@ const logout = async (req, res) => {
 
   if (token) {
     try {
-      const { exp } = verifyToken(token);
+      // An expired session still says who owned it, so its push subscription is removed too.
+      const { id, exp } = verifyToken(token, { ignoreExpiration: true });
+
+      // Only the subscription of the browser that is signing out: the same commuter's other phones keep their alerts.
+      const endpoint = req.body?.endpoint;
+      if (endpoint) await prisma.pushSubscription.deleteMany({ where: { endpoint, commuterId: id } });
+
       // A token that is already expired needs no entry: it is rejected anyway.
-      await prisma.blacklistedToken.upsert({
-        where: { tokenHash: hashToken(token) },
-        update: {},
-        create: { tokenHash: hashToken(token), expiresAt: new Date(exp * 1000) },
-      });
+      if (exp * 1000 > Date.now()) {
+        await prisma.blacklistedToken.upsert({
+          where: { tokenHash: hashToken(token) },
+          update: {},
+          create: { tokenHash: hashToken(token), expiresAt: new Date(exp * 1000) },
+        });
+      }
     } catch {
-      // expired, forged or malformed: nothing to blacklist
+      // forged or malformed: nothing to remove
     }
   }
 

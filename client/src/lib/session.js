@@ -13,8 +13,26 @@ export const markOnboardingSeen = () => {
 
 // A full page load (not router.push): Next keeps hidden pages alive, so their state would survive a soft navigation.
 export const logout = async (to = "/login") => {
+  // This browser's push subscription (there is none until alerts are turned on) is removed with the session, so the next
+  // person on a shared phone does not get the old alerts. getRegistration resolves at once even with no service worker.
+  let subscription = null;
   try {
-    await fetch("/api/auth/logout", { method: "POST" }); // JavaScript cannot delete an httpOnly cookie, the server does
+    const registration = await navigator.serviceWorker?.getRegistration();
+    subscription = (await registration?.pushManager?.getSubscription()) ?? null;
+  } catch {}
+
+  try {
+    // JavaScript cannot delete an httpOnly cookie, the server does
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      ...(subscription && {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      }),
+    });
+  } catch {}
+  try {
+    await subscription?.unsubscribe();
   } catch {}
   try {
     for (const key of PRIVATE_KEYS) localStorage.removeItem(key);

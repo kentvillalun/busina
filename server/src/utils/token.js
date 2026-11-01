@@ -18,7 +18,9 @@ const signCommuterToken = (commuter) =>
   });
 
 // Throws when the token is expired, tampered with, or signed with another algorithm.
-const verifyToken = (token) => jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
+// { ignoreExpiration: true } still checks the signature; logout uses it to find the owner of an expired session.
+const verifyToken = (token, options = {}) =>
+  jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"], ...options });
 
 // The blacklist keeps this, not the token, so a leaked table cannot be replayed as sessions.
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
