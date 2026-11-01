@@ -6,8 +6,10 @@ const SEEN_COOKIE = "hasSeenOnboarding"; // set by the onboarding page (lib/sess
 
 // Who may see what:
 //   first visit (no onboarding cookie)  -> /home sends them to /onboarding
-//   seen onboarding, no session (guest) -> /home only; bus details and Settings send them to /login
+//   seen onboarding, no session (guest) -> everything except Settings > Alerts, which sends them to /login
 //   seen onboarding, signed in          -> every page
+// The lock is on what needs an account, not on whole screens: a guest can browse the map, bus details and Settings, and is
+// asked to sign in only when they try to get alerts (the "Alert me" button on bus details, and the Alerts page).
 // The session check only verifies the signature and the expiry. It cannot see the logout blacklist (that is in the
 // database), so a logged-out token is stopped by the first API call instead; /api/auth/me then clears the cookie.
 const isValid = async (token) => {
@@ -49,5 +51,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/home", "/bus/:path*", "/settings/:path*", "/login"],
+  matcher: ["/home", "/settings/alerts", "/login"],
 };

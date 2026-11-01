@@ -6,8 +6,8 @@ import IconChevron from "@/components/icons/IconChevron";
 import { Page } from "@/components/layout/Page";
 import TopGradient from "@/components/layout/TopGradient";
 import { PageContent } from "@/components/layout/PageContent";
-import { useFetch } from "@/hooks/useFetch";
 import useSavedSetting from "@/hooks/useSavedSetting";
+import useSession from "@/hooks/useSession";
 import { logout } from "@/lib/session";
 import { spotLabel } from "@/lib/geocode";
 import { getAlertsPermission, getLocationPermission, permissionLabel } from "@/lib/permissions";
@@ -25,65 +25,39 @@ const Section = ({ title, note, children }) => (
   </section>
 );
 
-const Row = ({ label, hint, value, accent = false, right, href }) => {
-  const Tag = right ? "div" : Link; // a switch inside a link would nest interactive elements
+const Row = ({ label, hint, value, accent = false, href }) => {
   return (
-    <Tag
-      {...(!right && { href })}
-      className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left"
-    >
+    <Link href={href} className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left">
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="font-medium text-ink">{label}</span>
         {hint && (
           <span className="text-[13px] leading-4.5 text-muted">{hint}</span>
         )}
       </span>
-      {right ?? (
-        <span className="flex items-center gap-2">
-          {value && (
-            <span
-              className={
-                accent
-                  ? "text-[15px] font-bold text-primary"
-                  : "text-[15px] text-muted"
-              }
-            >
-              {value}
-            </span>
-          )}
-          <IconChevron className="text-muted" />
-        </span>
-      )}
-    </Tag>
+      <span className="flex items-center gap-2">
+        {value && (
+          <span
+            className={
+              accent
+                ? "text-[15px] font-bold text-primary"
+                : "text-[15px] text-muted"
+            }
+          >
+            {value}
+          </span>
+        )}
+        <IconChevron className="text-muted" />
+      </span>
+    </Link>
   );
 };
 
-const Switch = ({ checked, onChange, label }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={checked}
-    aria-label={label}
-    onClick={() => onChange(!checked)}
-    className={`relative h-7.5 w-12.5 shrink-0 rounded-full transition-colors ${
-      checked ? "bg-primary" : "bg-line"
-    }`}
-  >
-    <span
-      className={`absolute top-0.75 size-6 rounded-full bg-white shadow transition-[left] ${
-        checked ? "left-5.5" : "left-0.75"
-      }`}
-    />
-  </button>
-);
-
 export default function SettingsPage() {
-  const [background, setBackground] = useState(false);
   const [spot] = useSavedSetting("busina:spot", null); // { lat, lng } from the picker
   const [direction] = useSavedSetting("busina:direction", "NORTHBOUND");
   const [location, setLocation] = useState(null); // null while the permission is being read
   const [alerts, setAlerts] = useState(null);
-  const { data: account } = useFetch({ url: "/api/auth/me" }); // also signs out a session that has ended
+  const { status, user } = useSession(); // a guest can look around; only the Alerts page needs an account
 
   useEffect(() => {
     getLocationPermission().then(setLocation);
@@ -114,9 +88,9 @@ export default function SettingsPage() {
             <Row
               href="/settings/alerts"
               label="Alerts"
-              hint="Warns you when a bus is near"
-              value={permissionLabel(alerts)}
-              accent={alerts?.canAskAgain}
+              hint={status === "guest" ? "Sign in to get alerts" : "Warns you when a bus is near"}
+              value={status === "guest" ? "Sign in" : permissionLabel(alerts)}
+              accent={status === "guest" || alerts?.canAskAgain}
             />
           </Section>
 
@@ -134,31 +108,25 @@ export default function SettingsPage() {
             <Row href="/settings/direction" label="Direction" value={direction === "SOUTHBOUND" ? "Toward Vigan" : "Toward Laoag"} />
           </Section>
 
-          <Section
-            title="Optional"
-            note="Uses background location. Off by default."
-          >
-            <Row
-              label="Background alerts"
-              hint="Alert me even when the app is closed"
-              right={
-                <Switch
-                  checked={background}
-                  onChange={setBackground}
-                  label="Background alerts"
-                />
-              }
-            />
-          </Section>
-
-          <Section title="Account" note="Logging out also clears your boarding spot and chosen bus from this phone.">
-            <button type="button" onClick={() => logout()} className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left">
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="font-medium text-fault">Log out</span>
-                {account?.commuter && <span className="truncate text-[13px] leading-4.5 text-muted">{account.commuter.email}</span>}
-              </span>
-            </button>
-          </Section>
+          {/* Nothing until the server has answered, so the wrong block does not flash. */}
+          {status === "user" && (
+            <Section title="Account" note="Logging out also clears your boarding spot and chosen bus from this phone.">
+              <button type="button" onClick={() => logout()} className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left">
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="font-medium text-fault">Log out</span>
+                  <span className="truncate text-[13px] leading-4.5 text-muted">{user.email}</span>
+                </span>
+              </button>
+            </Section>
+          )}
+          {status === "guest" && (
+            <Section title="Account" note="Your boarding spot and direction stay on this phone. Sign in to get alerts.">
+              {/* A plain link: the whole page goes to Google and comes back, so the router cannot do it. */}
+              <a href="/api/auth/google?next=%2Fsettings" className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left">
+                <span className="font-medium text-primary">Sign in with Google</span>
+              </a>
+            </Section>
+          )}
 
           <Section
             title="About"

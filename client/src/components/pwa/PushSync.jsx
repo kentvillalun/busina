@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+import useSession from "@/hooks/useSession";
 import { PUSH_SYNC_EVENT, syncPush } from "@/lib/push";
 
 // Keeps the server's push subscription in step with the saved settings (spot, minutes, direction, chosen bus, alerts on).
 // It syncs on start (which also repairs a subscription the browser replaced) and whenever a setting is saved.
 const PushSync = () => {
+  const { status } = useSession();
+
   useEffect(() => {
+    if (status !== "user") return; // a guest has no account to keep a subscription under
     let timer;
     let running = false;
     let again = false;
@@ -35,7 +39,7 @@ const PushSync = () => {
       clearTimeout(timer);
       window.removeEventListener(PUSH_SYNC_EVENT, schedule);
     };
-  }, []);
+  }, [status]);
 
   return null;
 };

@@ -12,6 +12,7 @@ import TopGradient from "@/components/layout/TopGradient";
 import Toast from "@/components/ui/Toast";
 import SeatMap from "@/components/bus/SeatMap";
 import { useBuses } from "@/hooks/useBuses";
+import useSession from "@/hooks/useSession";
 import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
@@ -63,6 +64,7 @@ const BusDetails = ({ id }) => {
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const router = useRouter();
+  const { status: session } = useSession();
   const [askingAlerts, setAskingAlerts] = useState(false);
   const [, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null); // the bus this commuter wants to be alerted for
   const [alertMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
@@ -110,6 +112,8 @@ const BusDetails = ({ id }) => {
   // "Alert me": a boarding spot comes first (the alert is timed to it, the user's own position moves). Then choose the bus when
   // notifications are allowed, ask first when the browser still can, else say why we cannot.
   const notify = () => {
+    // Alerts belong to an account. The login page brings them back here, with a way to cancel.
+    if (session === "guest") return router.push(`/login?next=${encodeURIComponent(`/bus/${bus.id}`)}`);
     if (!spot) {
       fail("Set your boarding spot first, so we can time the alert.", {
         label: "Set spot",
