@@ -62,13 +62,13 @@ const BusDetails = ({ id }) => {
   const target = spot ?? userPos; // the ETA is measured to the spot when there is one, else to the user
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
-  const [showSpot, setShowSpot] = useState(false);
   const router = useRouter();
   const [askingAlerts, setAskingAlerts] = useState(false);
   const [, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null); // the bus this commuter wants to be alerted for
   const [alertMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null); // { message, type, action, ms, key }
   const toastTimer = useRef(null);
+  const toastCount = useRef(0);
 
   useEffect(() => {
     getCurrentPosition().then(setUserPos);
@@ -84,15 +84,19 @@ const BusDetails = ({ id }) => {
   const seconds = state ? secondsSince(serverTime, state.lastPingAt) : null;
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
-  const showToast = (message) => {
+  // A success toast is a quick confirmation. A failure buzzes harder, and one with an action stays longer so it can be tapped.
+  const showToast = (message, { type = "success", action = null } = {}) => {
+    const ms = action ? 5000 : 2500;
     clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), 2500);
+    setToast({ message, type, action, ms, key: ++toastCount.current }); // a new key restarts the animation for a repeated toast
+    toastTimer.current = setTimeout(() => setToast(null), ms);
+    if (type === "error") haptic.error();
   };
+  const fail = (message, action) => showToast(message, { type: "error", action });
 
   // Remember this bus as the one to alert for. notify() has already made sure there is a boarding spot.
   const choose = () => {
-    if (eta?.passed) return showToast("This bus has already passed your spot.");
+    if (eta?.passed) return fail("This bus has already passed your spot.");
     setAlertBus({ id: bus.id, busNumber: bus.busNumber });
     haptic.success();
     showToast(`Alert set for Bus ${bus.busNumber} · ${alertMinutes} min before`);
@@ -101,11 +105,18 @@ const BusDetails = ({ id }) => {
   // "Alert me": a boarding spot comes first (the alert is timed to it, the user's own position moves). Then choose the bus when
   // notifications are allowed, ask first when the browser still can, else say why we cannot.
   const notify = () => {
-    if (!spot) setShowSpot(true);
-    else if (!alerts?.supported) showToast("This browser can't show notifications.");
+    if (!spot) {
+      fail("Set your boarding spot first, so we can time the alert.", {
+        label: "Set spot",
+        onPress: () => {
+          setToast(null); // this page is kept alive while hidden, so the toast would still be here on return
+          router.push("/settings/boarding-spot");
+        },
+      });
+    } else if (!alerts?.supported) fail("This browser can't show notifications.");
     else if (alerts.granted) choose();
     else if (alerts.canAskAgain) setShowAlerts(true);
-    else showToast("Notifications are blocked. Allow them in your browser's site settings.");
+    else fail("Notifications are blocked. Allow them in your browser's site settings.");
   };
   const allowAlerts = async () => {
     setAskingAlerts(true);
@@ -114,7 +125,7 @@ const BusDetails = ({ id }) => {
     setAskingAlerts(false);
     setShowAlerts(false);
     if (result.granted) choose();
-    else showToast("Notifications are off, so we can't alert you.");
+    else fail("Notifications are off, so we can't alert you.");
   };
 
   const loading = !data && (!gaveUp || isLoading);
@@ -324,19 +335,7 @@ const BusDetails = ({ id }) => {
         )}
       </div>
 
-      {toast && <Toast message={toast} />}
-      <AlertsSheet
-        open={showSpot}
-        hero={false}
-        title="Set your boarding spot first"
-        text="We time the alert to the place where you wait for the bus. Pin it on the map, then come back and tap this button again."
-        allowLabel="Set boarding spot"
-        onAllow={() => {
-          setShowSpot(false); // this page is kept alive while hidden: close the sheet now or it is still open on return
-          router.push("/settings/boarding-spot");
-        }}
-        onDismiss={() => setShowSpot(false)}
-      />
+      {toast && <Toast key={toast.key} {...toast} />}
       <AlertsSheet
         open={showAlerts}
         busy={askingAlerts}
