@@ -78,6 +78,7 @@ const Switch = ({ checked, onChange, label }) => (
 export default function SettingsPage() {
   const [background, setBackground] = useState(false);
   const [spot] = useSavedSetting("busina:spot", null); // { lat, lng } from the picker
+  const [direction] = useSavedSetting("busina:direction", "NORTHBOUND");
   const [location, setLocation] = useState(null); // null while the permission is being read
   const [alerts, setAlerts] = useState(null);
 
@@ -127,7 +128,7 @@ export default function SettingsPage() {
               value={spot ? "Change" : "Not set"}
               accent={!!spot}
             />
-            <Row href="/settings/direction" label="Direction" value="Toward Laoag" />
+            <Row href="/settings/direction" label="Direction" value={direction === "SOUTHBOUND" ? "Toward Vigan" : "Toward Laoag"} />
           </Section>
 
           <Section

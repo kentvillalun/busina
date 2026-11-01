@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { DetailPage } from "@/components/settings/DetailPage";
+import useSavedSetting from "@/hooks/useSavedSetting";
 
 const OPTIONS = [
   { value: "NORTHBOUND", label: "Toward Laoag", hint: "Northbound buses" },
@@ -9,9 +9,7 @@ const OPTIONS = [
 ];
 
 export default function DirectionPage() {
-  // TODO(you): load the saved direction, save the new one when it changes, and use it as the starting
-  // tab on the home screen (home/page.jsx has `direction` in its own state).
-  const [direction, setDirection] = useState("NORTHBOUND");
+  const [direction, setDirection] = useSavedSetting("busina:direction", "NORTHBOUND");
 
   return (
     <DetailPage title="Direction">

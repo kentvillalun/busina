@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import AlertsSheet from "@/components/home/AlertsSheet";
 import BottomSheet from "@/components/home/BottomSheet";
@@ -25,6 +26,7 @@ import {
   getCurrentPosition,
   getLocationPermission,
 } from "@/lib/permissions";
+import { alertBusesFor } from "@/lib/nearBus";
 import { secondsSince } from "@/lib/time";
 import { useRouter } from "next/navigation";
 
@@ -64,7 +66,9 @@ const useMinute = () =>
   );
 
 export default function HomePage() {
-  const [direction, setDirection] = useState("NORTHBOUND");
+  const [savedDirection] = useSavedSetting("busina:direction", "NORTHBOUND"); // Settings > Direction: decides the alerts
+  const [tab, setTab] = useState(null); // the tab the user tapped for browsing; null = start at the saved direction
+  const direction = tab ?? savedDirection;
   const [expanded, setExpanded] = useState(false); // phone sheet: open = full list, closed = closest bus only
   const minute = useMinute();
   const now = minute === null ? null : new Date(minute * 60000);
@@ -129,9 +133,12 @@ export default function HomePage() {
 
   // Soonest bus first. A bus that lost its signal has an old position, so it goes last.
   // Without an ETA we fall back to the closest; without the user's location the order stays as the API sent it.
-  const buses = allBuses
+  const withEta = allBuses.map((bus) => ({
+    ...bus,
+    eta: etaFor(bus, routes.find((route) => route.id === bus.route.id), target),
+  }));
+  const buses = withEta
     .filter((bus) => bus.state.direction === direction)
-    .map((bus) => ({ ...bus, eta: etaFor(bus, routes.find((route) => route.id === bus.route.id), target) }))
     .sort((a, b) => {
       if (a.stale !== b.stale) return a.stale ? 1 : -1;
       if (a.eta && b.eta) return etaOrder(a.eta) - etaOrder(b.eta);
@@ -140,7 +147,7 @@ export default function HomePage() {
     });
 
   const [alertMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
-  useNearBusAlert(buses, alertMinutes);
+  useNearBusAlert(alertBusesFor(withEta, savedDirection), alertMinutes);
 
   const freshest =
     allBuses.length > 0
@@ -266,6 +273,12 @@ export default function HomePage() {
                   {headline ?? "No buses in this direction"}
                 </p>
               )}
+              <Link
+                href="/settings/direction"
+                className="mt-1.5 self-start rounded-full bg-white/80 px-2.5 py-1 text-xs font-semibold text-navy"
+              >
+                Alerts · {DIRECTIONS.find((item) => item.key === savedDirection)?.hint} ›
+              </Link>
             </div>
 
             <div className="-mx-2 mt-4 flex gap-1 rounded-[18px] shadow-[0_-4px_20px_rgba(15,33,51,0.03)] bg-white p-1.5">
@@ -274,7 +287,7 @@ export default function HomePage() {
                   key={item.key}
                   item={item}
                   selected={direction === item.key}
-                  onPress={() => setDirection(item.key)}
+                  onPress={() => setTab(item.key)}
                 />
               ))}
             </div>
