@@ -3,6 +3,8 @@
 /* eslint-disable @next/next/no-img-element -- the logo is a small SVG; next/image would only add work */
 
 import Link from "next/link";
+import IconChevron from "@/components/icons/IconChevron";
+import { haptic, hapticTrigger } from "@/lib/haptics";
 import { useSearchParams } from "next/navigation";
 import AlertsScene from "@/components/onboarding/AlertsScene";
 import SceneStage from "@/components/onboarding/SceneStage";
@@ -29,12 +31,27 @@ const GoogleG = () => (
 const LoginForm = () => {
   const params = useSearchParams();
   const next = params.get("next") ?? "/home";
+  const fromApp = params.has("next");
   const message = params.get("expired") ? MESSAGES.expired : MESSAGES[params.get("error")];
 
   return (
     <div className="min-h-svh bg-white">
       <main className="mx-auto flex min-h-svh w-full max-w-107.5 flex-col px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
-        <img src="/logo.svg" alt="Busina" width={132} height={43} />
+        <header className="flex items-center gap-2.5">
+          {/* Sent here from inside the app (the proxy adds ?next=): a way back to the map. From onboarding there is none. */}
+          {fromApp && (
+            <Link
+              href="/home"
+              ref={hapticTrigger}
+              onClick={haptic.light}
+              aria-label="Back to the map"
+              className="-ml-1 flex size-8 items-center justify-center rounded-full text-ink active:bg-stage"
+            >
+              <IconChevron className="size-6 rotate-180" />
+            </Link>
+          )}
+          <img src="/logo.svg" alt="Busina" width={132} height={43} />
+        </header>
 
         <div className="mt-4 flex max-h-99 min-h-44 flex-1 flex-col">
           <SceneStage className="w-full flex-1">
