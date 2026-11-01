@@ -16,7 +16,7 @@ const deviceAuth = async (req, res, next) => {
 
     const bus = await prisma.bus.findUnique({
       where: { deviceId },
-      select: { id: true, busNumber: true, seatCount: true, active: true, deviceKeyHash: true },
+      select: { id: true, busNumber: true, seatCount: true, routeId: true, active: true, deviceKeyHash: true },
     });
 
     const invalid = new HttpError(401, "Invalid device credentials", {

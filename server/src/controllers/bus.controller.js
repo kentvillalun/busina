@@ -1,12 +1,5 @@
 import { prisma } from "../config/db.js";
-import { snapToRoute } from "../utils/geo.js";
-
-// A bus that has not reported for this long is shown as "signal lost" in the app.
-// The ESP32 pings every 3-5 s, so 30 s means it missed several.
-const STALE_AFTER_MS = 30_000;
-
-// Farther than this from its route, a GPS fix is not drawn on the road: the app would show a bus where it is not.
-const OFF_ROUTE_AFTER_M = 100;
+import { busOnRoad, STALE_AFTER_MS } from "../utils/eta.js";
 
 // GET /buses: public (commuters are anonymous). The current state of every active bus.
 // Never returns deviceId or deviceKeyHash: those are secrets of the hardware.
@@ -35,11 +28,8 @@ const listBuses = async (req, res) => {
       return { ...bus, route, stale: true, state: null };
     }
 
-    // Draw the bus on its road, and tell the ETA how far along the road it is.
-    // Northbound buses take the diversion road when the route has one.
-    const road = state.direction === "NORTHBOUND" && polylineNorthbound ? polylineNorthbound : polyline;
-    const snapped = snapToRoute([state.lng, state.lat], road);
-    const offRoute = !snapped || snapped.distanceFromRouteM > OFF_ROUTE_AFTER_M;
+    // Draw the bus on its road, and tell the ETA how far along the road it is (the push sender reads it the same way).
+    const { snapped, offRoute, progressM, speedKmh } = busOnRoad(state, { polyline, polylineNorthbound });
 
     const onBoard = Math.max(0, state.doorInTotal - state.doorOutTotal);
 
@@ -51,8 +41,8 @@ const listBuses = async (req, res) => {
         lat: offRoute ? state.lat : snapped.lat,
         lng: offRoute ? state.lng : snapped.lng,
         offRoute,
-        progressM: snapped ? Math.round(snapped.progressM) : null,
-        speedKmh: Math.round(state.speedMps * 3.6 * 10) / 10,
+        progressM,
+        speedKmh,
         direction: state.direction,
         seats: state.seats,
         occupied: state.occupied,
