@@ -335,7 +335,9 @@ const BusDetails = ({ id }) => {
         )}
       </div>
 
-      {toast && <Toast key={toast.key} {...toast} />}
+      {toast && (
+        <Toast key={toast.key} message={toast.message} type={toast.type} action={toast.action} ms={toast.ms} />
+      )}
       <AlertsSheet
         open={showAlerts}
         busy={askingAlerts}

@@ -1,7 +1,7 @@
 // Run with: node --test src/lib/nearBus.test.js
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { alertBusesFor, minutesAway, targetOutcome } from "./nearBus.js";
+import { alertBusesFor, forgetGone, minutesAway, targetOutcome } from "./nearBus.js";
 
 const bus = (extra) => ({ id: "a", stale: false, state: { direction: "NORTHBOUND" }, eta: { passed: false, minMin: 4, maxMin: 6 }, ...extra });
 
@@ -33,4 +33,10 @@ test("targetOutcome: keep, passed, gone; a stale bus is kept", () => {
   assert.equal(targetOutcome([bus({ stale: true })], { id: "a" }), "ok");
   assert.equal(targetOutcome([bus({ eta: { passed: true } })], { id: "a" }), "passed");
   assert.equal(targetOutcome([bus()], { id: "zzz" }), "gone");
+});
+
+test("forgetGone removes only the buses that left the list", () => {
+  const notified = new Set(["a", "b"]);
+  forgetGone(notified, [bus()]);
+  assert.deepEqual([...notified], ["a"]);
 });

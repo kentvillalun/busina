@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { minutesAway } from "@/lib/nearBus";
+import { forgetGone, minutesAway } from "@/lib/nearBus";
 
 export const ALERT_MINUTES_KEY = "busina:alertMinutes";
 export const DEFAULT_ALERT_MINUTES = 10;
@@ -44,9 +44,7 @@ const useNearBusAlert = (buses, alertMinutes) => {
   useEffect(() => {
     if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
     // A bus that left the list (other direction, off the API) is never visited below, so forget it here.
-    for (const id of notified.current) {
-      if (!buses.some((bus) => bus.id === id)) notified.current.delete(id);
-    }
+    forgetGone(notified.current, buses);
     for (const bus of buses) {
       const minutes = minutesAway(bus);
       if (minutes === null || minutes > alertMinutes) {

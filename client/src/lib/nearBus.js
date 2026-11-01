@@ -18,3 +18,10 @@ export const targetOutcome = (buses, target) => {
   if (!bus) return "gone";
   return bus.eta?.passed ? "passed" : "ok";
 };
+
+// Drops from `notified` (a Set of bus ids) every bus that is no longer in `buses`, so it can alert again if it comes back.
+export const forgetGone = (notified, buses) => {
+  for (const id of notified) {
+    if (!buses.some((bus) => bus.id === id)) notified.delete(id);
+  }
+};
