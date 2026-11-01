@@ -119,9 +119,12 @@ model BusState {
   updatedAt  DateTime @updatedAt
 }
 
-// One row per browser that turned on alerts. Anonymous: no user, only the push endpoint the browser gave us.
+// One row per browser that turned on alerts. It belongs to the signed-in commuter, so logging out or deleting the account removes it.
 model PushSubscription {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  commuterId String   @db.Uuid
+  commuter   Commuter @relation(fields: [commuterId], references: [id], onDelete: Cascade)
 
   endpoint String @unique
   p256dh   String
@@ -139,4 +142,31 @@ model PushSubscription {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([commuterId])
+}
+
+// A person who signed in with Google. Google proves the email, so there is no password and no OTP.
+model Commuter {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  googleId String @unique
+  email    String @unique
+  name     String
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pushSubscriptions PushSubscription[]
+}
+
+// Tokens that were logged out before they expired. Only the SHA-256 hash is stored, so a leaked table cannot be used as sessions.
+// Rows are useless after expiresAt and are deleted on every logout.
+model BlacklistedToken {
+  tokenHash String   @id
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }
