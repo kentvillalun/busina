@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import AlertsSheet from "@/components/home/AlertsSheet";
 import LiveStatus from "@/components/home/LiveStatus";
@@ -61,6 +62,8 @@ const BusDetails = ({ id }) => {
   const target = spot ?? userPos; // the ETA is measured to the spot when there is one, else to the user
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
+  const [showSpot, setShowSpot] = useState(false);
+  const router = useRouter();
   const [askingAlerts, setAskingAlerts] = useState(false);
   const [, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null); // the bus this commuter wants to be alerted for
   const [alertMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
@@ -87,18 +90,19 @@ const BusDetails = ({ id }) => {
     toastTimer.current = setTimeout(() => setToast(""), 2500);
   };
 
-  // Remember this bus as the one to alert for. Without a spot or the user's position there is no ETA, so no alert could fire.
+  // Remember this bus as the one to alert for. notify() has already made sure there is a boarding spot.
   const choose = () => {
-    if (!target) return showToast("Set a boarding spot or turn on location first, so we can time the alert.");
     if (eta?.passed) return showToast("This bus has already passed your spot.");
     setAlertBus({ id: bus.id, busNumber: bus.busNumber });
     haptic.success();
     showToast(`Alert set for Bus ${bus.busNumber} · ${alertMinutes} min before`);
   };
 
-  // "Alert me": choose the bus when notifications are allowed, ask first when the browser still can, else say why we cannot.
+  // "Alert me": a boarding spot comes first (the alert is timed to it, the user's own position moves). Then choose the bus when
+  // notifications are allowed, ask first when the browser still can, else say why we cannot.
   const notify = () => {
-    if (!alerts?.supported) showToast("This browser can't show notifications.");
+    if (!spot) setShowSpot(true);
+    else if (!alerts?.supported) showToast("This browser can't show notifications.");
     else if (alerts.granted) choose();
     else if (alerts.canAskAgain) setShowAlerts(true);
     else showToast("Notifications are blocked. Allow them in your browser's site settings.");
@@ -321,6 +325,18 @@ const BusDetails = ({ id }) => {
       </div>
 
       {toast && <Toast message={toast} />}
+      <AlertsSheet
+        open={showSpot}
+        hero={false}
+        title="Set your boarding spot first"
+        text="We time the alert to the place where you wait for the bus. Pin it on the map, then come back and tap this button again."
+        allowLabel="Set boarding spot"
+        onAllow={() => {
+          setShowSpot(false); // this page is kept alive while hidden: close the sheet now or it is still open on return
+          router.push("/settings/boarding-spot");
+        }}
+        onDismiss={() => setShowSpot(false)}
+      />
       <AlertsSheet
         open={showAlerts}
         busy={askingAlerts}

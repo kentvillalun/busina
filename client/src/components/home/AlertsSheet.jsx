@@ -41,7 +41,17 @@ const Hero = ({ open }) => {
 
 // Figma S10: asks to turn on notifications. The phone's own prompt only appears after "Alert me".
 // On md and up it is a centered dialog instead of a bottom sheet.
-const AlertsSheet = ({ open, busy = false, onAllow, onDismiss }) => {
+// The texts and the hero can be replaced: the bus details page also uses it to ask for a boarding spot first.
+const AlertsSheet = ({
+  open,
+  busy = false,
+  onAllow,
+  onDismiss,
+  title = "Never miss your bus",
+  text = "We'll alert you when this bus is close to your boarding spot, so you don't have to keep watching the map.",
+  allowLabel = "Alert me when it's near",
+  hero = true,
+}) => {
   useEffect(() => {
     if (!open) return;
     const onKey = (event) => event.key === "Escape" && onDismiss();
@@ -75,15 +85,12 @@ const AlertsSheet = ({ open, busy = false, onAllow, onDismiss }) => {
           >
             <span className="mx-auto mb-4.25 block h-1.25 w-10 rounded-[3px] bg-line md:hidden" />
 
-            <Hero open={open} />
+            {hero && <Hero open={open} />}
 
-            <h2 id="alerts-title" className="mt-6 font-display text-[28px] leading-8.5 text-ink">
-              Never miss your bus
+            <h2 id="alerts-title" className={`${hero ? "mt-6" : "mt-2"} font-display text-[28px] leading-8.5 text-ink`}>
+              {title}
             </h2>
-            <p className="mt-2.5 text-[15px] leading-5.5 text-muted">
-              We&apos;ll alert you when this bus is close to your boarding spot, so you don&apos;t
-              have to keep watching the map.
-            </p>
+            <p className="mt-2.5 text-[15px] leading-5.5 text-muted">{text}</p>
 
             <button
               type="button"
@@ -95,7 +102,7 @@ const AlertsSheet = ({ open, busy = false, onAllow, onDismiss }) => {
               }}
               className="gradient-button disabled:opacity-60"
             >
-              Alert me when it&apos;s near
+              {allowLabel}
             </button>
             <button
               type="button"
