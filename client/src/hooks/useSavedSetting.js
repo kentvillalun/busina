@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { requestPushSync } from "@/lib/push";
 
 // A value kept in localStorage: [value, save]. It starts as `fallback` and is read after mount, so the server and the
 // first browser render match (there is no localStorage on the server). Storage can be blocked (private window): then the
@@ -21,6 +22,7 @@ const useSavedSetting = (key, fallback) => {
     try {
       localStorage.setItem(key, JSON.stringify(next));
     } catch {}
+    requestPushSync(); // the server keeps a copy of the alert settings (see lib/push.js)
   };
 
   return [value, save];

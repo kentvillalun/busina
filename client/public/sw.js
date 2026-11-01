@@ -20,6 +20,23 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// The server sends { title, body, tag, data: { url } } (server/src/services/push.js). A push must always show a notification,
+// or the browser shows its own generic one, so a payload that cannot be read still gets a title.
+self.addEventListener("push", (event) => {
+  let message = {};
+  try {
+    message = event.data?.json() ?? {};
+  } catch {}
+  event.waitUntil(
+    self.registration.showNotification(message.title ?? "Busina", {
+      body: message.body,
+      icon: "/web-app-manifest-192x192.png",
+      tag: message.tag, // the same tag replaces a notification instead of stacking another one
+      data: message.data,
+    }),
+  );
+});
+
 // A tap on a notification opens the page it carries in `data.url`, in the open window if there is one.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();

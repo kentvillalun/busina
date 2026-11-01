@@ -6,6 +6,7 @@ import PermissionCard from "@/components/settings/PermissionCard";
 import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { askAlerts, getAlertsPermission } from "@/lib/permissions";
+import { requestPushSync } from "@/lib/push";
 
 const MINUTES = [5, 10, 15];
 
@@ -21,8 +22,10 @@ export default function AlertsPage() {
 
   const turnOn = async () => {
     setTurningOn(true);
-    setPermission(await askAlerts());
+    const result = await askAlerts();
+    setPermission(result);
     setTurningOn(false);
+    if (result.granted) requestPushSync();
   };
 
   return (
