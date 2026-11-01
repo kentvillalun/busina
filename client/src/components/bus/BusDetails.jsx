@@ -16,7 +16,7 @@ import useSession from "@/hooks/useSession";
 import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
-import { etaFor, formatEta, isOnRoad } from "@/lib/eta";
+import { etaFor, formatEta, formatSpeed, isOnRoad } from "@/lib/eta";
 import { distanceM, formatDistance } from "@/lib/geo";
 import { haptic, hapticTrigger } from "@/lib/haptics";
 import { alertPlan, targetMode } from "@/lib/target";
@@ -256,6 +256,7 @@ const BusDetails = ({ id }) => {
                         {heading}
                         {away != null && ` · ${formatDistance(away)} from you`}
                       </span>
+                      {formatSpeed(state.speedKmh) && <span className="text-[13px]">{formatSpeed(state.speedKmh)}</span>}
                     </div>
                     <div className="flex flex-col items-end">
                       <span className="font-display text-[26px] leading-8">{eta ? formatEta(eta) : "-"}</span>

@@ -49,7 +49,15 @@ const formatEta = (eta) => {
   return low === high ? `~${high} min` : `${low}–${high} min`;
 };
 
+// "40 km/h", or "Stopped" when it is barely moving. Rounded to 5 so the number does not jump with every GPS reading.
+// null when there is no speed to show.
+const formatSpeed = (speedKmh) => {
+  if (!Number.isFinite(speedKmh)) return null;
+  const rounded = Math.round(speedKmh / 5) * 5;
+  return rounded === 0 ? "Stopped" : `${rounded} km/h`;
+};
+
 // For sorting: the sooner the bus, the smaller; a bus that has passed goes last.
 const etaOrder = (eta) => (eta.passed ? 1e9 : eta.minMin);
 
-export { etaFor, etaOrder, formatEta, isOnRoad, MAX_SPOT_FROM_ROUTE_M, roadFor };
+export { etaFor, etaOrder, formatEta, formatSpeed, isOnRoad, MAX_SPOT_FROM_ROUTE_M, roadFor };

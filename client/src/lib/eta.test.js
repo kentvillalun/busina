@@ -1,7 +1,7 @@
 // Run with: node --test src/lib/eta.test.js
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { etaFor, formatEta, isOnRoad, roadFor } from "./eta.js";
+import { etaFor, formatEta, formatSpeed, isOnRoad, roadFor } from "./eta.js";
 
 // A road running due north for about 1.1 km. Points are [lng, lat]. progressM grows toward the north here.
 const route = { polyline: [[120, 18], [120, 18.01]] };
@@ -68,4 +68,15 @@ test("isOnRoad: standing on the road counts, far away or without a position does
   // either carriageway: here only the detour passes the point
   assert.equal(isOnRoad({ lat: 18.01, lng: 120.01 }, detour), true);
   assert.equal(isOnRoad({ lat: 18.01, lng: 120.01 }, route), false);
+});
+
+test("formatSpeed: rounded to 5 so it does not flicker, Stopped when barely moving, nothing without a number", () => {
+  assert.equal(formatSpeed(42.4), "40 km/h");
+  assert.equal(formatSpeed(43), "45 km/h");
+  assert.equal(formatSpeed(25), "25 km/h");
+  assert.equal(formatSpeed(2.4), "Stopped");
+  assert.equal(formatSpeed(0), "Stopped");
+  assert.equal(formatSpeed(2.5), "5 km/h"); // 2.5 is the first value that rounds up
+  assert.equal(formatSpeed(undefined), null);
+  assert.equal(formatSpeed(NaN), null);
 });
