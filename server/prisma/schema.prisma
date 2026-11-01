@@ -119,7 +119,7 @@ model BusState {
   updatedAt  DateTime @updatedAt
 }
 
-// One row per browser that turned on alerts. It belongs to the signed-in commuter, so logging out or deleting the account removes it.
+// One row per browser that turned on alerts. It belongs to the signed-in commuter; logging out on that browser, or deleting the account, removes it.
 model PushSubscription {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
