@@ -7,7 +7,12 @@ import { BusMarker, Pop, RoadBase, Scene } from "./sceneParts";
 // O3 "Never miss your bus": a notification preview floating over the road.
 // The pieces appear in the order they are written below: road, bus, notification.
 // `showBus` is false in the home alerts sheet (S10), which shows only the road and the notification.
-const AlertsScene = ({ active, showBus = true }) => (
+// `body` is the third line of the notification; the login page shows a different one.
+const AlertsScene = ({
+  active,
+  showBus = true,
+  body = "9 of 40 seats free now. You will likely still get a seat. Tap to view.",
+}) => (
   <Scene active={active}>
     <RoadBase />
 
@@ -22,9 +27,7 @@ const AlertsScene = ({ active, showBus = true }) => (
       <div className="flex flex-col gap-[2.58px]">
         <p className="text-[10.32px] font-medium text-muted">Busina &nbsp;·&nbsp; now</p>
         <p className="text-[12.9px] font-bold text-ink">Bus 214 is about 2 min away</p>
-        <p className="text-[11.18px] text-muted">
-          9 of 40 seats free now. You will likely still get a seat. Tap to view.
-        </p>
+        <p className="text-[11.18px] text-muted">{body}</p>
       </div>
     </Pop>
   </Scene>
