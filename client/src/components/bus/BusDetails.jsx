@@ -99,7 +99,12 @@ const BusDetails = ({ id }) => {
     if (eta?.passed) return fail("This bus has already passed your spot.");
     setAlertBus({ id: bus.id, busNumber: bus.busNumber });
     haptic.success();
-    showToast(`Alert set for Bus ${bus.busNumber} · ${alertMinutes} min before`);
+    // A bus with no signal cannot alert yet; say so instead of promising "N min before".
+    showToast(
+      stale || !state
+        ? `Bus ${bus.busNumber} has no signal. We'll alert you once it's back.`
+        : `Alert set for Bus ${bus.busNumber} · ${alertMinutes} min before`,
+    );
   };
 
   // "Alert me": a boarding spot comes first (the alert is timed to it, the user's own position moves). Then choose the bus when

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import GuestGate from "@/components/auth/GuestGate";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import PushSync from "@/components/pwa/PushSync";
 
@@ -9,7 +8,6 @@ export default function CommutersLayout({ children }) {
     <>
       {children}
       <PushSync />
-      <GuestGate />
       <Suspense fallback={null}>
         <BottomNav />
       </Suspense>
