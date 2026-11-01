@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import IconChevron from "@/components/icons/IconChevron";
 import { useBuses } from "@/hooks/useBuses";
+import { ALERT_BUS_KEY } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { MAX_SPOT_FROM_ROUTE_M } from "@/lib/eta";
@@ -25,6 +26,8 @@ export default function BoardingSpotPage() {
   const routes = useRoutes();
   const router = useRouter();
   const [saved, saveSpot] = useSavedSetting("busina:spot", null); // { lat, lng, name }
+  const [, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null);
+  const clearAlertBus = () => setAlertBus(null);
   const [saving, setSaving] = useState(false);
   const [userPos, setUserPos] = useState(null);
   const [spot, setSpot] = useState(null); // { lat, lng } under the pin; null until the map has moved once
@@ -58,6 +61,7 @@ export default function BoardingSpotPage() {
   const confirm = async () => {
     setSaving(true);
     saveSpot({ lat: pin.lat, lng: pin.lng, name: await placeName(pin) });
+    clearAlertBus(); // the chosen bus was timed to the old spot
     router.push("/settings");
   };
 

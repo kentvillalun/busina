@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Body, Card, DetailPage } from "@/components/settings/DetailPage";
 import PermissionCard from "@/components/settings/PermissionCard";
-import { ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
+import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { askAlerts, getAlertsPermission } from "@/lib/permissions";
 
@@ -13,6 +13,7 @@ export default function AlertsPage() {
   const [permission, setPermission] = useState(null);
   const [turningOn, setTurningOn] = useState(false);
   const [minutes, setMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
+  const [alertBus, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null);
 
   useEffect(() => {
     getAlertsPermission().then(setPermission);
@@ -52,6 +53,20 @@ export default function AlertsPage() {
           ))}
         </div>
         <Body>away from your boarding spot. Alerts show while the app is open.</Body>
+      </Card>
+      <Card>
+        <h2 className="font-medium text-ink">Alert for</h2>
+        <div className="mt-1 flex items-center gap-3">
+          <span className="flex-1 text-[15px] text-ink">
+            {alertBus ? `Bus ${alertBus.busNumber}` : "Any bus going your direction"}
+          </span>
+          {alertBus && (
+            <button type="button" onClick={() => setAlertBus(null)} className="text-[13px] font-bold text-primary">
+              Clear
+            </button>
+          )}
+        </div>
+        <Body>Pick a bus on its details page to be alerted for that bus only.</Body>
       </Card>
     </DetailPage>
   );

@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AlertsSheet from "@/components/home/AlertsSheet";
 import LiveStatus from "@/components/home/LiveStatus";
 import LoadError from "@/components/home/LoadError";
 import IconChevron from "@/components/icons/IconChevron";
 import { Page } from "@/components/layout/Page";
 import TopGradient from "@/components/layout/TopGradient";
+import Toast from "@/components/ui/Toast";
 import SeatMap from "@/components/bus/SeatMap";
 import { useBuses } from "@/hooks/useBuses";
+import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { etaFor, formatEta } from "@/lib/eta";
@@ -60,7 +62,10 @@ const BusDetails = ({ id }) => {
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const [askingAlerts, setAskingAlerts] = useState(false);
-  const [note, setNote] = useState("");
+  const [, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null); // the bus this commuter wants to be alerted for
+  const [alertMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
+  const [toast, setToast] = useState("");
+  const toastTimer = useRef(null);
 
   useEffect(() => {
     getCurrentPosition().then(setUserPos);
@@ -75,18 +80,28 @@ const BusDetails = ({ id }) => {
   const lastSeen = state ? ago(serverTime, state.lastPingAt) : null;
   const seconds = state ? secondsSince(serverTime, state.lastPingAt) : null;
 
-  // "Notify me": ask for notifications when the browser still can; otherwise say why we cannot.
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+  const showToast = (message) => {
+    clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = setTimeout(() => setToast(""), 2500);
+  };
+
+  // Remember this bus as the one to alert for. Without a spot or the user's position there is no ETA, so no alert could fire.
+  const choose = () => {
+    if (!target) return showToast("Set a boarding spot or turn on location first, so we can time the alert.");
+    if (eta?.passed) return showToast("This bus has already passed your spot.");
+    setAlertBus({ id: bus.id, busNumber: bus.busNumber });
+    haptic.success();
+    showToast(`Alert set for Bus ${bus.busNumber} · ${alertMinutes} min before`);
+  };
+
+  // "Alert me": choose the bus when notifications are allowed, ask first when the browser still can, else say why we cannot.
   const notify = () => {
-    if (alerts?.supported && alerts.canAskAgain) {
-      setNote("");
-      setShowAlerts(true);
-    } else if (!alerts?.supported) {
-      setNote("This browser can't show notifications.");
-    } else if (alerts.granted) {
-      setNote("Notifications are allowed on this device.");
-    } else {
-      setNote("Notifications are blocked. Allow them in your browser's site settings.");
-    }
+    if (!alerts?.supported) showToast("This browser can't show notifications.");
+    else if (alerts.granted) choose();
+    else if (alerts.canAskAgain) setShowAlerts(true);
+    else showToast("Notifications are blocked. Allow them in your browser's site settings.");
   };
   const allowAlerts = async () => {
     setAskingAlerts(true);
@@ -94,6 +109,8 @@ const BusDetails = ({ id }) => {
     setAlerts(result);
     setAskingAlerts(false);
     setShowAlerts(false);
+    if (result.granted) choose();
+    else showToast("Notifications are off, so we can't alert you.");
   };
 
   const loading = !data && (!gaveUp || isLoading);
@@ -283,7 +300,6 @@ const BusDetails = ({ id }) => {
             </Card>
 
             <div className="fixed inset-x-0  bottom-0 z-20 flex flex-col items-center gap-2 bg-linear-to-t from-[#f5f8fb] via-[#f5f8fb]/90 to-transparent px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-6 md:static md:col-span-2 md:bg-none md:p-0">
-              {note && <p className="max-w-107.5 text-center text-xs text-muted md:max-w-none">{note}</p>}
               <button
                 type="button"
                 ref={hapticTrigger}
@@ -297,13 +313,14 @@ const BusDetails = ({ id }) => {
                     : "bg-linear-to-b from-primary-light to-primary-dark text-white"
                 }`}
               >
-                {stale || !state ? "Notify me if signal returns" : "Notify me when it is near"}
+                {stale || !state ? "Alert me if signal returns" : "Alert me for this bus"}
               </button>
             </div>
           </>
         )}
       </div>
 
+      {toast && <Toast message={toast} />}
       <AlertsSheet
         open={showAlerts}
         busy={askingAlerts}

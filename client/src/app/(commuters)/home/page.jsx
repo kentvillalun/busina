@@ -14,7 +14,7 @@ import LiveStatus from "@/components/home/LiveStatus";
 import TopGradient from "@/components/layout/TopGradient";
 import IconLocationOff from "@/components/icons/IconLocationOff";
 import { useBuses } from "@/hooks/useBuses";
-import useNearBusAlert, { ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
+import useNearBusAlert, { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES, notifyPassed } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { etaFor, etaOrder, roadFor } from "@/lib/eta";
@@ -26,7 +26,7 @@ import {
   getCurrentPosition,
   getLocationPermission,
 } from "@/lib/permissions";
-import { alertBusesFor } from "@/lib/nearBus";
+import { alertBusesFor, targetOutcome } from "@/lib/nearBus";
 import { secondsSince } from "@/lib/time";
 import { useRouter } from "next/navigation";
 
@@ -147,7 +147,17 @@ export default function HomePage() {
     });
 
   const [alertMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
-  useNearBusAlert(alertBusesFor(withEta, savedDirection), alertMinutes);
+  const [alertBus, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null);
+  useNearBusAlert(alertBusesFor(withEta, savedDirection, alertBus), alertMinutes);
+
+  // The chosen bus went by the spot or left the list (resting, off the road): the choice is over. A short signal loss is not.
+  useEffect(() => {
+    if (!data || !alertBus) return;
+    const outcome = targetOutcome(withEta, alertBus);
+    if (outcome === "ok") return;
+    if (outcome === "passed") notifyPassed(withEta.find((bus) => bus.id === alertBus.id));
+    setAlertBus(null);
+  }, [data, withEta, alertBus, setAlertBus]);
 
   const freshest =
     allBuses.length > 0

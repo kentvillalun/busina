@@ -6,5 +6,15 @@ export const minutesAway = (bus) => {
   return (eta.minMin + eta.maxMin) / 2;
 };
 
-// Buses that may alert: only the direction the commuter saved in Settings. The home tab is for browsing, so it must not decide this.
-export const alertBusesFor = (buses, direction) => buses.filter((bus) => bus.state.direction === direction);
+// Buses that may alert. A bus the commuter chose on its detail page ({ id }) is the only one. With no choice, any bus going
+// the direction saved in Settings. The home tab is for browsing, so it must not decide this.
+export const alertBusesFor = (buses, direction, target = null) =>
+  target ? buses.filter((bus) => bus.id === target.id) : buses.filter((bus) => bus.state.direction === direction);
+
+// What happened to the chosen bus: "ok" (keep it), "passed" (went by the spot) or "gone" (not in the list: resting or off the road).
+// A short signal loss is still "ok": the bus can come back.
+export const targetOutcome = (buses, target) => {
+  const bus = buses.find((item) => item.id === target.id);
+  if (!bus) return "gone";
+  return bus.eta?.passed ? "passed" : "ok";
+};
