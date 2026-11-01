@@ -35,4 +35,13 @@ const pushLimiter = rateLimit({
   handler: onLimit("Too many alert changes, please slow down"),
 });
 
-export { generalLimiter, devicePingLimiter, pushLimiter };
+// Per IP, for the sign-in redirects and logout. Each login uses two requests; 20 a minute leaves room for a shared Wi-Fi.
+const authLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 20,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Too many sign-in attempts, please wait a minute"),
+});
+
+export { generalLimiter, devicePingLimiter, pushLimiter, authLimiter };

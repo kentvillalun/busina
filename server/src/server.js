@@ -1,10 +1,14 @@
 import "dotenv/config";
 import express from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import passport from "passport";
 import { connectDB, disconnectDB } from "./config/db.js";
+import { configurePassport } from "./config/passport.js";
 import { errorHandler, notFound } from "./middlewares/errorHandler.js";
 import { generalLimiter } from "./middlewares/rateLimit.js";
+import authRoute from "./routes/auth.route.js";
 import busRoute from "./routes/bus.route.js";
 import deviceRoute from "./routes/device.route.js";
 import healthRoute from "./routes/health.route.js";
@@ -24,14 +28,19 @@ app.use(
     origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   }),
 );
 
 app.use(express.json({ limit: "100kb" }));
+app.use(cookieParser());
+configurePassport();
+app.use(passport.initialize());
 
 app.use(generalLimiter);
 
 app.use("/", healthRoute);
+app.use("/auth", authRoute);
 app.use("/device", deviceRoute);
 app.use("/buses", busRoute);
 app.use("/routes", routesRoute);
