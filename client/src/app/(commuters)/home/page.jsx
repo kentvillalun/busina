@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import AlertsSheet from "@/components/home/AlertsSheet";
 import BottomSheet from "@/components/home/BottomSheet";
@@ -87,6 +88,18 @@ export default function HomePage() {
     setPermission(result);
     setUserPos(pos);
   };
+
+  // The proxy sends a first-time visitor to onboarding using a cookie. A phone that just added the app to the Home Screen
+  // can inherit that cookie from the browser but starts with empty localStorage (and its own permissions), so Home checks too.
+  const router = useRouter();
+  useEffect(() => {
+    let seen = true; // storage blocked: assume seen, or onboarding and Home would send each other around
+    try {
+      seen = Boolean(localStorage.getItem("hasSeenOnboarding"));
+    } catch {}
+    if (!seen) router.replace("/onboarding");
+  }, [router]);
+
   // Check on load and whenever the user comes back to the tab, e.g. from the browser's site settings.
   useEffect(() => {
     const check = () => readLocation().then(showLocation);
