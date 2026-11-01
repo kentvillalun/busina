@@ -12,7 +12,7 @@ const subscribe = (onChange) => {
   query.addEventListener("change", onChange);
   return () => query.removeEventListener("change", onChange);
 };
-const useIsWide = () =>
+export const useIsWide = () =>
   useSyncExternalStore(subscribe, () => window.matchMedia(WIDE).matches, () => false);
 
 // On a phone: a sheet with two stops. Closed shows the first child of the list, open shows

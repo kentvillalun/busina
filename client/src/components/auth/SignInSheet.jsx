@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
+import { useIsWide } from "@/components/home/BottomSheet";
 import { haptic, hapticTrigger } from "@/lib/haptics";
 
 const spring = { type: "spring", stiffness: 400, damping: 40 };
@@ -9,6 +10,7 @@ const spring = { type: "spring", stiffness: 400, damping: 40 };
 // Shown to a guest who taps something that needs an account. Same shape as AlertsSheet: a bottom sheet, a centered dialog
 // from md up. Placeholder look until the Figma design is final. `next` is where Google sends them back to.
 const SignInSheet = ({ open, next, onDismiss }) => {
+  const wide = useIsWide(); // md and up: a dialog that appears and disappears with no animation
   useEffect(() => {
     if (!open) return;
     const onKey = (event) => event.key === "Escape" && onDismiss();
@@ -27,17 +29,17 @@ const SignInSheet = ({ open, next, onDismiss }) => {
         >
           <motion.div
             className="absolute inset-0 bg-ink/50"
-            initial={{ opacity: 0 }}
+            initial={wide ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={wide ? undefined : { opacity: 0 }}
             onClick={onDismiss}
           />
 
           <motion.div
-            className="relative w-full max-w-md rounded-t-4xl bg-white px-6 pb-[calc(32px+env(safe-area-inset-bottom))] pt-3 md:rounded-4xl md:pb-8"
-            initial={{ y: "100%" }}
+            className="relative w-full max-w-md rounded-t-4xl bg-white px-6 pb-[calc(32px+env(safe-area-inset-bottom))] pt-3 md:rounded-4xl md:p-8"
+            initial={wide ? false : { y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            exit={wide ? undefined : { y: "100%" }}
             transition={spring}
           >
             <span className="mx-auto mb-4.25 block h-1.25 w-10 rounded-[3px] bg-line md:hidden" />
