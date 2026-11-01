@@ -4,26 +4,30 @@
  *
  * Talks to the BUSina Express API (server/): POST /device/ping
  *   Header: X-Device-Key: <DEVICE_KEY>
- *   Body:   {"deviceId","lat","lng","speedKmh","seats":[0/1 x SEAT_COUNT],"doorIn","doorOut"}
- * The shape must match server/src/schemas/device.schema.js, otherwise the API answers 400.
+ *   Body:   {"deviceId","lat","lng","speedKmh","direction","seats":[0/1 x SEAT_COUNT],"doorIn","doorOut"}
+ *
+ * Transport Modes:
+ *   - USE_WIFI_HOTSPOT = true  -> Built-in ESP32 Wi-Fi + HTTPS (WiFiClientSecure + HTTPClient)
+ *   - USE_WIFI_HOTSPOT = false -> Air780E 4G LTE Cat-1 Modem on UART2 (RX=25, TX=26)
  *
  * Hardware:
  * - NEO-M8N GPS            UART1  RX=16 TX=17  @ 9600
  * - Air780E 4G Cat-1       UART2  RX=25 TX=26  @ 115200
  * - HX711 + 10kg load cell DOUT=32 SCK=33      (one seat)
- * - E18-D80NK IR beam #1   GPIO 27, active LOW (door entries / doorIn)
- * - E18-D80NK IR beam #2   GPIO 14, active LOW (door exits / doorOut)
+ * - E18-D80NK IR beam #1   GPIO 27, active LOW (Outer doorway sensor A)
+ * - E18-D80NK IR beam #2   GPIO 14, active LOW (Inner doorway sensor B)
  * - MicroSD (VSPI)         SCK=18 MISO=19 MOSI=23 CS=5
- *
- * Copy secrets.example.h to secrets.h and fill it in before compiling (secrets.h is git-ignored).
  */
 
 #include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
 #include <SPI.h>
 #include <SD.h>
 #include <TinyGPSPlus.h>
 #include <HX711.h>
-#include "secrets.h" // DEVICE_ID, DEVICE_KEY, API_BASE_URL, APN
+#include "secrets.h" // WIFI_SSID, WIFI_PASS, DEVICE_ID, DEVICE_KEY, API_BASE_URL, APN
 
 // ============================================================================
 // 1. PINS & CONFIGURATION
@@ -41,19 +45,25 @@ constexpr uint8_t PIN_HX711_SCK  = 33;
 constexpr uint8_t PIN_IR_A       = 27; // Outer doorway sensor (D27)
 constexpr uint8_t PIN_IR_B       = 14; // Inner doorway sensor (D14)
 
+// Set true to send pings over ESP32 Wi-Fi / Phone Hotspot (no Air780E needed).
+constexpr bool     USE_WIFI_HOTSPOT      = true;
+// Set true so indoor bench testing still sends coordinates along the seeded Laoag route when GPS has no sky lock yet.
+constexpr bool     INDOOR_GPS_FALLBACK   = true;
+// Must be "NORTHBOUND" or "SOUTHBOUND" so the web app's direction tabs display the bus.
+constexpr char     DEFAULT_DIRECTION[]   = "NORTHBOUND";
+
 constexpr char     LOG_FILENAME[]        = "/datalog.csv";
 
 // Must equal Bus.seatCount in the database (seed: 40), or the API rejects the ping with SEAT_COUNT_MISMATCH.
 constexpr uint8_t  SEAT_COUNT            = 40;
-// The prototype has one load cell; it reports this seat. The other seats are sent as free.
 constexpr uint8_t  SENSOR_SEAT_INDEX     = 0;
 
 constexpr float    SEAT_THRESHOLD_KG     = 2.0f;
-constexpr float    HX711_CALIBRATION     = 2280.0f;    // Replace after calibration (see README)
+constexpr float    HX711_CALIBRATION     = 2280.0f;
 constexpr uint32_t TELEMETRY_INTERVAL_MS = 5000;       // API limit is 60 pings/min per device
 constexpr uint32_t IR_DEBOUNCE_MS        = 350;
-constexpr uint32_t GPS_MAX_AGE_MS        = 10000;      // Older fixes are not sent: the map would show a frozen bus
-constexpr float    MAX_SPEED_KMH         = 200.0f;     // API schema maximum
+constexpr uint32_t GPS_MAX_AGE_MS        = 10000;
+constexpr float    MAX_SPEED_KMH         = 200.0f;
 
 // ============================================================================
 // 2. HARDWARE INSTANCES & STATE
@@ -65,8 +75,8 @@ HX711          scale;
 
 struct TelemetryData {
   uint32_t timestampMs  = 0;
-  double   lat          = 0.0;
-  double   lng          = 0.0;
+  double   lat          = 18.197800; // Seeded route start (Laoag)
+  double   lng          = 120.593600;
   double   speedKmh     = 0.0;
   bool     gpsValid     = false;
   float    weightKg     = 0.0f;
@@ -78,6 +88,7 @@ struct TelemetryData {
 bool     sdReady          = false;
 uint32_t lastCycleMillis  = 0;
 uint32_t lastWeightMillis = 0;
+uint8_t  demoStep         = 0;
 
 // ============================================================================
 // 3. SINGLE-DOOR BIDIRECTIONAL PASSENGER COUNTER (2x E18-D80NK: A=D27, B=D14)
@@ -131,7 +142,9 @@ void pollDoorwaySensors() {
     case DoorState::B_WAIT_A:
       // Inner B broken first, then Outer A -> Passenger exited (doorOut++)
       if (hitA || stateA == LOW) {
-        currentData.doorOut++;
+        if (currentData.doorOut < currentData.doorIn) {
+          currentData.doorOut++;
+        }
         Serial.printf("[DOOR] Passenger OUT (B->A) | doorIn=%lu doorOut=%lu\n",
                       (unsigned long)currentData.doorIn, (unsigned long)currentData.doorOut);
         doorState     = DoorState::COOLDOWN;
@@ -150,7 +163,7 @@ void pollDoorwaySensors() {
 }
 
 // ============================================================================
-// 4. NON-BLOCKING AIR780E HTTP POST STATE MACHINE
+// 4. PAYLOAD BUILDER, WI-FI HTTPS POST, & AIR780E FALLBACK
 // ============================================================================
 enum class ModemState : uint8_t {
   IDLE,
@@ -173,10 +186,94 @@ struct ModemJob {
   ModemState state        = ModemState::IDLE;
   uint32_t   stateEntered = 0;
   uint32_t   timeoutMs    = 2000;
-  char       payload[320] = {0};
+  char       payload[384] = {0};
   char       rxBuf[256]   = {0};
   size_t     rxIdx        = 0;
 } modem;
+
+void buildPayload(const TelemetryData& data) {
+  int n = snprintf(
+    modem.payload, sizeof(modem.payload),
+    "{\"deviceId\":\"%s\",\"lat\":%.6f,\"lng\":%.6f,\"speedKmh\":%.1f,\"direction\":\"%s\",\"seats\":[",
+    DEVICE_ID, data.lat, data.lng, data.speedKmh, DEFAULT_DIRECTION
+  );
+  for (uint8_t i = 0; i < SEAT_COUNT; i++) {
+    uint8_t taken = (i == SENSOR_SEAT_INDEX && data.seatOccupied) ? 1 : 0;
+    n += snprintf(modem.payload + n, sizeof(modem.payload) - n, i == 0 ? "%u" : ",%u", taken);
+  }
+  snprintf(
+    modem.payload + n, sizeof(modem.payload) - n,
+    "],\"doorIn\":%lu,\"doorOut\":%lu}",
+    (unsigned long)data.doorIn, (unsigned long)data.doorOut
+  );
+}
+
+void initWiFi() {
+  if (!USE_WIFI_HOTSPOT) return;
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  Serial.printf("[WIFI] Connecting to \"%s\"", WIFI_SSID);
+  uint32_t start = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 8000) {
+    delay(250);
+    Serial.print('.');
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.printf("\n[WIFI] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
+  } else {
+    Serial.println(F("\n[WIFI] Not connected yet (will keep retrying in background).Check WIFI_SSID/WIFI_PASS in secrets.h."));
+  }
+}
+
+bool sendWiFiPost(const TelemetryData& data) {
+  if (!data.gpsValid && !INDOOR_GPS_FALLBACK) {
+    Serial.println(F("[WIFI] No GPS fix yet; ping skipped."));
+    return false;
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println(F("[WIFI] Disconnected; reconnecting to hotspot..."));
+    WiFi.reconnect();
+    return false;
+  }
+
+  buildPayload(data);
+  Serial.print(F("[WIFI] POST Payload: "));
+  Serial.println(modem.payload);
+
+  WiFiClientSecure client;
+  client.setInsecure(); // Skip root CA bundle verification for bench prototype
+
+  HTTPClient http;
+  String url = String(API_BASE_URL) + "/device/ping";
+  http.setTimeout(4000);
+  // Follow 307/308 redirects if Vercel rewrites or redirects
+  http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+
+  if (!http.begin(client, url)) {
+    Serial.println(F("[WIFI] Failed to initialize HTTP client."));
+    return false;
+  }
+
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("X-Device-Key", DEVICE_KEY);
+
+  int status = http.POST((uint8_t*)modem.payload, strlen(modem.payload));
+  String response = http.getString();
+  http.end();
+
+  if (status == 200) {
+    Serial.printf("[WIFI] SUCCESS (200)! Live on web app -> %s\n", response.c_str());
+    return true;
+  } else if (status == 401) {
+    Serial.printf("[WIFI] 401 Unauthorized: DEVICE_ID or DEVICE_KEY in secrets.h does not match the production DB! (%s)\n", response.c_str());
+  } else if (status == 400) {
+    Serial.printf("[WIFI] 400 Bad Request: %s\n", response.c_str());
+  } else {
+    Serial.printf("[WIFI] HTTP Error %d: %s\n", status, response.c_str());
+  }
+  return false;
+}
 
 void sendATCommand(const char* cmd, ModemState nextState, uint32_t timeoutMs = 2000) {
   while (SerialModem.available()) SerialModem.read();
@@ -192,26 +289,8 @@ void abortHttp() {
   sendATCommand("AT+HTTPTERM", ModemState::WAIT_HTTPTERM, 1500);
 }
 
-void buildPayload(const TelemetryData& data) {
-  int n = snprintf(
-    modem.payload, sizeof(modem.payload),
-    "{\"deviceId\":\"%s\",\"lat\":%.6f,\"lng\":%.6f,\"speedKmh\":%.1f,\"seats\":[",
-    DEVICE_ID, data.lat, data.lng, data.speedKmh
-  );
-  for (uint8_t i = 0; i < SEAT_COUNT; i++) {
-    uint8_t taken = (i == SENSOR_SEAT_INDEX && data.seatOccupied) ? 1 : 0;
-    n += snprintf(modem.payload + n, sizeof(modem.payload) - n, i == 0 ? "%u" : ",%u", taken);
-  }
-  snprintf(
-    modem.payload + n, sizeof(modem.payload) - n,
-    "],\"doorIn\":%lu,\"doorOut\":%lu}",
-    (unsigned long)data.doorIn, (unsigned long)data.doorOut
-  );
-}
-
 bool startCellularPost(const TelemetryData& data) {
-  if (!data.gpsValid) {
-    // Sending 0,0 would put the bus in the ocean on the commuter map.
+  if (!data.gpsValid && !INDOOR_GPS_FALLBACK) {
     Serial.println(F("[MODEM] No fresh GPS fix; ping skipped (saved on SD)."));
     return false;
   }
@@ -229,6 +308,8 @@ bool startCellularPost(const TelemetryData& data) {
 }
 
 void updateModemStateMachine() {
+  if (USE_WIFI_HOTSPOT) return;
+
   while (SerialModem.available()) {
     char c = (char)SerialModem.read();
     if (modem.rxIdx < sizeof(modem.rxBuf) - 1) {
@@ -275,12 +356,10 @@ void updateModemStateMachine() {
       break;
 
     case ModemState::WAIT_SAPBR_OPEN:
-      // ERROR here usually means the bearer is already open, which is fine.
       if (hasOK || hasError) sendATCommand("AT+HTTPINIT", ModemState::WAIT_HTTPINIT);
       break;
 
     case ModemState::WAIT_HTTPINIT:
-      // ERROR here usually means a previous HTTP session is still open; it is reused.
       if (hasOK || hasError) sendATCommand("AT+HTTPPARA=\"CID\",1", ModemState::WAIT_HTTPPARA_CID);
       break;
 
@@ -322,22 +401,20 @@ void updateModemStateMachine() {
       break;
 
     case ModemState::WAIT_HTTPDATA_LOAD:
-      // HTTPS handshake over Cat-1 can take several seconds.
       if (hasOK) sendATCommand("AT+HTTPACTION=1", ModemState::WAIT_HTTPACTION, 15000);
       else if (hasError) abortHttp();
       break;
 
     case ModemState::WAIT_HTTPACTION: {
-      // URC format: +HTTPACTION: <method>,<status>,<length>
       const char* urc = strstr(modem.rxBuf, "+HTTPACTION:");
       int method = 0, status = 0, length = 0;
       if (urc && sscanf(urc, "+HTTPACTION: %d,%d,%d", &method, &status, &length) == 3) {
         if (status == 200)      Serial.println(F("[MODEM] Ping accepted (200)."));
-        else if (status == 400) Serial.println(F("[MODEM] 400: payload rejected. Check SEAT_COUNT and the JSON shape."));
+        else if (status == 400) Serial.println(F("[MODEM] 400: payload rejected."));
         else if (status == 401) Serial.println(F("[MODEM] 401: wrong DEVICE_ID or DEVICE_KEY in secrets.h."));
         else if (status == 403) Serial.println(F("[MODEM] 403: this bus is disabled on the server."));
         else if (status == 429) Serial.println(F("[MODEM] 429: pinging too fast."));
-        else Serial.printf("[MODEM] HTTP status %d (6xx = network/DNS/TLS error on the modem).\n", status);
+        else Serial.printf("[MODEM] HTTP status %d\n", status);
         abortHttp();
       } else if (hasError) abortHttp();
       break;
@@ -359,7 +436,7 @@ void updateModemStateMachine() {
 void initMicroSD() {
   SPI.begin(PIN_SD_SCK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
   if (!SD.begin(PIN_SD_CS)) {
-    Serial.println(F("[SD] Mount failed. Check FAT32 formatting and wiring."));
+    Serial.println(F("[SD] Mount failed (optional for live test)."));
     sdReady = false;
     return;
   }
@@ -376,18 +453,10 @@ void initMicroSD() {
 }
 
 void logToMicroSD(const TelemetryData& data) {
-  if (!sdReady) {
-    if (SD.begin(PIN_SD_CS)) {
-      sdReady = true;
-    } else {
-      Serial.println(F("[SD] Unavailable; log skipped."));
-      return;
-    }
-  }
+  if (!sdReady) return;
 
   File file = SD.open(LOG_FILENAME, FILE_APPEND);
   if (!file) {
-    Serial.println(F("[SD] Could not open datalog.csv."));
     sdReady = false;
     return;
   }
@@ -412,9 +481,15 @@ void pollGPS() {
   if (currentData.gpsValid) {
     currentData.lat = gps.location.lat();
     currentData.lng = gps.location.lng();
-  }
-  if (gps.speed.isValid()) {
-    currentData.speedKmh = constrain(gps.speed.kmph(), 0.0, (double)MAX_SPEED_KMH);
+    if (gps.speed.isValid()) {
+      currentData.speedKmh = constrain(gps.speed.kmph(), 0.0, (double)MAX_SPEED_KMH);
+    }
+  } else if (INDOOR_GPS_FALLBACK) {
+    // Indoor fallback along the seeded Laoag route so the bus is visible on the map indoors.
+    // As soon as the real NEO-M8N gets a satellite lock, currentData.gpsValid becomes true and overrides this.
+    currentData.lat      = 18.197800 - (demoStep % 10) * 0.001800;
+    currentData.lng      = 120.593600 - (demoStep % 10) * 0.000600;
+    currentData.speedKmh = 25.0;
   }
 }
 
@@ -424,7 +499,6 @@ void pollWeightSensor() {
     float reading = scale.get_units(1);
     if (reading < 0.0f) reading = 0.0f;
 
-    // Smooths out bus vibration so the seat does not flicker between states.
     currentData.weightKg     = (0.7f * currentData.weightKg) + (0.3f * reading);
     currentData.seatOccupied = (currentData.weightKg >= SEAT_THRESHOLD_KG);
   }
@@ -440,14 +514,15 @@ void setup() {
   Serial.printf("Device %s -> %s/device/ping\n", DEVICE_ID, API_BASE_URL);
 
   SerialGPS.begin(9600, SERIAL_8N1, PIN_GPS_RX, PIN_GPS_TX);
-  SerialModem.begin(115200, SERIAL_8N1, PIN_MODEM_RX, PIN_MODEM_TX);
-  // Echo off, so the modem does not repeat our commands back into the response buffer.
-  SerialModem.println("ATE0");
+  if (!USE_WIFI_HOTSPOT) {
+    SerialModem.begin(115200, SERIAL_8N1, PIN_MODEM_RX, PIN_MODEM_TX);
+    SerialModem.println("ATE0");
+  }
 
   scale.begin(PIN_HX711_DOUT, PIN_HX711_SCK);
   scale.set_scale(HX711_CALIBRATION);
   if (scale.wait_ready_timeout(500)) {
-    scale.tare(); // The seat must be empty at boot.
+    scale.tare();
     Serial.println(F("[HX711] Tared."));
   } else {
     Serial.println(F("[HX711] Not detected at boot."));
@@ -457,6 +532,7 @@ void setup() {
   pinMode(PIN_IR_B, INPUT_PULLUP);
 
   initMicroSD();
+  initWiFi();
 }
 
 void loop() {
@@ -469,21 +545,27 @@ void loop() {
   if (now - lastCycleMillis >= TELEMETRY_INTERVAL_MS) {
     lastCycleMillis = now;
     currentData.timestampMs = now;
+    demoStep++;
 
     Serial.printf(
-      "[GPS] bytes=%lu sats=%lu valid=%s lat=%.6f lng=%.6f speed=%.1fkm/h | doorIn=%lu doorOut=%lu\n",
+      "[GPS] bytes=%lu sats=%lu lock=%s lat=%.6f lng=%.6f | seat=%s (%.1fkg) | doorIn=%lu doorOut=%lu\n",
       (unsigned long)gps.charsProcessed(),
       (unsigned long)gps.satellites.value(),
-      currentData.gpsValid ? "YES" : "NO",
+      currentData.gpsValid ? "REAL-GPS" : "INDOOR-FALLBACK",
       currentData.lat,
       currentData.lng,
-      currentData.speedKmh,
+      currentData.seatOccupied ? "OCCUPIED" : "VACANT",
+      currentData.weightKg,
       (unsigned long)currentData.doorIn,
       (unsigned long)currentData.doorOut
     );
 
-    // SD first, so a record survives even when the network is down.
     logToMicroSD(currentData);
-    startCellularPost(currentData);
+
+    if (USE_WIFI_HOTSPOT) {
+      sendWiFiPost(currentData);
+    } else {
+      startCellularPost(currentData);
+    }
   }
 }
