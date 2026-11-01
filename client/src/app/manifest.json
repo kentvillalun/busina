@@ -9,7 +9,10 @@
   "orientation": "portrait",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["navigation", "travel"],
+  "categories": [
+    "navigation",
+    "travel"
+  ],
   "theme_color": "#0F2233",
   "background_color": "#0F2233",
   "icons": [
@@ -40,39 +43,39 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshots/home.png",
-      "sizes": "1170x2532",
+      "src": "/screenshots/store-1-live-map.png",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Live map and arrival time"
+      "label": "Know where your bus is on a live map"
     },
     {
-      "src": "/screenshots/bus-details.png",
-      "sizes": "1170x2532",
+      "src": "/screenshots/store-2-free-seats.png",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Free seats and passengers on board"
+      "label": "See free seats and passengers on board"
     },
     {
-      "src": "/screenshots/signal-lost.png",
-      "sizes": "1170x2532",
+      "src": "/screenshots/store-3-boarding-spot.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Pick your boarding spot and get alerted"
+    },
+    {
+      "src": "/screenshots/store-4-signal-lost.png",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Clear message when the bus signal is lost"
     },
     {
-      "src": "/screenshots/boarding-spot.png",
-      "sizes": "1170x2532",
+      "src": "/screenshots/store-5-wait-less.png",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Pick your boarding spot on the map"
-    },
-    {
-      "src": "/screenshots/settings.png",
-      "sizes": "1170x2532",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Alerts, location and trip settings"
+      "label": "Wait less. Ride easy."
     }
   ],
   "shortcuts": [
@@ -82,7 +85,11 @@
       "description": "See the buses near you right now",
       "url": "/home",
       "icons": [
-        { "src": "/web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png" }
+        {
+          "src": "/web-app-manifest-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
       ]
     },
     {
@@ -91,7 +98,11 @@
       "description": "Alerts, location and travel time",
       "url": "/settings",
       "icons": [
-        { "src": "/web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png" }
+        {
+          "src": "/web-app-manifest-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
       ]
     }
   ]
