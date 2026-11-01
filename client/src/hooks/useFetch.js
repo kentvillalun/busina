@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { handleUnauthorized } from "@/lib/session";
 
 // Same hook as in Ecoaid: GET a url and give back { isLoading, isError, data, error }.
 // Change `refetchCount` to fetch again (the home page bumps it every few seconds).
@@ -23,6 +24,8 @@ export const useFetch = ({ url, refetchCount }) => {
 
         const response = await fetch(url);
         const result = await response.json();
+
+        if (response.status === 401) return handleUnauthorized(); // the session ended: back to the login page
 
         if (!response.ok) {
           setError("There is an error fetching data");

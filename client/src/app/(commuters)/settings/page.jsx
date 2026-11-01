@@ -6,7 +6,9 @@ import IconChevron from "@/components/icons/IconChevron";
 import { Page } from "@/components/layout/Page";
 import TopGradient from "@/components/layout/TopGradient";
 import { PageContent } from "@/components/layout/PageContent";
+import { useFetch } from "@/hooks/useFetch";
 import useSavedSetting from "@/hooks/useSavedSetting";
+import { logout } from "@/lib/session";
 import { spotLabel } from "@/lib/geocode";
 import { getAlertsPermission, getLocationPermission, permissionLabel } from "@/lib/permissions";
 
@@ -81,6 +83,7 @@ export default function SettingsPage() {
   const [direction] = useSavedSetting("busina:direction", "NORTHBOUND");
   const [location, setLocation] = useState(null); // null while the permission is being read
   const [alerts, setAlerts] = useState(null);
+  const { data: account } = useFetch({ url: "/api/auth/me" }); // also signs out a session that has ended
 
   useEffect(() => {
     getLocationPermission().then(setLocation);
@@ -146,6 +149,15 @@ export default function SettingsPage() {
                 />
               }
             />
+          </Section>
+
+          <Section title="Account" note="Logging out also clears your boarding spot and chosen bus from this phone.">
+            <button type="button" onClick={() => logout()} className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left">
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="font-medium text-fault">Log out</span>
+                {account?.commuter && <span className="truncate text-[13px] leading-4.5 text-muted">{account.commuter.email}</span>}
+              </span>
+            </button>
           </Section>
 
           <Section

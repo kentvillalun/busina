@@ -96,7 +96,7 @@ export default function OnboardingPage() {
   const current = steps[step];
   const isLast = step === steps.length - 1;
 
-  const finish = () => router.replace("/home");
+  const finish = () => router.replace("/login"); // a signed-in person is sent on to /home by the proxy
 
   const advance = () => {
     if (isLast) finish();
