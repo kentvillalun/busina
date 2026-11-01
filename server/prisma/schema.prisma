@@ -118,3 +118,25 @@ model BusState {
   lastPingAt DateTime
   updatedAt  DateTime @updatedAt
 }
+
+// One row per browser that turned on alerts. Anonymous: no user, only the push endpoint the browser gave us.
+model PushSubscription {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  endpoint String @unique
+  p256dh   String
+  auth     String
+
+  spotLat      Float
+  spotLng      Float
+  alertMinutes Int
+
+  direction Direction
+  // The bus chosen on its detail page; null = any bus going `direction`. Not a foreign key: a deleted bus simply never matches.
+  targetBusId String? @db.Uuid
+  // Ids of the buses already alerted in this approach, so one bus alerts once (see push.js).
+  notifiedBusIds Json @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
