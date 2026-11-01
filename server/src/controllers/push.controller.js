@@ -1,4 +1,9 @@
 import { prisma } from "../config/db.js";
+import { distanceM } from "../utils/geo.js";
+
+// A commuter timing the alert to where they stand sends a slightly different position every time (GPS jitter): only a real move
+// counts as a new spot, or the "already alerted" list would be emptied and the same bus would alert again.
+const SPOT_MOVED_M = 50;
 
 // The browser re-sends this whenever the spot, minutes, direction or chosen bus changes, so it is an upsert on `endpoint`.
 // The endpoint is a secret URL only that browser knows, so whoever presents it owns it: on a shared phone the commuter who
@@ -17,13 +22,12 @@ const subscribe = async (req, res) => {
     targetBusId,
   };
 
-  // A new owner, spot, direction or chosen bus is a new approach: buses already alerted for the old setup may alert again.
+  // A new owner, a spot that really moved, a new direction or chosen bus is a new approach: buses already alerted for the old setup may alert again.
   const old = await prisma.pushSubscription.findUnique({ where: { endpoint } });
   const changed =
     old &&
     (old.commuterId !== data.commuterId ||
-      old.spotLat !== data.spotLat ||
-      old.spotLng !== data.spotLng ||
+      distanceM([old.spotLng, old.spotLat], [data.spotLng, data.spotLat]) > SPOT_MOVED_M ||
       old.direction !== direction ||
       old.targetBusId !== targetBusId);
 

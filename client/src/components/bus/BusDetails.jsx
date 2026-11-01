@@ -16,10 +16,10 @@ import useSession from "@/hooks/useSession";
 import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
-import { etaFor, formatEta } from "@/lib/eta";
+import { etaFor, formatEta, isOnRoad } from "@/lib/eta";
 import { distanceM, formatDistance } from "@/lib/geo";
 import { haptic, hapticTrigger } from "@/lib/haptics";
-import { targetMode } from "@/lib/target";
+import { alertPlan, targetMode } from "@/lib/target";
 import { askAlerts, getAlertsPermission, getCurrentPosition } from "@/lib/permissions";
 import { ago, secondsSince } from "@/lib/time";
 
@@ -61,8 +61,9 @@ const BusDetails = ({ id }) => {
   const routes = useRoutes();
   const [userPos, setUserPos] = useState(null);
   const [spot] = useSavedSetting("busina:spot", null); // the boarding spot from Settings
-  const [storedTarget] = useSavedSetting("busina:target", null); // "location" | "spot", chosen on Home
-  const useMyLocation = targetMode(storedTarget, spot) === "location";
+  const [storedTarget, setStoredTarget] = useSavedSetting("busina:target", null); // "location" | "spot", chosen on Home
+  const mode = targetMode(storedTarget, spot);
+  const useMyLocation = mode === "location";
   const target = useMyLocation ? userPos : spot ?? userPos; // the ETA is measured to where you stand, or to the spot
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
@@ -99,36 +100,61 @@ const BusDetails = ({ id }) => {
   };
   const fail = (message, action) => showToast(message, { type: "error", action });
 
-  // Remember this bus as the one to alert for. notify() has already made sure there is a boarding spot.
-  const choose = () => {
-    if (eta?.passed) return fail("This bus has already passed your spot.");
+  // Remember this bus as the one to alert for. `viaLocation` is true when the alert is timed to where the commuter stands.
+  const choose = (viaLocation) => {
+    if (eta?.passed) return fail(viaLocation ? "This bus has already passed you." : "This bus has already passed your spot.");
     setAlertBus({ id: bus.id, busNumber: bus.busNumber });
     haptic.success();
     // A bus with no signal cannot alert yet; say so instead of promising "N min before".
     showToast(
       stale || !state
         ? `Bus ${bus.busNumber} has no signal. We'll alert you once it's back.`
-        : `Alert set for Bus ${bus.busNumber} · ${alertMinutes} min before`,
+        : `Alert set for Bus ${bus.busNumber} · ${alertMinutes} min before${viaLocation ? " (your location)" : ""}`,
     );
   };
 
-  // "Alert me": a boarding spot comes first (the alert is timed to it, the user's own position moves). Then choose the bus when
-  // notifications are allowed, ask first when the browser still can, else say why we cannot.
+  // Choose the bus when notifications are allowed, ask first when the browser still can, else say why we cannot.
+  const viaLocationRef = useRef(false); // what the permission sheet was opened for
+  const proceed = (viaLocation) => {
+    viaLocationRef.current = viaLocation;
+    if (!alerts?.supported) fail("This browser can't show notifications.");
+    else if (alerts.granted) choose(viaLocation);
+    else if (alerts.canAskAgain) setShowAlerts(true);
+    else fail("Notifications are blocked. Allow them in your browser's site settings.");
+  };
+
+  // "Alert me": the alert is timed to where the commuter stands (on the road, no spot needed) or to the boarding spot.
   const notify = () => {
     // Alerts belong to an account. The login page brings them back here, with a way to cancel.
     if (session === "guest") return router.push(`/login?next=${encodeURIComponent(`/bus/${bus.id}`)}`);
-    if (!spot) {
-      fail("Set your boarding spot first, so we can time the alert.", {
-        label: "Set spot",
+
+    const route = routes.find((item) => item.id === bus.route.id);
+    const plan = alertPlan({ mode, hasSpot: Boolean(spot), hasPosition: Boolean(userPos), onRoad: isOnRoad(userPos, route) });
+
+    if (plan.use === "spot") return proceed(false);
+    if (plan.use === "location") {
+      if (mode !== "location") setStoredTarget("location"); // no spot yet: remember that the position is what we use
+      return proceed(true);
+    }
+
+    const problem = plan.problem === "far" ? "You're far from the bus route." : "We can't get your location.";
+    if (plan.fallback === "spot") {
+      return fail(`${problem} Use your boarding spot instead.`, {
+        label: "Use spot",
         onPress: () => {
           setToast(null); // this page is kept alive while hidden, so the toast would still be here on return
-          router.push("/settings/boarding-spot");
+          setStoredTarget("spot");
+          proceed(false);
         },
       });
-    } else if (!alerts?.supported) fail("This browser can't show notifications.");
-    else if (alerts.granted) choose();
-    else if (alerts.canAskAgain) setShowAlerts(true);
-    else fail("Notifications are blocked. Allow them in your browser's site settings.");
+    }
+    fail(`${problem} Set a boarding spot instead.`, {
+      label: "Set spot",
+      onPress: () => {
+        setToast(null);
+        router.push("/settings/boarding-spot");
+      },
+    });
   };
   const allowAlerts = async () => {
     setAskingAlerts(true);
@@ -136,7 +162,7 @@ const BusDetails = ({ id }) => {
     setAlerts(result);
     setAskingAlerts(false);
     setShowAlerts(false);
-    if (result.granted) choose();
+    if (result.granted) choose(viaLocationRef.current);
     else fail("Notifications are off, so we can't alert you.");
   };
 

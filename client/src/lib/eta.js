@@ -6,6 +6,15 @@ const FAST = 1.2; // the bus goes 20% faster than it is now: the early end of th
 const SLOW = 0.8; // 20% slower: the late end
 const PASSED_AFTER_M = 30; // this far beyond the spot counts as passed; closer reads as arriving
 const MAX_SPOT_FROM_ROUTE_M = 1000; // farther than this the user is not on this bus's route
+const ON_ROAD_M = 100; // within this of a road counts as standing on it: no boarding spot needed, the position will do
+
+// Is the commuter on (or right next to) the route? Either carriageway counts: they only have to be where buses pass.
+const isOnRoad = (userPos, route) => {
+  if (!userPos || !route) return false;
+  return [route.polyline, route.polylineNorthbound]
+    .filter(Boolean)
+    .some((road) => (snapToRoute(userPos, road)?.distanceFromRouteM ?? Infinity) <= ON_ROAD_M);
+};
 
 // The road a bus follows: northbound buses take the diversion when the route has one.
 const roadFor = (route, direction) =>
@@ -43,4 +52,4 @@ const formatEta = (eta) => {
 // For sorting: the sooner the bus, the smaller; a bus that has passed goes last.
 const etaOrder = (eta) => (eta.passed ? 1e9 : eta.minMin);
 
-export { etaFor, etaOrder, formatEta, MAX_SPOT_FROM_ROUTE_M, roadFor };
+export { etaFor, etaOrder, formatEta, isOnRoad, MAX_SPOT_FROM_ROUTE_M, roadFor };

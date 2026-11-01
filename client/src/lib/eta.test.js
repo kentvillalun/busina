@@ -1,7 +1,7 @@
 // Run with: node --test src/lib/eta.test.js
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { etaFor, formatEta, roadFor } from "./eta.js";
+import { etaFor, formatEta, isOnRoad, roadFor } from "./eta.js";
 
 // A road running due north for about 1.1 km. Points are [lng, lat]. progressM grows toward the north here.
 const route = { polyline: [[120, 18], [120, 18.01]] };
@@ -56,4 +56,16 @@ test("a northbound bus uses the northbound road when the route has one", () => {
   const north = etaFor(bus(1900, "NORTHBOUND"), detour, { lat: 18.015, lng: 120 });
   const south = etaFor(bus(0, "SOUTHBOUND"), detour, { lat: 18.015, lng: 120 });
   assert.ok(north.spotM > 1500 && south.spotM < 1200);
+});
+
+test("isOnRoad: standing on the road counts, far away or without a position does not", () => {
+  const detour = { ...route, polylineNorthbound: [[120, 18], [120.02, 18.02]] };
+  assert.equal(isOnRoad({ lat: 18.005, lng: 120.0001 }, route), true); // about 10 m from the road
+  assert.equal(isOnRoad({ lat: 18.005, lng: 120.002 }, route), false); // about 220 m away
+  assert.equal(isOnRoad({ lat: 18.5, lng: 120 }, route), false);
+  assert.equal(isOnRoad(null, route), false);
+  assert.equal(isOnRoad({ lat: 18.005, lng: 120.0001 }, null), false);
+  // either carriageway: here only the detour passes the point
+  assert.equal(isOnRoad({ lat: 18.01, lng: 120.01 }, detour), true);
+  assert.equal(isOnRoad({ lat: 18.01, lng: 120.01 }, route), false);
 });
