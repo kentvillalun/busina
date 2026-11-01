@@ -101,9 +101,9 @@ export default function SettingsPage() {
             <Row
               href="/settings/boarding-spot"
               label="Boarding spot"
-              hint={spot ? spotLabel(spot) : "Where you wait for the bus"}
-              value={spot ? "Change" : "Not set"}
-              accent={!!spot}
+              hint={status === "guest" ? "Sign in to set your spot" : spot ? spotLabel(spot) : "Where you wait for the bus"}
+              value={status === "guest" ? "Sign in" : spot ? "Change" : "Not set"}
+              accent={status === "guest" || !!spot}
             />
             <Row href="/settings/direction" label="Direction" value={direction === "SOUTHBOUND" ? "Toward Vigan" : "Toward Laoag"} />
           </Section>
@@ -120,7 +120,7 @@ export default function SettingsPage() {
             </Section>
           )}
           {status === "guest" && (
-            <Section title="Account" note="Your boarding spot and direction stay on this phone. Sign in to get alerts.">
+            <Section title="Account" note="Your direction stays on this phone. Sign in to set your boarding spot and get alerts.">
               {/* A plain link: the whole page goes to Google and comes back, so the router cannot do it. */}
               <a href="/api/auth/google?next=%2Fsettings" className="flex w-full items-center gap-3 px-4.5 py-3.25 text-left">
                 <span className="font-medium text-primary">Sign in with Google</span>
