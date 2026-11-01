@@ -26,4 +26,13 @@ const devicePingLimiter = rateLimit({
   handler: onLimit("This device is sending too many updates"),
 });
 
-export { generalLimiter, devicePingLimiter };
+// Per IP. A commuter changes the spot or minutes a few times at most; anything faster is a script filling the table.
+const pushLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 20,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Too many alert changes, please slow down"),
+});
+
+export { generalLimiter, devicePingLimiter, pushLimiter };
