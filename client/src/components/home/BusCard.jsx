@@ -6,7 +6,7 @@ import { ago } from "@/lib/time";
 
 // Figma S1b. `selected` is the highlighted card. With `onSelect`, tapping the card shows the bus on
 // the map (a button stretched over the card); "View details" is its own link on top of that.
-const BusCard = ({ bus, serverTime, selected, onSelect, locationOff = false, className = "" }) => {
+const BusCard = ({ bus, serverTime, selected, onSelect, locationOff = false, toYou = false, className = "" }) => {
   const { state, stale } = bus;
 
   let seatsText = `${state.seatsFree} of ${bus.seatCount} seats free`;
@@ -28,7 +28,7 @@ const BusCard = ({ bus, serverTime, selected, onSelect, locationOff = false, cla
   else if (locationOff) etaNote = "location off";
   else if (bus.eta) {
     etaText = formatEta(bus.eta);
-    etaNote = bus.eta.passed ? "already passed you" : "to your spot";
+    etaNote = bus.eta.passed ? "already passed you" : toYou ? "to you" : "to your spot";
   }
 
   return (

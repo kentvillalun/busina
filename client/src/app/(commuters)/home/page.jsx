@@ -11,6 +11,7 @@ import BusCardSkeleton from "@/components/home/BusCardSkeleton";
 import DirectionTab from "@/components/home/DirectionTab";
 import LoadError from "@/components/home/LoadError";
 import LocationBanner from "@/components/home/LocationBanner";
+import TargetToggle from "@/components/home/TargetToggle";
 import LiveStatus from "@/components/home/LiveStatus";
 import TopGradient from "@/components/layout/TopGradient";
 import IconLocationOff from "@/components/icons/IconLocationOff";
@@ -28,6 +29,7 @@ import {
   getLocationPermission,
 } from "@/lib/permissions";
 import { alertBusesFor, targetOutcome } from "@/lib/nearBus";
+import { targetMode } from "@/lib/target";
 import { secondsSince } from "@/lib/time";
 
 // Leaflet touches `window`, so it can only load in the browser.
@@ -75,7 +77,10 @@ export default function HomePage() {
 
   const [userPos, setUserPos] = useState(null); // { lat, lng }, or null while unknown or location is off
   const [spot] = useSavedSetting("busina:spot", null); // the boarding spot from Settings
-  const target = spot ?? userPos; // the ETA is measured to the spot when there is one, else to the user
+  const [storedTarget, setStoredTarget] = useSavedSetting("busina:target", null); // "location" | "spot": the commuter's choice
+  const useMyLocation = targetMode(storedTarget, spot) === "location";
+  // The ETA is measured to where the commuter stands, or to the boarding spot (and to the user when no spot is saved yet).
+  const target = useMyLocation ? userPos : spot ?? userPos;
   const [pickedId, setPickedId] = useState(null); // a bus the user tapped; null = the closest one
   const [focus, setFocus] = useState(null); // { id, n }: tells the map to fly to a bus
 
@@ -136,6 +141,13 @@ export default function HomePage() {
     showLocation(await readLocation());
   };
   const locationOff = permission !== null && !permission.granted;
+
+  const pickTarget = (key) => {
+    // No spot saved yet: set one up (a guest is sent to sign in first by the proxy).
+    if (key === "spot" && !spot) return router.push("/settings/boarding-spot");
+    setStoredTarget(key);
+    if (key === "location" && locationOff) turnOnLocation();
+  };
 
   const serverTime = data?.serverTime;
   // A bus that has never pinged has no state yet, so it cannot be shown.
@@ -240,7 +252,7 @@ export default function HomePage() {
             routes={routes.filter((route) => allBuses.some((bus) => bus.route.id === route.id))}
             direction={direction}
             me={userPos}
-            spot={spot}
+            spot={useMyLocation ? null : spot}
             selectedId={selectedId}
             focus={focus}
             onSelect={findBus}
@@ -286,12 +298,15 @@ export default function HomePage() {
                   {headline ?? "No buses in this direction"}
                 </p>
               )}
-              <Link
-                href="/settings/direction"
-                className="mt-1.5 self-start rounded-full bg-white/80 px-2.5 py-1 text-xs font-semibold text-navy"
-              >
-                Alerts · {DIRECTIONS.find((item) => item.key === savedDirection)?.hint} ›
-              </Link>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                <Link
+                  href="/settings/direction"
+                  className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-semibold text-navy"
+                >
+                  Alerts · {DIRECTIONS.find((item) => item.key === savedDirection)?.hint} ›
+                </Link>
+                <TargetToggle mode={useMyLocation ? "location" : "spot"} onPick={pickTarget} />
+              </div>
             </div>
 
             <div className="-mx-2 mt-4 flex gap-1 rounded-[18px] shadow-[0_-4px_20px_rgba(15,33,51,0.03)] bg-white p-1.5">
@@ -357,7 +372,8 @@ export default function HomePage() {
                 bus={bus}
                 serverTime={serverTime}
                 selected={bus.id === selectedId}
-                locationOff={locationOff && !spot}
+                locationOff={locationOff && (useMyLocation || !spot)}
+                toYou={useMyLocation || !spot}
                 onSelect={() => findBus(bus.id)}
               />
             ))}

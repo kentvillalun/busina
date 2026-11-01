@@ -27,6 +27,7 @@ export default function BoardingSpotPage() {
   const router = useRouter();
   const [saved, saveSpot] = useSavedSetting("busina:spot", null); // { lat, lng, name }
   const [, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null);
+  const [, setTarget] = useSavedSetting("busina:target", null);
   const clearAlertBus = () => setAlertBus(null);
   const [saving, setSaving] = useState(false);
   const [userPos, setUserPos] = useState(null);
@@ -62,6 +63,7 @@ export default function BoardingSpotPage() {
     setSaving(true);
     saveSpot({ lat: pin.lat, lng: pin.lng, name: await placeName(pin) });
     clearAlertBus(); // the chosen bus was timed to the old spot
+    setTarget("spot");
     router.push("/settings");
     setSaving(false); // this page is kept alive while hidden, so "Saving..." would still be there on return
   };
@@ -69,6 +71,7 @@ export default function BoardingSpotPage() {
   const remove = () => {
     saveSpot(null);
     clearAlertBus();
+    setTarget(null); // no spot: back to the default, your location
     router.push("/settings");
   };
 

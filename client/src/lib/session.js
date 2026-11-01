@@ -1,6 +1,6 @@
 // What belongs to the signed-in person on this phone. Cleared on logout so the next person on a shared phone does not
 // inherit someone's boarding spot or chosen bus.
-const PRIVATE_KEYS = ["busina:spot", "busina:alertBus"];
+const PRIVATE_KEYS = ["busina:spot", "busina:alertBus", "busina:target"];
 
 // Onboarding is shown once. The proxy reads the cookie (it cannot read localStorage) to send first-time visitors to it
 // before Home is drawn. The localStorage copy is kept for people who finished it before the cookie existed.

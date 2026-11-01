@@ -19,6 +19,7 @@ import useSavedSetting from "@/hooks/useSavedSetting";
 import { etaFor, formatEta } from "@/lib/eta";
 import { distanceM, formatDistance } from "@/lib/geo";
 import { haptic, hapticTrigger } from "@/lib/haptics";
+import { targetMode } from "@/lib/target";
 import { askAlerts, getAlertsPermission, getCurrentPosition } from "@/lib/permissions";
 import { ago, secondsSince } from "@/lib/time";
 
@@ -60,7 +61,9 @@ const BusDetails = ({ id }) => {
   const routes = useRoutes();
   const [userPos, setUserPos] = useState(null);
   const [spot] = useSavedSetting("busina:spot", null); // the boarding spot from Settings
-  const target = spot ?? userPos; // the ETA is measured to the spot when there is one, else to the user
+  const [storedTarget] = useSavedSetting("busina:target", null); // "location" | "spot", chosen on Home
+  const useMyLocation = targetMode(storedTarget, spot) === "location";
+  const target = useMyLocation ? userPos : spot ?? userPos; // the ETA is measured to where you stand, or to the spot
   const [alerts, setAlerts] = useState(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const router = useRouter();
@@ -231,7 +234,7 @@ const BusDetails = ({ id }) => {
                     <div className="flex flex-col items-end">
                       <span className="font-display text-[26px] leading-8">{eta ? formatEta(eta) : "-"}</span>
                       <span className="text-xs">
-                        {eta ? (eta.passed ? "already passed you" : "to your spot") : target ? "ETA coming soon" : "location off"}
+                        {eta ? (eta.passed ? "already passed you" : useMyLocation || !spot ? "to you" : "to your spot") : target ? "ETA coming soon" : "location off"}
                       </span>
                     </div>
                   </div>
