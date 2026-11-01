@@ -25,8 +25,9 @@ deployed API and the web app treat it exactly like the simulator.
 ## What the prototype reports
 
 - **Seats:** one load cell = seat index `0` (`SENSOR_SEAT_INDEX`). The other 39 seats are always sent as free.
-- **Door:** one IR sensor counts entries (`doorIn`). `doorOut` is always 0, so the app's "on board" and
-  "standing" numbers only grow until the device restarts.
+- **Door (Bidirectional Single-Door):** two E18-D80NK IR sensors mounted side-by-side in the doorway (`Sensor A` on `D27` outer, `Sensor B` on `D14` inner):
+  - Breaking `A (D27) → B (D14)` counts a boarding passenger (`doorIn++`).
+  - Breaking `B (D14) → A (D27)` counts an exiting passenger (`doorOut++`).
 - **Position:** a ping is only sent with a GPS fix younger than 10 s. Every 5 s cycle is still written to the SD card.
 
 ## Hardware Pinout & Wiring
@@ -51,9 +52,12 @@ deployed API and the web app treat it exactly like the simulator.
 | | GND | `GND` | Common ground |
 | | DOUT (DT) | `GPIO 32` | Digital Input |
 | | SCK | `GPIO 33` | Digital Output |
-| **E18-D80NK IR Beam** | Brown (VCC) | Buck 5V | Needs 5V power |
-| | Blue (GND) | `GND` | Common ground |
-| | Black (OUT) | `GPIO 27` | Active LOW, `INPUT_PULLUP`. Add a diode if the output idles at 5V |
+| **E18-D80NK #1 (Outer A)** | Brown / Red (VCC) | Buck 5V / `VIN` | Needs 5V power |
+| | Blue / Black (GND) | `GND` | Common ground |
+| | Black / Yellow (OUT) | `GPIO 27` (`D27`) | Outer doorway sensor (`INPUT_PULLUP`) |
+| **E18-D80NK #2 (Inner B)** | Brown / Red (VCC) | Buck 5V / `VIN` | Needs 5V power |
+| | Blue / Black (GND) | `GND` | Common ground |
+| | Black / Yellow (OUT) | `GPIO 14` (`D14`) | Inner doorway sensor (`INPUT_PULLUP`) |
 
 Power: 12V battery → buck converter set to 5.0V → Air780E, E18-D80NK, ESP32 `VIN`. All grounds tied together.
 

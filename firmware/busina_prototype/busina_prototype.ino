@@ -11,7 +11,8 @@
  * - NEO-M8N GPS            UART1  RX=16 TX=17  @ 9600
  * - Air780E 4G Cat-1       UART2  RX=25 TX=26  @ 115200
  * - HX711 + 10kg load cell DOUT=32 SCK=33      (one seat)
- * - E18-D80NK IR beam      GPIO 27, active LOW (door entries)
+ * - E18-D80NK IR beam #1   GPIO 27, active LOW (door entries / doorIn)
+ * - E18-D80NK IR beam #2   GPIO 14, active LOW (door exits / doorOut)
  * - MicroSD (VSPI)         SCK=18 MISO=19 MOSI=23 CS=5
  *
  * Copy secrets.example.h to secrets.h and fill it in before compiling (secrets.h is git-ignored).
@@ -37,7 +38,8 @@ constexpr uint8_t PIN_SD_MOSI    = 23;
 constexpr uint8_t PIN_SD_CS      = 5;
 constexpr uint8_t PIN_HX711_DOUT = 32;
 constexpr uint8_t PIN_HX711_SCK  = 33;
-constexpr uint8_t PIN_IR_SENSOR  = 27;
+constexpr uint8_t PIN_IR_A       = 27; // Outer doorway sensor (D27)
+constexpr uint8_t PIN_IR_B       = 14; // Inner doorway sensor (D14)
 
 constexpr char     LOG_FILENAME[]        = "/datalog.csv";
 
@@ -61,9 +63,6 @@ HardwareSerial SerialModem(2);
 TinyGPSPlus    gps;
 HX711          scale;
 
-volatile uint32_t isrDoorInCounter  = 0;
-volatile uint32_t lastIrTriggerTick = 0;
-
 struct TelemetryData {
   uint32_t timestampMs  = 0;
   double   lat          = 0.0;
@@ -73,7 +72,7 @@ struct TelemetryData {
   float    weightKg     = 0.0f;
   bool     seatOccupied = false;
   uint32_t doorIn       = 0;
-  uint32_t doorOut      = 0; // Only one entry sensor on the prototype, so exits are not counted yet
+  uint32_t doorOut      = 0;
 } currentData;
 
 bool     sdReady          = false;
@@ -81,13 +80,72 @@ uint32_t lastCycleMillis  = 0;
 uint32_t lastWeightMillis = 0;
 
 // ============================================================================
-// 3. DOOR SENSOR INTERRUPT (E18-D80NK)
+// 3. SINGLE-DOOR BIDIRECTIONAL PASSENGER COUNTER (2x E18-D80NK: A=D27, B=D14)
 // ============================================================================
-void IRAM_ATTR onDoorwayBeamBroken() {
+enum class DoorState : uint8_t { IDLE, A_WAIT_B, B_WAIT_A, COOLDOWN };
+
+DoorState doorState     = DoorState::IDLE;
+uint32_t  doorStepTimer = 0;
+int       lastIrStateA  = HIGH;
+int       lastIrStateB  = HIGH;
+uint32_t  lastIrEdgeA   = 0;
+uint32_t  lastIrEdgeB   = 0;
+
+void pollDoorwaySensors() {
   uint32_t now = millis();
-  if (now - lastIrTriggerTick >= IR_DEBOUNCE_MS) {
-    isrDoorInCounter++;
-    lastIrTriggerTick = now;
+  int stateA = digitalRead(PIN_IR_A); // LOW = blocked, HIGH = clear
+  int stateB = digitalRead(PIN_IR_B);
+
+  bool hitA = (stateA == LOW && lastIrStateA == HIGH && (now - lastIrEdgeA >= 80));
+  bool hitB = (stateB == LOW && lastIrStateB == HIGH && (now - lastIrEdgeB >= 80));
+  if (hitA) lastIrEdgeA = now;
+  if (hitB) lastIrEdgeB = now;
+
+  lastIrStateA = stateA;
+  lastIrStateB = stateB;
+
+  switch (doorState) {
+    case DoorState::IDLE:
+      if (hitA && !hitB) {
+        doorState     = DoorState::A_WAIT_B;
+        doorStepTimer = now;
+      } else if (hitB && !hitA) {
+        doorState     = DoorState::B_WAIT_A;
+        doorStepTimer = now;
+      }
+      break;
+
+    case DoorState::A_WAIT_B:
+      // Outer A broken first, then Inner B -> Passenger boarded (doorIn++)
+      if (hitB || stateB == LOW) {
+        currentData.doorIn++;
+        Serial.printf("[DOOR] Passenger IN (A->B) | doorIn=%lu doorOut=%lu\n",
+                      (unsigned long)currentData.doorIn, (unsigned long)currentData.doorOut);
+        doorState     = DoorState::COOLDOWN;
+        doorStepTimer = now;
+      } else if (now - doorStepTimer >= 1200) {
+        doorState = DoorState::IDLE;
+      }
+      break;
+
+    case DoorState::B_WAIT_A:
+      // Inner B broken first, then Outer A -> Passenger exited (doorOut++)
+      if (hitA || stateA == LOW) {
+        currentData.doorOut++;
+        Serial.printf("[DOOR] Passenger OUT (B->A) | doorIn=%lu doorOut=%lu\n",
+                      (unsigned long)currentData.doorIn, (unsigned long)currentData.doorOut);
+        doorState     = DoorState::COOLDOWN;
+        doorStepTimer = now;
+      } else if (now - doorStepTimer >= 1200) {
+        doorState = DoorState::IDLE;
+      }
+      break;
+
+    case DoorState::COOLDOWN:
+      if (stateA == HIGH && stateB == HIGH && (now - doorStepTimer >= IR_DEBOUNCE_MS)) {
+        doorState = DoorState::IDLE;
+      }
+      break;
   }
 }
 
@@ -395,24 +453,21 @@ void setup() {
     Serial.println(F("[HX711] Not detected at boot."));
   }
 
-  pinMode(PIN_IR_SENSOR, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(PIN_IR_SENSOR), onDoorwayBeamBroken, FALLING);
+  pinMode(PIN_IR_A, INPUT_PULLUP);
+  pinMode(PIN_IR_B, INPUT_PULLUP);
 
   initMicroSD();
 }
 
 void loop() {
   pollGPS();
+  pollDoorwaySensors();
   pollWeightSensor();
   updateModemStateMachine();
 
   uint32_t now = millis();
   if (now - lastCycleMillis >= TELEMETRY_INTERVAL_MS) {
     lastCycleMillis = now;
-
-    noInterrupts();
-    currentData.doorIn = isrDoorInCounter;
-    interrupts();
     currentData.timestampMs = now;
 
     // SD first, so a record survives even when the network is down.
