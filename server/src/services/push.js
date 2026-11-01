@@ -78,7 +78,7 @@ const notifyBusPing = async ({ bus, state, signalReturned }) => {
 
   try {
     // A commuter who chose this bus, or one who chose none and watches this bus's direction.
-    // A device that sends no direction (a real ESP32 today) can only reach commuters who chose it.
+    // A bus with no direction has no ETA (etaFor returns null), so it alerts nobody; see docs/web-push.md.
     const subscriptions = await prisma.pushSubscription.findMany({
       where: {
         OR: [
