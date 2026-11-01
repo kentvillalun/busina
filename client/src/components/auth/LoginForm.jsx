@@ -36,7 +36,7 @@ const LoginForm = () => {
 
   return (
     <div className="min-h-svh bg-white">
-      <main className="mx-auto flex min-h-svh w-full max-w-107.5 flex-col px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
+      <main className="mx-auto flex min-h-svh w-full max-w-107.5 flex-col px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] md:max-w-5xl md:px-10 md:pt-8">
         <header className="flex items-center gap-2.5">
           {/* Sent here from inside the app (the proxy adds ?next=): a way back to the map. From onboarding there is none. */}
           {fromApp && (
@@ -53,37 +53,42 @@ const LoginForm = () => {
           <img src="/logo.svg" alt="Busina" width={132} height={43} />
         </header>
 
-        <div className="mt-4 flex max-h-99 min-h-44 flex-1 flex-col">
-          <SceneStage className="w-full flex-1">
-            <AlertsScene active body="9 of 40 seats free now. Your alerts follow you to any phone." />
-          </SceneStage>
+        {/* Phone: one column. Medium screens and up: the scene on the left, the text and buttons on the right. */}
+        <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:items-center md:gap-x-10 lg:gap-x-14">
+          <div className="mt-4 flex max-h-99 min-h-44 flex-1 flex-col md:mt-0 md:h-[min(520px,70dvh)] md:max-h-none md:flex-none">
+            <SceneStage maxScale={1.3} className="w-full flex-1">
+              <AlertsScene active body="9 of 40 seats free now. Your alerts follow you to any phone." />
+            </SceneStage>
+          </div>
+
+          <div className="md:max-w-sm">
+            <h1 className="mt-7 font-display text-[clamp(26px,8vw,32px)] leading-[1.2] text-ink md:mt-0 md:text-[34px] md:leading-[1.15] lg:text-[44px] lg:leading-[1.1]">
+              Keep your alerts
+              <br />
+              on <span className="text-primary">any phone</span>
+            </h1>
+            <p className="mt-3 text-[15px] leading-6 text-muted md:mt-4 md:text-lg md:leading-7">
+              Sign in with Google to get bus alerts and save your boarding spot. Guests can still watch buses on the map.
+            </p>
+
+            {message && (
+              <p role="alert" className="mt-4 text-sm font-medium text-fault">
+                {message}
+              </p>
+            )}
+
+            <a
+              href={`/api/auth/google?next=${encodeURIComponent(next)}`}
+              className="gradient-button flex items-center justify-center gap-3 active:opacity-80"
+            >
+              <GoogleG />
+              Continue with Google
+            </a>
+            <Link href="/home" className="mt-1 block w-full py-3 text-center text-[15px] font-bold text-muted">
+              Continue as guest
+            </Link>
+          </div>
         </div>
-
-        <h1 className="mt-7 font-display text-[clamp(26px,8vw,32px)] leading-[1.2] text-ink">
-          Keep your alerts
-          <br />
-          on <span className="text-primary">any phone</span>
-        </h1>
-        <p className="mt-3 text-[15px] leading-6 text-muted">
-          Sign in with Google to get bus alerts and save your boarding spot. Guests can still watch buses on the map.
-        </p>
-
-        {message && (
-          <p role="alert" className="mt-4 text-sm font-medium text-fault">
-            {message}
-          </p>
-        )}
-
-        <a
-          href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-          className="gradient-button flex items-center justify-center gap-3 active:opacity-80"
-        >
-          <GoogleG />
-          Continue with Google
-        </a>
-        <Link href="/home" className="mt-1 w-full py-3 text-center text-[15px] font-bold text-muted">
-          Continue as guest
-        </Link>
       </main>
     </div>
   );
