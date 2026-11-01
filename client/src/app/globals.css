@@ -20,6 +20,21 @@
   --breakpoint-xs: 300px;
   --breakpoint-mobile: 400px;
   --color-accent: #B5D1E9;
+
+  /* Toast: slides down, stays, fades out. The 2.5s must match the hide timer in BusDetails.jsx. */
+  --animate-toast: toast 2.5s ease-out forwards;
+  --animate-check-pop: check-pop 0.5s ease-out 0.15s both;
+  @keyframes toast {
+    0% { opacity: 0; transform: translateY(-24px) scale(0.9); }
+    10% { opacity: 1; transform: translateY(0) scale(1); }
+    88% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-12px) scale(0.97); }
+  }
+  @keyframes check-pop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
 }
 
 /* `inline` because the variables come from next/font on <html> (see layout.js). */
