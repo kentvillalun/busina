@@ -6,15 +6,30 @@ import PermissionCard from "@/components/settings/PermissionCard";
 import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks/useNearBusAlert";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { askAlerts, getAlertsPermission } from "@/lib/permissions";
-import { requestPushSync } from "@/lib/push";
+import { requestPushSync, sendTestPush } from "@/lib/push";
 
 const MINUTES = [5, 10, 15];
+
+// What the test button says for each result of sendTestPush.
+const TEST_MESSAGES = {
+  sent: "Sent. It should reach this phone in a few seconds. Lock the screen to see it as an alert.",
+  off: "Turn on notifications above first.",
+  unsupported: "This browser can't receive alerts. On iPhone, add Busina to the Home Screen first.",
+  "no-spot": "Set your boarding spot first (or use your location from Home), so alerts can be set up.",
+  "no-position": "We can't get your location. Turn on location, or set a boarding spot.",
+  guest: "Sign in first.",
+  expired: "This phone's alert link had expired and was reset. Tap the button again.",
+  "slow-down": "Please wait a minute before sending another test.",
+  failed: "Could not send the test. Try again in a minute.",
+};
 
 export default function AlertsPage() {
   const [permission, setPermission] = useState(null);
   const [turningOn, setTurningOn] = useState(false);
   const [minutes, setMinutes] = useSavedSetting(ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES);
   const [alertBus, setAlertBus] = useSavedSetting(ALERT_BUS_KEY, null);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     getAlertsPermission().then(setPermission);
@@ -26,6 +41,13 @@ export default function AlertsPage() {
     setPermission(result);
     setTurningOn(false);
     if (result.granted) requestPushSync();
+  };
+
+  const sendTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    setTestResult(await sendTestPush());
+    setTesting(false);
   };
 
   return (
@@ -70,6 +92,23 @@ export default function AlertsPage() {
           )}
         </div>
         <Body>Pick a bus on its details page to be alerted for that bus only.</Body>
+      </Card>
+      <Card>
+        <h2 className="font-medium text-ink">Check that alerts work</h2>
+        <Body>Sends one test notification to this phone.</Body>
+        <button
+          type="button"
+          onClick={sendTest}
+          disabled={testing}
+          className="mt-1 h-11 rounded-full bg-primary text-[15px] font-bold text-white disabled:opacity-60"
+        >
+          {testing ? "Sending..." : "Send test notification"}
+        </button>
+        {testResult && (
+          <p role="status" className={`text-[13px] leading-4.5 ${testResult === "sent" ? "text-success" : "text-fault"}`}>
+            {TEST_MESSAGES[testResult]}
+          </p>
+        )}
       </Card>
     </DetailPage>
   );

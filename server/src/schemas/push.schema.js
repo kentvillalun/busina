@@ -24,4 +24,7 @@ const subscribeSchema = z.object({
 
 const unsubscribeSchema = z.object({ endpoint });
 
-export { endpoint, subscribeSchema, unsubscribeSchema };
+// "Send test notification": which browser to send to. Same body as unsubscribe.
+const testSchema = unsubscribeSchema;
+
+export { endpoint, subscribeSchema, testSchema, unsubscribeSchema };

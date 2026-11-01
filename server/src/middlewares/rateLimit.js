@@ -35,6 +35,16 @@ const pushLimiter = rateLimit({
   handler: onLimit("Too many alert changes, please slow down"),
 });
 
+// Per commuter (so it runs after authenticateCommuter). Each test is a real push through Apple or Google: a few are plenty.
+const pushTestLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 5,
+  keyGenerator: (req) => `push-test:${req.user.id}`,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Please wait a minute before sending another test"),
+});
+
 // Per IP, for the sign-in redirects and logout. Each login uses two requests; 20 a minute leaves room for a shared Wi-Fi.
 const authLimiter = rateLimit({
   windowMs: 60_000,
@@ -44,4 +54,4 @@ const authLimiter = rateLimit({
   handler: onLimit("Too many sign-in attempts, please wait a minute"),
 });
 
-export { generalLimiter, devicePingLimiter, pushLimiter, authLimiter };
+export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter };

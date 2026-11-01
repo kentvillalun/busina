@@ -40,6 +40,37 @@ const getRegistration = () =>
 const send = (method, body) =>
   fetch("/api/push/subscribe", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
+// "Send test notification": makes sure this phone is subscribed with the latest settings, then asks the server to push one test
+// to it. Returns "sent", "unsupported", "off", "no-spot", "no-position", "guest", "expired", "slow-down" or "failed".
+// "sent" means the push service accepted it, not that it has arrived: the person sees that on the phone.
+export const sendTestPush = async () => {
+  const synced = await syncPush();
+  if (["unsupported", "off", "no-spot", "no-position", "guest"].includes(synced)) return synced;
+  if (synced !== "on" && synced !== "unchanged") return "failed";
+
+  try {
+    const registration = await getRegistration();
+    const subscription = await registration?.pushManager.getSubscription();
+    if (!subscription) return "failed";
+
+    const response = await fetch("/api/push/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: subscription.endpoint }),
+    });
+    if (response.ok) return "sent";
+    if (response.status === 429) return "slow-down";
+    if (response.status === 410) {
+      await subscription.unsubscribe(); // the push service dropped it: the next sync makes a fresh one
+      return "expired";
+    }
+    return "failed";
+  } catch (error) {
+    console.error("[push] the test notification failed:", error);
+    return "failed";
+  }
+};
+
 // Makes the server's copy match the saved settings. Safe to call any number of times (the server upserts).
 // A closed web app cannot report its position, so in location mode the server keeps a snapshot: the position at the latest sync
 // (see PushSync, which refreshes it while the app is open). Returns "on", "unchanged", "no-spot", "no-position", "off"
