@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { useIsWide } from "@/components/home/BottomSheet";
 import { haptic, hapticTrigger } from "@/lib/haptics";
+import Link from "next/link";
 
 const spring = { type: "spring", stiffness: 400, damping: 40 };
 
@@ -53,14 +54,14 @@ const SignInSheet = ({ open, next, onDismiss }) => {
             </p>
 
             {/* A plain link: the whole page goes to Google and comes back, so the router cannot do it. */}
-            <a
+            <Link
               href={`/api/auth/google?next=${encodeURIComponent(next)}`}
               ref={hapticTrigger}
               onClick={() => haptic.medium()}
               className="gradient-button flex items-center justify-center"
             >
               Continue with Google
-            </a>
+            </Link>
             <button
               type="button"
               ref={hapticTrigger}
