@@ -99,7 +99,7 @@ repeat alerts.
   and the choice ends. With no chosen bus, any bus going their saved direction can alert.
 - Both the in-app alert and the push use the tag `bus-<id>`, so if both fire the second **replaces** the first.
 - A bus whose state has **no `direction`** cannot alert **anyone**, not even a commuter who chose it: without a direction there
-  is no honest ETA (see the limits).
+  is no honest ETA. The server therefore works the direction out from how the bus moves (see section 9).
 
 ## 6. Setup: keys and environment variables
 
@@ -170,10 +170,16 @@ Tip: the Neon database is shared with production. The simulator and the test but
   silence it.
 - **Android** may delay or restrict notifications under battery optimization. Not tested here yet.
 - **No background location on the web.** See section 4: a closed app only has a snapshot.
-- **The real ESP32 sends no `direction`** (it cannot know its heading), and the server keeps whatever direction the bus had
-  before. A bus that never had one has no ETA, so **it cannot alert anyone**. Today alerts work only with the simulator (which
-  sends it). Deriving the direction from consecutive positions, or letting the driver set it, is the fix and is not built. This must
-  be solved before a demo with a real GPS.
+- **The direction of a bus comes from its movement, not from the device.** The ESP32 cannot know its heading: the main
+  firmware sends none and the prototype firmware branch (`feat/firmware-esp32-prototype`) sends a fixed `"NORTHBOUND"`. On every
+  ping the server compares the bus's position with its last one along the road (`server/src/utils/direction.js`): forward toward
+  Vigan is `SOUTHBOUND`, backward `NORTHBOUND`. It needs a real move (at least 10 m, at least 5 km/h, at most 1 km in one ping, last
+  ping under 30 s old, both fixes within 100 m of the road). Otherwise it keeps the direction the bus had, and a device value only
+  counts for a bus that has none yet. Checked offline on the real route over full laps: wrong only on the one ping at each turn-around.
+  A bus that never moves has no direction until it does.
+- **Fake positions.** The prototype firmware has `INDOOR_GPS_FALLBACK = true`: with no GPS lock it sends made-up positions along the
+  Laoag road at 25 km/h and loops them. Set it to `false` for any real run, or the bus will jump to Laoag when it loses the sky and can
+  alert people there.
 - **One server instance assumed.** The route cache and the "already handling this bus" set are in memory
   (`shortcut:` in `services/push.js`).
 - A subscription is removed on **logout** (that browser's only), on **404/410**, and when the account is deleted. It is **not**
@@ -199,7 +205,7 @@ Tip: the Neon database is shared with production. The simulator and the test but
 
 ## 11. Known gaps
 
-- Real device direction (above).
+- The direction logic is checked offline and by unit tests, not yet with a real GPS on a real trip.
 - Not tested on Android; not tested with several buses approaching at once on a real phone.
 - No expiry for a location-mode point, no delete-account screen.
 - Auth hardening from the review: tests for the sign-in checks, a startup check that `JWT_SECRET` is set, and a Google email

@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { prisma } from "../config/db.js";
+import { getRoute } from "./routeCache.js";
 import { decideAlert } from "../utils/alertDecision.js";
 import { busOnRoad, etaFor } from "../utils/eta.js";
 
@@ -36,20 +37,6 @@ const sendPush = async (subscription, payload) => {
     console.error("[push] send failed:", error.statusCode ?? error.message);
     return "failed";
   }
-};
-
-// A route changes only when someone edits it, so a few minutes in memory saves a read of two long polylines on every ping.
-const ROUTE_CACHE_MS = 10 * 60_000;
-const routes = new Map(); // routeId -> { route, loadedAt }
-const getRoute = async (routeId) => {
-  const cached = routes.get(routeId);
-  if (cached && Date.now() - cached.loadedAt < ROUTE_CACHE_MS) return cached.route;
-  const route = await prisma.route.findUnique({
-    where: { id: routeId },
-    select: { polyline: true, polylineNorthbound: true },
-  });
-  routes.set(routeId, { route, loadedAt: Date.now() });
-  return route;
 };
 
 // Same words as the notifications the app shows itself (hooks/useNearBusAlert.js), so both read alike.
