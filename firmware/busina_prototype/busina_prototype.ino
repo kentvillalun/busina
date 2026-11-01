@@ -470,6 +470,18 @@ void loop() {
     lastCycleMillis = now;
     currentData.timestampMs = now;
 
+    Serial.printf(
+      "[GPS] bytes=%lu sats=%lu valid=%s lat=%.6f lng=%.6f speed=%.1fkm/h | doorIn=%lu doorOut=%lu\n",
+      (unsigned long)gps.charsProcessed(),
+      (unsigned long)gps.satellites.value(),
+      currentData.gpsValid ? "YES" : "NO",
+      currentData.lat,
+      currentData.lng,
+      currentData.speedKmh,
+      (unsigned long)currentData.doorIn,
+      (unsigned long)currentData.doorOut
+    );
+
     // SD first, so a record survives even when the network is down.
     logToMicroSD(currentData);
     startCellularPost(currentData);
