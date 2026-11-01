@@ -13,6 +13,7 @@ import SceneStage from "@/components/onboarding/SceneStage";
 import WaitScene from "@/components/onboarding/WaitScene";
 import { haptic, hapticTrigger } from "@/lib/haptics";
 import { askAlerts, askLocation } from "@/lib/permissions";
+import { markOnboardingSeen } from "@/lib/session";
 
 const steps = [
   {
@@ -130,9 +131,10 @@ export default function OnboardingPage() {
   };
 
   useEffect(() => {
-    const hasSeen = localStorage.getItem("hasSeenOnboarding");
-    if (hasSeen) {
-      finish();
+    // Seen before (this flag also exists from before the cookie did): carry on to Home, no login detour.
+    if (localStorage.getItem("hasSeenOnboarding")) {
+      markOnboardingSeen();
+      router.replace("/home");
     }
   }, []);
 
@@ -151,7 +153,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={() => {
                 haptic.light();
-                localStorage.setItem("hasSeenOnboarding", "true");
+                markOnboardingSeen();
                 finish();
               }}
               ref={hapticTrigger}
@@ -212,7 +214,7 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={() => {
                     if (step === 2) {
-                      localStorage.setItem("hasSeenOnboarding", "true");
+                      markOnboardingSeen();
                     }
                     handlePrimary();
                   }}
@@ -228,7 +230,7 @@ export default function OnboardingPage() {
                     type="button"
                     onClick={() => {
                       if (step === 2) {
-                        localStorage.setItem("hasSeenOnboarding", "true");
+                        markOnboardingSeen();
                       }
                       next();
                     }}

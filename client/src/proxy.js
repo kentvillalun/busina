@@ -2,10 +2,14 @@ import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 
 const COOKIE = "commuter_token";
+const SEEN_COOKIE = "hasSeenOnboarding"; // set by the onboarding page (lib/session.js)
 
-// Guests (no valid cookie) only get Home. Bus details and Settings, where alerts are set up, need a Google sign-in.
-// This only checks the signature and the expiry. It cannot see the logout blacklist (that is in the database),
-// so a logged-out token is stopped by the first API call instead; /api/auth/me then clears the cookie.
+// Who may see what:
+//   first visit (no onboarding cookie)  -> /home sends them to /onboarding
+//   seen onboarding, no session (guest) -> /home only; bus details and Settings send them to /login
+//   seen onboarding, signed in          -> every page
+// The session check only verifies the signature and the expiry. It cannot see the logout blacklist (that is in the
+// database), so a logged-out token is stopped by the first API call instead; /api/auth/me then clears the cookie.
 const isValid = async (token) => {
   if (!token || !process.env.JWT_SECRET) return { valid: false, expired: false };
   try {
@@ -18,6 +22,12 @@ const isValid = async (token) => {
 
 export async function proxy(request) {
   const { pathname, search } = request.nextUrl;
+
+  // The app opens on /home (manifest start_url), so this is where a first-time visitor is caught.
+  if (pathname === "/home") {
+    return request.cookies.has(SEEN_COOKIE) ? NextResponse.next() : NextResponse.redirect(new URL("/onboarding", request.url));
+  }
+
   const token = request.cookies.get(COOKIE)?.value;
   const { valid, expired } = await isValid(token);
 
@@ -39,5 +49,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/bus/:path*", "/settings/:path*", "/login"],
+  matcher: ["/home", "/bus/:path*", "/settings/:path*", "/login"],
 };

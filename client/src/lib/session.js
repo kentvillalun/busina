@@ -2,6 +2,15 @@
 // inherit someone's boarding spot or chosen bus.
 const PRIVATE_KEYS = ["busina:spot", "busina:alertBus"];
 
+// Onboarding is shown once. The proxy reads the cookie (it cannot read localStorage) to send first-time visitors to it
+// before Home is drawn. The localStorage copy is kept for people who finished it before the cookie existed.
+export const markOnboardingSeen = () => {
+  try {
+    localStorage.setItem("hasSeenOnboarding", "true");
+  } catch {}
+  document.cookie = "hasSeenOnboarding=1; path=/; max-age=31536000; samesite=lax";
+};
+
 // A full page load (not router.push): Next keeps hidden pages alive, so their state would survive a soft navigation.
 export const logout = async (to = "/login") => {
   try {
