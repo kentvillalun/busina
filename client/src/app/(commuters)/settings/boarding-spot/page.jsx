@@ -63,6 +63,13 @@ export default function BoardingSpotPage() {
     saveSpot({ lat: pin.lat, lng: pin.lng, name: await placeName(pin) });
     clearAlertBus(); // the chosen bus was timed to the old spot
     router.push("/settings");
+    setSaving(false); // this page is kept alive while hidden, so "Saving..." would still be there on return
+  };
+
+  const remove = () => {
+    saveSpot(null);
+    clearAlertBus();
+    router.push("/settings");
   };
 
   return (
@@ -100,7 +107,14 @@ export default function BoardingSpotPage() {
 
       <section className="absolute inset-x-0 bottom-0 z-20 mx-auto flex h-69 max-w-107.5 flex-col rounded-t-[32px] bg-white px-6 pb-6 pt-3 shadow-[0_-4px_14px_rgba(16,59,96,0.18)]">
         <span className="mx-auto h-1.25 w-10 rounded-full bg-line" />
-        <h2 className="mt-4.5 font-display text-[22px] leading-7 text-ink">Your boarding spot</h2>
+        <div className="mt-4.5 flex items-center justify-between gap-3">
+          <h2 className="font-display text-[22px] leading-7 text-ink">Your boarding spot</h2>
+          {saved && (
+            <button type="button" onClick={remove} className="text-[13px] font-bold text-fault">
+              Remove
+            </button>
+          )}
+        </div>
         <p className="mt-1 text-sm leading-5 text-muted">
           We&apos;ll alert you when a bus is close to this spot. Place the pin on the roadside where you usually wait.
         </p>
