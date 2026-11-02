@@ -14,6 +14,7 @@ import deviceRoute from "./routes/device.route.js";
 import healthRoute from "./routes/health.route.js";
 import pushRoute from "./routes/push.route.js";
 import routesRoute from "./routes/routes.route.js";
+import staffRoute from "./routes/staff.route.js";
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use("/device", deviceRoute);
 app.use("/buses", busRoute);
 app.use("/routes", routesRoute);
 app.use("/push", pushRoute);
+app.use("/staff", staffRoute);
 
 app.use(notFound);
 app.use(errorHandler);

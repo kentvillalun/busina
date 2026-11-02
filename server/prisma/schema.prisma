@@ -89,6 +89,8 @@ model Bus {
   seatCount     Int     @default(40)
   deviceId      String  @unique
   deviceKeyHash String
+  // Driver sign-in PIN (bcrypt); null until `npm run bus:pin` sets one, and then nobody can sign in as this bus.
+  pinHash       String?
   active        Boolean @default(true)
 
   createdAt DateTime @default(now())

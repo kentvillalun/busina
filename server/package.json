@@ -14,7 +14,8 @@
     "db:studio": "prisma studio",
     "seed": "node --env-file=.env prisma/seed.js",
     "simulate": "node --env-file=.env scripts/simulate-bus.js",
-    "push:test": "node --env-file=.env scripts/push-test.js"
+    "push:test": "node --env-file=.env scripts/push-test.js",
+    "bus:pin": "node --env-file=.env scripts/set-bus-pin.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",

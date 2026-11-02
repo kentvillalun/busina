@@ -1,16 +1,10 @@
 import { prisma } from "../config/db.js";
 import { HttpError } from "../utils/HttpError.js";
-import { COMMUTER_COOKIE, cookieOptions, hashToken, verifyToken } from "../utils/token.js";
-
-// Stub for the login slice (drivers, conductors, operators). Devices use deviceAuth instead.
-// TODO: verify the Bearer JWT, load the user, set req.user = { id, role, companyId }.
-const authenticate = async (req, res, next) => {
-  return next(new HttpError(501, "Authentication is not implemented yet"));
-};
+import { COMMUTER_COOKIE, STAFF_COOKIE, cookieOptions, hashToken, verifyToken } from "../utils/token.js";
 
 // A cookie that failed any check is removed, so the browser stops sending a dead session.
-const rejectSession = (res, next, message, code) => {
-  res.clearCookie(COMMUTER_COOKIE, cookieOptions);
+const rejectSession = (res, next, message, code, cookie = COMMUTER_COOKIE) => {
+  res.clearCookie(cookie, cookieOptions);
   return next(new HttpError(401, message, { code }));
 };
 
@@ -28,6 +22,9 @@ const authenticateCommuter = async (req, res, next) => {
       : rejectSession(res, next, "Invalid session", "INVALID_SESSION");
   }
 
+  // A token of another portal (a driver's) is never a commuter session, whatever cookie it came in.
+  if (payload.role !== "COMMUTER") return rejectSession(res, next, "Invalid session", "INVALID_SESSION");
+
   if (await prisma.blacklistedToken.findUnique({ where: { tokenHash: hashToken(token) } })) {
     return rejectSession(res, next, "Invalid session", "INVALID_SESSION");
   }
@@ -40,7 +37,36 @@ const authenticateCommuter = async (req, res, next) => {
   next();
 };
 
-// requireRoles(["DRIVER", "CONDUCTOR"]); must run after authenticate, which sets req.user.
+// Driver session: the JWT in the staff_token cookie. The driver is the bus, so this sets
+// req.user = { id: busId, role: "DRIVER", busId, busNumber, name } and a driver can only ever act on that bus.
+const authenticateStaff = async (req, res, next) => {
+  const token = req.cookies?.[STAFF_COOKIE];
+  if (!token) return next(new HttpError(401, "Sign in to continue"));
+
+  let payload;
+  try {
+    payload = verifyToken(token);
+  } catch (error) {
+    return error.name === "TokenExpiredError"
+      ? rejectSession(res, next, "Your session expired, please sign in again", "SESSION_EXPIRED", STAFF_COOKIE)
+      : rejectSession(res, next, "Invalid session", "INVALID_SESSION", STAFF_COOKIE);
+  }
+
+  if (payload.role !== "DRIVER") return rejectSession(res, next, "Invalid session", "INVALID_SESSION", STAFF_COOKIE);
+
+  if (await prisma.blacklistedToken.findUnique({ where: { tokenHash: hashToken(token) } })) {
+    return rejectSession(res, next, "Invalid session", "INVALID_SESSION", STAFF_COOKIE);
+  }
+
+  // A bus that was disabled, or whose PIN was removed, stops working at once, not when the token expires.
+  const bus = await prisma.bus.findUnique({ where: { id: payload.busId } });
+  if (!bus?.active || !bus.pinHash) return rejectSession(res, next, "Invalid session", "INVALID_SESSION", STAFF_COOKIE);
+
+  req.user = { id: bus.id, role: "DRIVER", busId: bus.id, busNumber: bus.busNumber, name: bus.name };
+  next();
+};
+
+// requireRoles(["DRIVER"]); must run after an authenticate middleware, which sets req.user.
 const requireRoles = (allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -55,4 +81,4 @@ const requireRoles = (allowedRoles) => {
   };
 };
 
-export { authenticate, authenticateCommuter, requireRoles };
+export { authenticateCommuter, authenticateStaff, requireRoles };

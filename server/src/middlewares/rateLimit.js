@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { HttpError } from "../utils/HttpError.js";
 
 // Counters live in memory: fine for one server, reset on restart.
@@ -54,4 +54,17 @@ const authLimiter = rateLimit({
   handler: onLimit("Too many sign-in attempts, please wait a minute"),
 });
 
-export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter };
+// Driver PIN guesses: only failed attempts count, 5 per 15 minutes for each IP and bus code (so it runs after validate,
+// which cleans req.body). A short numeric PIN is the weak spot, so this is what makes guessing it impractical.
+// shortcut: counted per IP, so many IPs together could still guess; add a per-bus failure count if that matters.
+const staffLoginLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  limit: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `staff-login:${ipKeyGenerator(req.ip)}:${req.body.busNumber}`,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Too many wrong PINs, please try again in 15 minutes"),
+});
+
+export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter };
