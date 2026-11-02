@@ -5,6 +5,7 @@ import { useState } from "react";
 import Dialog, { outlineButton, primaryButton } from "@/components/operator/Dialog";
 import StatusChip from "@/components/operator/StatusChip";
 import { routeText, seatsText } from "@/lib/fleet";
+import { send } from "@/lib/operatorApi";
 
 const Row = ({ label, children }) => (
   <div className="flex items-center justify-between gap-4 border-t border-line/60 py-2.5 text-[13px]">
@@ -12,21 +13,6 @@ const Row = ({ label, children }) => (
     <dd className="text-right font-medium text-ink">{children}</dd>
   </div>
 );
-
-// A POST or PATCH to the operator API. A 401 means the session ended: back to the sign-in page, and nothing is returned.
-const send = async (url, method, body) => {
-  const response = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (response.status === 401) {
-    window.location.replace("/operator/login?expired=1");
-    return null;
-  }
-  if (!response.ok) throw new Error("rejected");
-  return response.json();
-};
 
 // The details of one bus, shown in a modal. Reset PIN and Disable / Enable ask first (Figma OP5 and OP6).
 // `onChanged` makes the page ask for the fleet again.
