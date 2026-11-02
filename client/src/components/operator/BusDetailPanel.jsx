@@ -4,7 +4,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import Dialog, { outlineButton, primaryButton } from "@/components/operator/Dialog";
 import StatusChip from "@/components/operator/StatusChip";
-import { crewText, routeText } from "@/lib/fleetSample";
+import { routeText } from "@/lib/fleet";
 
 const Row = ({ label, children }) => (
   <div className="flex items-center justify-between gap-4 border-t border-line/60 py-2.5 text-[13px]">
@@ -39,7 +39,6 @@ const BusDetailPanel = ({ bus, onClose }) => {
         <Row label="Speed">{bus.speedKmh === null ? "Unknown" : `${bus.speedKmh} km/h`}</Row>
         <Row label="Route">{routeText(bus.direction)}</Row>
         <Row label="Last update">{bus.lastUpdate}</Row>
-        <Row label="Crew">{crewText(bus.id)}</Row>
       </dl>
 
       <div className="grid grid-cols-2 gap-3">

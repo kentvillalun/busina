@@ -4,7 +4,8 @@ import { useState } from "react";
 import BusDetailPanel from "@/components/operator/BusDetailPanel";
 import DataTable from "@/components/operator/DataTable";
 import StatusChip from "@/components/operator/StatusChip";
-import { FLEET, NEEDS_ATTENTION, crewText, routeText } from "@/lib/fleetSample";
+import useFleet from "@/hooks/useFleet";
+import { NEEDS_ATTENTION, routeText, seatsText } from "@/lib/fleet";
 
 const TABS = [
   { name: "All", test: () => true },
@@ -14,33 +15,35 @@ const TABS = [
   { name: "Stopover", test: (bus) => bus.status === "stopover" },
 ];
 
-const seatsText = (bus) => (bus.seatsFree === null ? "Unknown" : `${bus.seatsFree} / ${bus.seatCount}`);
-
+// Crew joins the table with the staff roster.
 const COLUMNS = {
   bus: { header: "Bus", render: (bus) => bus.busNumber },
   route: { header: "Route", render: (bus) => routeText(bus.direction) },
   status: { header: "Status", render: (bus) => <StatusChip status={bus.status} /> },
   seats: { header: "Seats free", render: seatsText },
-  crew: { header: "Crew", render: (bus) => crewText(bus.id) },
+  speed: { header: "Speed", render: (bus) => (bus.speedKmh === null ? "—" : `${bus.speedKmh} km/h`) },
   update: { header: "Last update", render: (bus) => bus.lastUpdate },
 };
 
 // Figma OP3 and OP4. With a bus selected the table keeps four columns and the details open beside it.
 export default function OperatorBusesPage() {
+  const { fleet, loaded, offline } = useFleet();
   const [tab, setTab] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
-  const rows = FLEET.filter(TABS.find((item) => item.name === tab).test);
-  const selected = FLEET.find((bus) => bus.id === selectedId);
-  const columns = (selected ? ["bus", "status", "seats", "update"] : ["bus", "route", "status", "seats", "crew", "update"]).map((key) => COLUMNS[key]);
+
+  if (!loaded) return <p className="mx-auto max-w-300 text-sm text-muted">{offline ? "Could not load the fleet. Check your connection." : "Loading the fleet..."}</p>;
+
+  const rows = fleet.filter(TABS.find((item) => item.name === tab).test);
+  const selected = fleet.find((bus) => bus.id === selectedId);
+  const columns = (selected ? ["bus", "status", "seats", "update"] : ["bus", "route", "status", "seats", "speed", "update"]).map((key) => COLUMNS[key]);
 
   return (
     <div className="mx-auto flex max-w-300 flex-col gap-4 md:gap-5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="font-display text-[28px] leading-8 text-ink">Buses</h1>
-          <p className="text-[13px] text-muted">{FLEET.length} buses · select a bus for details</p>
-        </div>
-        <span className="rounded-full border border-primary bg-stage px-2.5 py-1 text-xs font-semibold text-navy md:ml-auto">SIMULATED DATA</span>
+      <div className="flex flex-col gap-0.5">
+        <h1 className="font-display text-[28px] leading-8 text-ink">Buses</h1>
+        <p className="text-[13px] text-muted">
+          {fleet.length} {fleet.length === 1 ? "bus" : "buses"} · select a bus for details{offline ? " · connection lost, showing the last data" : ""}
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -57,7 +60,7 @@ export default function OperatorBusesPage() {
               }`}
             >
               {item.name}
-              <span>{FLEET.filter(item.test).length}</span>
+              <span>{fleet.filter(item.test).length}</span>
             </button>
           );
         })}
