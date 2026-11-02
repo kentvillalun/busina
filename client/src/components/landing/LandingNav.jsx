@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- the logo is a small SVG; next/image would only add work */
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const LINKS = [
   { label: "Features", href: "#features" },
@@ -13,15 +13,28 @@ const LINKS = [
 
 const ctaClass = "rounded-lg bg-linear-to-b from-primary-light to-primary-dark px-4 py-1.5 text-center text-sm font-bold text-white active:opacity-80";
 
-// Floating navbar: fixed near the top, a blurred pill from md up and a compact bar with a dropdown on a phone (Figma L1, L2, L3).
+// At the top of the page the bar is part of the page: transparent, square, as wide as the content. Once the page is scrolled it
+// floats: it moves in from the edges, turns glassy and gets rounded (a pill from md up, the 14px of the buttons on a phone).
 const LandingNav = () => {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   return (
-    <header className="fixed inset-x-4 top-3 z-50 md:inset-x-auto md:left-1/2 md:w-195 md:-translate-x-1/2">
+    <header className={`fixed inset-x-0 top-0 z-50 flex flex-col items-center transition-[padding] duration-300 ${scrolled ? "px-4 pt-3" : "px-0 pt-0"}`}>
       <nav
         aria-label="Main"
-        className="flex h-13 items-center justify-between rounded-[14px] border-[0.8px] border-line bg-white/72 px-3.5 shadow-[0_8px_24px_rgba(15,34,51,0.06)] backdrop-blur-lg md:rounded-full md:px-5"
+        className={`flex w-full items-center justify-between border-[0.8px] transition-all duration-300 ${
+          scrolled
+            ? "h-13 max-w-195 rounded-[14px] border-line bg-white/72 px-3.5 shadow-[0_8px_24px_rgba(15,34,51,0.06)] backdrop-blur-lg md:rounded-full md:px-5"
+            : "h-16 max-w-310 rounded-none border-transparent bg-transparent px-5 md:px-10"
+        }`}
       >
         <Link href="/get" aria-label="Busina">
           <img src="/logo.svg" alt="Busina" width={96} height={32} />
@@ -59,7 +72,11 @@ const LandingNav = () => {
       </nav>
 
       {open && (
-        <div className="mt-2 flex flex-col gap-3.5 rounded-[14px] border-[0.8px] border-line bg-white p-5 shadow-[0_10px_28px_rgba(15,34,51,0.08)] md:hidden">
+        <div
+          className={`flex w-full flex-col gap-3.5 border-[0.8px] border-line bg-white p-5 shadow-[0_10px_28px_rgba(15,34,51,0.08)] md:hidden ${
+            scrolled ? "mt-2 rounded-[14px]" : "rounded-b-[14px] border-t-0"
+          }`}
+        >
           {LINKS.map((link) => (
             <a key={link.href} href={link.href} onClick={() => setOpen(false)} className="text-[17px] font-medium text-ink">
               {link.label}

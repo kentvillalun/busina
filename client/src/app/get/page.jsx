@@ -50,10 +50,7 @@ export default function GetPage() {
       <section className="bg-stage pb-12 pt-28 md:pb-24 md:pt-40">
         <div className={`${container} flex flex-col items-center gap-10 xl:flex-row xl:gap-14`}>
           <div className="flex w-full flex-col gap-5 md:gap-6 xl:w-130 xl:shrink-0">
-            <span className="w-fit rounded-full border border-line bg-white px-3.5 py-1.5 text-[13px] font-semibold text-navy">
-              UMAK ITSO 2026 · IoT category
-            </span>
-            <h1 className="font-display text-[38px] leading-[1.05] text-ink md:text-[60px]">Know where your bus is. Know if there is a seat.</h1>
+            <h1 className="font-display text-[44px] leading-[1.05] text-ink md:text-[68px]">Less guessing, better commuting.</h1>
             <p className="text-base leading-6 text-muted md:text-[19px] md:leading-7.5">
               Busina shows commuters live bus locations and free seats on provincial highways, and tells you when to leave for your boarding spot.
             </p>
