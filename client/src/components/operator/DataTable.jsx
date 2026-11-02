@@ -1,3 +1,4 @@
+import { thinScroll } from "@/components/operator/Dialog";
 import { Empty, ErrorState, Loading } from "@/components/operator/states";
 
 // The table of Ecoaid: a card with a hairline border, a header row with a rule under it, 16px cell padding, 14px text and a thin
@@ -22,7 +23,7 @@ const DataTable = ({ columns, rows, card, onRowClick, selectedId, loading = fals
 
   return (
     <>
-      <div className="hidden w-full overflow-x-auto rounded-xl border-[0.5px] border-line bg-white px-8 md:block">
+      <div className={`hidden w-full overflow-x-auto rounded-xl border-[0.5px] border-line bg-white px-8 md:block ${thinScroll}`}>
         <table className="w-full border-collapse text-nowrap text-sm">
           <thead className="border-b-[0.5px] border-line">
             <tr>
