@@ -18,6 +18,13 @@ enum Role {
   OPERATOR
 }
 
+// Set by the driver. AT_REST: off duty, hidden from commuters. STOPOVER: a short stop, shown as stopped with no ETA.
+enum ServiceStatus {
+  IN_SERVICE
+  AT_REST
+  STOPOVER
+}
+
 model Company {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
@@ -92,6 +99,8 @@ model Bus {
   // Driver sign-in PIN (bcrypt); null until `npm run bus:pin` sets one, and then nobody can sign in as this bus.
   pinHash       String?
   active        Boolean @default(true)
+  // Lives on Bus, not BusState: a ping upserts BusState every few seconds and must never undo what the driver chose.
+  serviceStatus ServiceStatus @default(IN_SERVICE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

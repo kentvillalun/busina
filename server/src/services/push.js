@@ -60,6 +60,8 @@ const handling = new Set(); // bus ids whose last ping is still being processed
 // follows a silence longer than the stale limit. Decides for every subscription this bus matters to.
 const notifyBusPing = async ({ bus, state, signalReturned }) => {
   if (!setup()) return;
+  // A bus the driver put at rest or on a stopover is not coming: "about 2 min away" would be false.
+  if (bus.serviceStatus && bus.serviceStatus !== "IN_SERVICE") return;
   if (handling.has(bus.id)) return; // pings come every few seconds; the next one catches up, and nothing is sent twice
   handling.add(bus.id);
 

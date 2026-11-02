@@ -67,4 +67,14 @@ const staffLoginLimiter = rateLimit({
   handler: onLimit("Too many wrong PINs, please try again in 15 minutes"),
 });
 
-export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter };
+// Per signed-in bus (so it runs after authenticateStaff). A driver taps a toggle now and then; more is a stuck button or a script.
+const staffActionLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 30,
+  keyGenerator: (req) => `staff:${req.user.id}`,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Too many changes, please slow down"),
+});
+
+export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter, staffActionLimiter };

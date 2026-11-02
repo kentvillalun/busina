@@ -25,7 +25,7 @@ const roadFor = (route, direction) =>
 // or null when there is nothing honest to say (no location, signal lost, off the route, user far from the route).
 const etaFor = (bus, route, userPos) => {
   const { state } = bus;
-  if (!userPos || !route || !state || bus.stale || state.offRoute) return null;
+  if (!userPos || !route || !state || bus.stale || bus.stopped || state.offRoute) return null;
   if (state.progressM == null || !state.direction) return null;
 
   const spot = snapToRoute(userPos, roadFor(route, state.direction));

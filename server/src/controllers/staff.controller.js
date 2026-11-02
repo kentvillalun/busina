@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../config/db.js";
+import { getRoute } from "../services/routeCache.js";
+import { busOnRoad, roadFor, STALE_AFTER_MS } from "../utils/eta.js";
+import { snapToRoute } from "../utils/geo.js";
 import { HttpError } from "../utils/HttpError.js";
+import { groupPickups } from "../utils/pickups.js";
 import { STAFF_COOKIE, cookieMaxAgeMs, cookieOptions, hashToken, signStaffToken, verifyToken } from "../utils/token.js";
 
 // Compared when the bus does not exist, so an unknown bus code takes as long as a wrong PIN and cannot be told apart by timing.
@@ -52,4 +56,59 @@ const me = (req, res) => {
   return res.json({ bus: { id: busId, busNumber, name } });
 };
 
-export { login, logout, me };
+const SPOT_MAX_FROM_ROAD_M = 1000; // a saved spot farther than this from the road is not on this route (same limit as etaFor)
+
+// Everything the driver screen needs in one poll: the bus, where it is, and who is waiting ahead.
+// The bus comes from the token (req.user.busId), never from the URL, so a driver can only ever see their own bus.
+// Pickups are anonymous: only where and how many, never who (no commuter id leaves the database).
+const overview = async (req, res) => {
+  const bus = await prisma.bus.findUnique({
+    where: { id: req.user.busId },
+    select: { id: true, busNumber: true, name: true, routeId: true, serviceStatus: true, state: true },
+  });
+  const summary = { id: bus.id, busNumber: bus.busNumber, name: bus.name, routeId: bus.routeId, serviceStatus: bus.serviceStatus };
+  const { state } = bus;
+  const route = state ? await getRoute(bus.routeId) : null;
+  if (!state || !route) return res.json({ serverTime: new Date().toISOString(), bus: summary, position: null, pickups: null });
+
+  const { snapped, offRoute, progressM, speedKmh } = busOnRoad(state, route);
+  const stale = Date.now() - state.lastPingAt.getTime() > STALE_AFTER_MS;
+  const position = {
+    lat: offRoute ? state.lat : snapped.lat,
+    lng: offRoute ? state.lng : snapped.lng,
+    direction: state.direction,
+    speedKmh,
+    progressM,
+    offRoute,
+    stale,
+    lastPingAt: state.lastPingAt,
+  };
+
+  // No honest pickups without a fresh position on the road and a direction, or while the bus is off duty.
+  let pickups = null;
+  if (!stale && !offRoute && state.direction && bus.serviceStatus !== "AT_REST") {
+    const subscriptions = await prisma.pushSubscription.findMany({
+      where: { OR: [{ targetBusId: bus.id }, { targetBusId: null, direction: state.direction }] },
+      select: { spotLat: true, spotLng: true },
+    });
+    const road = roadFor(route, state.direction);
+    // shortcut: one commuter with alerts on two browsers counts twice; the numbers are a hint, not a headcount.
+    const spots = subscriptions
+      .map((sub) => snapToRoute([sub.spotLng, sub.spotLat], road))
+      .filter((spot) => spot && spot.distanceFromRouteM <= SPOT_MAX_FROM_ROAD_M);
+    pickups = groupPickups({ busProgressM: progressM, direction: state.direction, spots });
+  }
+
+  return res.json({ serverTime: new Date().toISOString(), bus: summary, position, pickups });
+};
+
+const setStatus = async (req, res) => {
+  const bus = await prisma.bus.update({
+    where: { id: req.user.busId },
+    data: { serviceStatus: req.body.status },
+    select: { serviceStatus: true },
+  });
+  return res.json({ serviceStatus: bus.serviceStatus });
+};
+
+export { login, logout, me, overview, setStatus };

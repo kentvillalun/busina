@@ -37,7 +37,7 @@ const busOnRoad = (state, route) => {
 // `bus` is { stale, state: { progressM, direction, speedKmh, offRoute } } and `userPos` is { lat, lng }.
 const etaFor = (bus, route, userPos) => {
   const { state } = bus;
-  if (!userPos || !route || !state || bus.stale || state.offRoute) return null;
+  if (!userPos || !route || !state || bus.stale || bus.stopped || state.offRoute) return null;
   if (state.progressM == null || !state.direction) return null;
 
   const spot = snapToRoute([userPos.lng, userPos.lat], roadFor(route, state.direction));

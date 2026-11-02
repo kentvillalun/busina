@@ -25,6 +25,7 @@ const BusCard = ({ bus, serverTime, selected, onSelect, locationOff = false, toY
   let etaText = "-";
   let etaNote = "ETA coming soon";
   if (stale) etaNote = "no live ETA";
+  else if (bus.stopped) etaNote = "bus is stopped";
   else if (locationOff) etaNote = "location off";
   else if (bus.eta) {
     etaText = formatEta(bus.eta);

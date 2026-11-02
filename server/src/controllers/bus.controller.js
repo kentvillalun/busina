@@ -3,13 +3,15 @@ import { busOnRoad, STALE_AFTER_MS } from "../utils/eta.js";
 
 // GET /buses: public (commuters are anonymous). The current state of every active bus.
 // Never returns deviceId or deviceKeyHash: those are secrets of the hardware.
+// A bus the driver put at rest is off duty and left out; one on a stopover stays, marked `stopped` (no ETA).
 const listBuses = async (req, res) => {
   const buses = await prisma.bus.findMany({
-    where: { active: true },
+    where: { active: true, serviceStatus: { not: "AT_REST" } },
     orderBy: { busNumber: "asc" },
     select: {
       id: true,
       busNumber: true,
+      serviceStatus: true,
       plateNumber: true,
       name: true,
       photoUrl: true,
@@ -22,10 +24,12 @@ const listBuses = async (req, res) => {
 
   const now = Date.now();
 
-  const data = buses.map(({ state, route: { polyline, polylineNorthbound, ...route }, ...bus }) => {
+  const data = buses.map(({ state, serviceStatus, route: { polyline, polylineNorthbound, ...route }, ...bus }) => {
+    const stopped = serviceStatus === "STOPOVER";
+
     // A bus that has never pinged has no state yet.
     if (!state) {
-      return { ...bus, route, stale: true, state: null };
+      return { ...bus, route, stopped, stale: true, state: null };
     }
 
     // Draw the bus on its road, and tell the ETA how far along the road it is (the push sender reads it the same way).
@@ -36,6 +40,7 @@ const listBuses = async (req, res) => {
     return {
       ...bus,
       route,
+      stopped,
       stale: now - state.lastPingAt.getTime() > STALE_AFTER_MS,
       state: {
         lat: offRoute ? state.lat : snapped.lat,

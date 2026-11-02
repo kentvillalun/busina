@@ -6,4 +6,7 @@ const loginSchema = z.object({
   pin: z.string().regex(/^\d{4,8}$/, "The PIN is 4 to 8 digits"),
 });
 
-export { loginSchema };
+// What the driver says about the bus: serving passengers, parked off duty, or a short stop.
+const statusSchema = z.object({ status: z.enum(["IN_SERVICE", "AT_REST", "STOPOVER"]) });
+
+export { loginSchema, statusSchema };
