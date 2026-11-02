@@ -5,7 +5,7 @@ import { getRoute } from "../services/routeCache.js";
 import { fleetBus } from "../utils/fleet.js";
 import { HttpError } from "../utils/HttpError.js";
 import { canOperate } from "../utils/operatorUser.js";
-import { busParamsSchema } from "../schemas/operator.schema.js";
+import { idParamsSchema } from "../schemas/operator.schema.js";
 import { OPERATOR_COOKIE, cookieMaxAgeMs, cookieOptions, hashToken, signOperatorToken, verifyToken } from "../utils/token.js";
 
 // Compared when the user does not exist, so an unknown username takes as long as a wrong password.
@@ -71,14 +71,15 @@ const fleet = async (req, res) => {
   return res.json({ serverTime: new Date(now).toISOString(), buses: buses.map((bus) => fleetBus(bus, roads.get(bus.routeId), now)) });
 };
 
-// The bus comes from the URL, but only a bus of the operator's own company is found: another company's id answers 404, the same
+// A bus id (from the URL or the body) only finds a bus of the operator's own company: another company's id answers 404, the same
 // as an id that does not exist, so nobody can learn which ids exist elsewhere.
-const ownBus = async (req) => {
-  const { id } = busParamsSchema.parse(req.params);
-  const bus = await prisma.bus.findFirst({ where: { id, companyId: req.user.companyId }, select: { id: true, busNumber: true } });
+const findOwnBus = async (companyId, id) => {
+  const bus = await prisma.bus.findFirst({ where: { id, companyId }, select: { id: true, busNumber: true } });
   if (!bus) throw new HttpError(404, "Bus not found");
   return bus;
 };
+
+const ownBus = (req) => findOwnBus(req.user.companyId, idParamsSchema.parse(req.params).id);
 
 // A new random 6-digit PIN. Only its bcrypt hash is stored; the PIN itself is in this one answer and nowhere else.
 // A driver who is already signed in stays signed in until the shift token ends (12 h); disabling the bus ends that at once.
@@ -98,4 +99,33 @@ const setBusActive = async (req, res) => {
   return res.json({ busNumber: bus.busNumber, active });
 };
 
-export { login, logout, me, fleet, resetPin, setBusActive };
+// The staff roster: drivers and conductors of the operator's company, as records only. Operators are never listed or edited here.
+const STAFF_ROLES = ["DRIVER", "CONDUCTOR"];
+const staffSelect = { id: true, firstName: true, lastName: true, role: true, active: true, busId: true };
+
+const listStaff = async (req, res) => {
+  const staff = await prisma.user.findMany({
+    where: { companyId: req.user.companyId, role: { in: STAFF_ROLES } },
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    select: staffSelect,
+  });
+  return res.json({ staff });
+};
+
+const createStaff = async (req, res) => {
+  const { busId, ...person } = req.body;
+  if (busId) await findOwnBus(req.user.companyId, busId);
+  const created = await prisma.user.create({ data: { ...person, busId, companyId: req.user.companyId }, select: staffSelect });
+  return res.status(201).json({ person: created });
+};
+
+const updateStaff = async (req, res) => {
+  const { id } = idParamsSchema.parse(req.params);
+  const person = await prisma.user.findFirst({ where: { id, companyId: req.user.companyId, role: { in: STAFF_ROLES } }, select: { id: true } });
+  if (!person) throw new HttpError(404, "Person not found");
+  if (req.body.busId) await findOwnBus(req.user.companyId, req.body.busId);
+  const updated = await prisma.user.update({ where: { id }, data: req.body, select: staffSelect });
+  return res.json({ person: updated });
+};
+
+export { login, logout, me, fleet, resetPin, setBusActive, listStaff, createStaff, updateStaff };

@@ -47,10 +47,15 @@ model User {
 
   role Role
 
-  firstName    String
-  lastName     String
-  username     String @unique
-  passwordHash String
+  firstName String
+  lastName  String
+  // Operators sign in with these two. A driver or conductor on the staff roster is a record only: no username, no password.
+  username     String? @unique
+  passwordHash String?
+
+  // The bus a driver or conductor works on (the roster); null for an operator or for staff without a bus yet.
+  busId String? @db.Uuid
+  bus   Bus?    @relation(fields: [busId], references: [id], onDelete: SetNull)
 
   active Boolean @default(true)
 
@@ -58,6 +63,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@index([companyId])
+  @@index([busId])
 }
 
 model Route {
@@ -106,6 +112,7 @@ model Bus {
   updatedAt DateTime @updatedAt
 
   state BusState?
+  staff User[]
 
   @@unique([companyId, busNumber])
   @@index([routeId])

@@ -23,6 +23,14 @@ const BUS = {
   deviceId: "esp32-0015",
 };
 const OPERATOR = { username: "operator", firstName: "Demo", lastName: "Operator" };
+// `onBus` puts the person on the demo bus; the others wait for the operator to assign them.
+const STAFF = [
+  { firstName: "Juan", lastName: "Dela Cruz", role: "DRIVER", onBus: true },
+  { firstName: "Ana", lastName: "Reyes", role: "CONDUCTOR", onBus: true },
+  { firstName: "Mario", lastName: "Santos", role: "DRIVER", onBus: false },
+  { firstName: "Liza", lastName: "Bautista", role: "CONDUCTOR", onBus: false },
+  { firstName: "Carlo", lastName: "Mendoza", role: "DRIVER", onBus: false },
+];
 
 // The roads from the Laoag terminal to the Vigan terminal (Puregold, Vigan), from OSRM through scripts/fetch-route.js.
 // Points are [lng, lat] (GeoJSON order), ordered Laoag to Vigan, so "distance along the route" grows toward Vigan.
@@ -104,6 +112,14 @@ async function main() {
     secretsToSave.SEED_OPERATOR_PASSWORD = password;
   }
 
+  // Staff roster: made-up people for the demo (records only, no login). Added once, matched by company and name, so
+  // re-running never duplicates them and never undoes an assignment the operator changed.
+  const staff = [];
+  for (const { onBus, ...person } of STAFF) {
+    const found = await prisma.user.findFirst({ where: { companyId: company.id, ...person } });
+    staff.push(found ?? (await prisma.user.create({ data: { ...person, companyId: company.id, busId: onBus ? bus.id : null } })));
+  }
+
   const saved = saveToEnv(secretsToSave);
 
   console.log("Seed done.");
@@ -111,6 +127,7 @@ async function main() {
   console.log(`  route   : ${route.name} (${route.lengthM} m, ${ROUTE_POINTS.length} points)`);
   console.log(`  bus     : ${bus.busNumber} / ${bus.plateNumber} / ${bus.deviceId}, ${bus.seatCount} seats`);
   console.log(`  user    : ${operator.username} (${operator.role})`);
+  console.log(`  staff   : ${staff.length} drivers and conductors, ${staff.filter((person) => person.busId).length} on bus ${bus.busNumber}`);
   console.log(
     saved.length > 0
       ? `  new secrets saved to server/.env: ${saved.join(", ")}`
