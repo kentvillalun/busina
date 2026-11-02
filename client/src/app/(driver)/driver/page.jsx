@@ -11,6 +11,8 @@ import TopGradient from "@/components/layout/TopGradient";
 import useDriverOverview from "@/hooks/useDriverOverview";
 import { useRoutes } from "@/hooks/useRoutes";
 import { DIRECTION_LABEL, driverMode, MODE_COPY } from "@/lib/driverMode";
+import { roadFor } from "@/lib/eta";
+import { routeBetween } from "@/lib/geo";
 import { secondsSince } from "@/lib/time";
 
 const BusMap = dynamic(() => import("@/components/map/BusMap"), { ssr: false });
@@ -75,13 +77,26 @@ export default function DriverPage() {
     : [];
   const seconds = position ? secondsSince(data.serverTime, position.lastPingAt) : null;
 
+  // The solid blue stretch of road from the bus to the next pickup, like the stretch to the commuter on their map.
+  const route = routes.find((item) => item.id === bus.routeId);
+  const next = pickups?.[0];
+  const ahead =
+    route && position?.direction && position.progressM != null && next
+      ? routeBetween(
+          roadFor(route, position.direction),
+          position.progressM,
+          position.progressM + (position.direction === "SOUTHBOUND" ? 1 : -1) * next.distanceM,
+        )
+      : [];
+
   return (
     <main className="fixed inset-0 isolate bg-stage">
       <div className="absolute inset-0 z-0 md:right-82">
         <BusMap
           buses={buses}
-          routes={routes.filter((route) => route.id === bus.routeId)}
+          routes={route ? [route] : []}
           direction={position?.direction ?? undefined}
+          ahead={mode === "live" || mode === "stopover" ? ahead : []}
           pickups={mode === "live" || mode === "stopover" ? (pickups ?? []) : []}
           selectedId={bus.id}
           center={position ? [position.lat, position.lng] : LAOAG}
