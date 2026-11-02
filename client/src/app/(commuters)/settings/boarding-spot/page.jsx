@@ -114,7 +114,7 @@ export default function BoardingSpotPage() {
         </div>
       </div>
 
-      <section className="absolute inset-x-0 bottom-0 z-20 mx-auto flex h-69 max-w-107.5 flex-col rounded-t-[32px] bg-white px-6 pb-6 pt-3 shadow-[0_-4px_14px_rgba(16,59,96,0.18)]">
+      <section className="absolute inset-x-0 bottom-0 z-20 mx-auto flex h-69 max-w-107.5 flex-col rounded-t-4xl bg-white px-6 pb-6 pt-3 shadow-[0_-4px_14px_rgba(16,59,96,0.18)]">
         <span className="mx-auto h-1.25 w-10 rounded-full bg-line" />
         <div className="mt-4.5 flex items-center justify-between gap-3">
           <h2 className="font-display text-[22px] leading-7 text-ink">Your boarding spot</h2>
