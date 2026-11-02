@@ -23,7 +23,7 @@ const Bearing = ({ degrees }) => {
 // The driver's map: the commuter's map that can face the way the bus is going, so "up" on the screen is "ahead" on the road.
 // `heading` is a compass bearing (0 = north up), or null to keep the current turn.
 const DriverMap = ({ heading, ...props }) => (
-  <BusMap {...props} mapOptions={{ rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false, pitchDrag: false }}>
+  <BusMap {...props} labels={false} mapOptions={{ rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false, pitchDrag: false }}>
     <Bearing degrees={heading} />
   </BusMap>
 );

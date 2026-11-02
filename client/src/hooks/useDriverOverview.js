@@ -15,6 +15,8 @@ const useDriverOverview = () => {
   const failures = useRef(0);
   const leaving = useRef(false);
   const latest = useRef(null);
+  const issued = useRef(0);
+  const applied = useRef(0);
 
   const signedOut = useCallback(() => {
     if (leaving.current) return;
@@ -23,11 +25,14 @@ const useDriverOverview = () => {
   }, []);
 
   const load = useCallback(async () => {
+    const mine = ++issued.current;
     try {
       const response = await fetch("/api/staff/overview", { cache: "no-store" });
       if (response.status === 401) return signedOut();
       if (!response.ok) throw new Error("bad answer");
       const next = await response.json();
+      if (mine < applied.current) return; // a newer answer already arrived (two refreshes overlapped)
+      applied.current = mine;
       latest.current = next;
       setData(next);
       failures.current = 0;
@@ -38,12 +43,24 @@ const useDriverOverview = () => {
     }
   }, [signedOut]);
 
+  // The screen refreshes itself, so the driver never has to reload (an installed app has no reload button). It polls while the
+  // app is showing, and the moment it comes back (unlocked phone, switched back to the app, network returned) it asks at once,
+  // because a phone freezes timers while the app is in the background.
   useEffect(() => {
     const first = setTimeout(load, 0); // not a direct call: the lint rule keeps setState out of the effect body
-    const timer = setInterval(load, POLL_MS);
+    const refresh = () => document.visibilityState === "visible" && load();
+    const timer = setInterval(refresh, POLL_MS);
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("online", refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("pageshow", refresh);
     return () => {
       clearTimeout(first);
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("online", refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("pageshow", refresh);
     };
   }, [load]);
 

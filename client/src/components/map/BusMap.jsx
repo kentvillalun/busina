@@ -23,6 +23,16 @@ const tiles = GEOAPIFY_KEY
       className: "map-tiles",
     };
 
+// The driver's map turns, and the names printed in raster tiles turn with it (upside down when heading south). Tiles without
+// names are used there instead; the place names come from the upright <Landmarks /> markers below.
+const noLabelTiles = {
+  url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+  attribution: "© OpenStreetMap contributors © CARTO",
+  className: "map-tiles-light",
+  subdomains: "abcd",
+};
+const tileSet = (labels) => (labels === false ? noLabelTiles : tiles);
+
 // Leaflet swaps the DOM whenever it gets a new icon object, which would restart the pulse on
 // every poll, so one icon is built per look and reused.
 const icons = new Map();
@@ -173,7 +183,7 @@ const CenterReporter = ({ onChange }) => {
 // `center` is [lat, lng]; `routes` come from GET /routes; `direction` draws only that way's road (both when left out); `ahead` is the [lat, lng] stretch from the selected bus to you; `spot` is the saved boarding spot ({ lat, lng }). Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
 // `pickups` (driver app) is [{ lat, lng, count, distanceM }]. `mapOptions` and `children` let the driver map add the rotation
 // plugin's options and a child that sets the bearing, without this file knowing about the plugin.
-const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, pickups = [], selectedId, center, focus, onSelect, onCenterChange, mapOptions, children }) => (
+const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, pickups = [], selectedId, center, focus, onSelect, onCenterChange, labels, mapOptions, children }) => (
   <MapContainer
     center={center}
     zoom={15}
@@ -183,9 +193,10 @@ const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, picku
     {...mapOptions}
   >
     <TileLayer
-      className={tiles?.className}
-      url={tiles?.url}
-      attribution={tiles?.attribution}
+      className={tileSet(labels).className}
+      url={tileSet(labels).url}
+      attribution={tileSet(labels).attribution}
+      subdomains={tileSet(labels).subdomains}
       maxZoom={19}
     />
     <Recenter center={center} />
