@@ -34,7 +34,6 @@ export default function OperatorStaffPage() {
     { header: "Role", render: (person) => ROLE[person.role] },
     { header: "Bus", render: (person) => busNumber(person.busId) },
     { header: "Status", render: statusChip },
-    { header: "Action", render: () => <span className="font-medium text-primary">Edit</span> },
   ];
 
   return (
