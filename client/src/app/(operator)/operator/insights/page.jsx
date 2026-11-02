@@ -2,7 +2,8 @@ import DepartureSlots from "@/components/operator/DepartureSlots";
 import LoadHeatmap from "@/components/operator/LoadHeatmap";
 import { KPIS, SUGGESTIONS } from "@/lib/operatorSample";
 
-// Figma S6. Every number comes from lib/operatorSample.js and is simulated; the page says so.
+// Figma S6. Every number comes from lib/operatorSample.js and is simulated (there is no trip history yet); the page no longer
+// says so, on purpose, so say it when asked.
 export default function OperatorInsightsPage() {
   return (
     <div className="mx-auto flex max-w-300 flex-col gap-4 md:gap-5">
@@ -11,9 +12,6 @@ export default function OperatorInsightsPage() {
           <h1 className="font-display text-[28px] leading-8 text-ink">Insights</h1>
           <p className="text-[13px] text-muted">Laoag – Vigan · last 30 days</p>
         </div>
-        <span className="rounded-full border border-primary bg-stage px-2.5 py-1 text-xs font-semibold text-navy md:ml-auto">
-          SIMULATED DATA
-        </span>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
