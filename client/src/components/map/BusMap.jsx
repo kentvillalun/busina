@@ -196,7 +196,8 @@ const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, picku
       className={tileSet(labels).className}
       url={tileSet(labels).url}
       attribution={tileSet(labels).attribution}
-      subdomains={tileSet(labels).subdomains}
+      // Only when the tiles have {s}: an explicit undefined replaces Leaflet's default "abc" and crashes it (tile.length).
+      {...(tileSet(labels).subdomains && { subdomains: tileSet(labels).subdomains })}
       maxZoom={19}
     />
     <Recenter center={center} />
