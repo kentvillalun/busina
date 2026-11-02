@@ -1,5 +1,5 @@
 // A POST or PATCH to the operator API; resolves with the JSON answer. A 401 means the session ended: the browser goes back to
-// the sign-in page and this resolves with null. Any other failure throws, so the caller can show its own message.
+// the sign-in page and this resolves with null. Any other failure throws (with the HTTP `status`), so the caller can show its own message.
 export const send = async (url, method, body) => {
   const response = await fetch(url, {
     method,
@@ -10,6 +10,6 @@ export const send = async (url, method, body) => {
     window.location.replace("/operator/login?expired=1");
     return null;
   }
-  if (!response.ok) throw new Error("rejected");
+  if (!response.ok) throw Object.assign(new Error("rejected"), { status: response.status });
   return response.json();
 };

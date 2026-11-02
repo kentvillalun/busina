@@ -1,3 +1,5 @@
+import { MAX_SEATS, seatSlot } from "@/lib/seatLayout";
+
 // Figma S2 / S3: the bus seen from above, drawn on a 328 x 156 canvas. Every position below is the
 // Figma one in pixels, turned into percentages so the map scales with its card.
 const W = 328;
@@ -5,10 +7,8 @@ const H = 156;
 const x = (value) => `${(value / W) * 100}%`;
 const y = (value) => `${(value / H) * 100}%`;
 
-// The 40 seats are 10 rows of 4 across the bus, numbered from the rear: seats[0..3] are the rear
-// row, seats[36..39] the front one. If the device numbers its sensors differently, change this
-// mapping and nothing else.
-const ROWS_OF = 4;
+// The seats are rows of 4 across the bus, numbered from the front (see lib/seatLayout.js); a bus with fewer seats fills only the
+// front rows.
 const COLUMN_X = (column) => 9 + column * 27; // column 0 = rear
 const LANE_Y = [8, 35, 71, 98]; // two lanes on each side of the aisle
 
@@ -27,8 +27,11 @@ const Piece = ({ left, top, width, height, className = "", style, children }) =>
   </div>
 );
 
-// `seats` is the array from the API (1 = taken, 0 = free). `unknown` draws every seat as "no reading".
-const SeatMap = ({ seats, unknown = false }) => (
+// `seats` is the array from the API (1 = taken, 0 = free) and `seatCount` the seats the bus has. `unknown` draws every seat as
+// "no reading", and so does a reading of another length (the seat count was just changed, and the device has not caught up).
+const SeatMap = ({ seats, seatCount, unknown = false }) => {
+  const readable = !unknown && seats.length === seatCount;
+  return (
   <div className="relative mx-auto w-full max-w-100" style={{ aspectRatio: `${W} / ${H}` }}>
     {/* The Figma exports bleed a little past their box, so each image is a bit larger than its slot. */}
     <Piece left={0} top={0} width={W} height={134}>
@@ -56,10 +59,9 @@ const SeatMap = ({ seats, unknown = false }) => (
     </Piece>
     <Piece left={243} top={131} width={34} height={6} className="rounded-[3px] bg-primary" />
 
-    {Array.from({ length: 40 }, (_, i) => {
-      const column = Math.floor(i / ROWS_OF);
-      const lane = i % ROWS_OF;
-      const state = unknown ? "unknown" : seats[i] ? "taken" : "free";
+    {Array.from({ length: Math.min(seatCount, MAX_SEATS) }, (_, i) => {
+      const { column, lane } = seatSlot(i);
+      const state = !readable ? "unknown" : seats[i] ? "taken" : "free";
       return (
         <Piece
           key={i}
@@ -82,6 +84,7 @@ const SeatMap = ({ seats, unknown = false }) => (
       Front ›
     </span>
   </div>
-);
+  );
+};
 
 export default SeatMap;

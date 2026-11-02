@@ -27,11 +27,14 @@ const TOWARD = { NORTHBOUND: "Laoag", SOUTHBOUND: "Vigan" };
 
 // Figma S2 has a forecast ("3 to 5 seats may be left"). We cannot make one yet (no ETA, no boarding
 // rate), so this only describes the seats that are free right now.
-const outlook = (seatsFree) => {
+// The limits are for a 40-seat bus (10 or more is plenty, 3 or more is limited) and shrink for a smaller one.
+const outlook = (seatsFree, seatCount) => {
+  const plenty = Math.min(10, Math.ceil(seatCount * 0.75));
+  const limited = Math.min(3, Math.ceil(seatCount * 0.25));
   const left =
     seatsFree === 1 ? "Only 1 seat is free right now." : `Only ${seatsFree} seats are free right now.`;
-  if (seatsFree >= 10) return { title: "Plenty of seats", text: `${seatsFree} seats are free right now.` };
-  if (seatsFree >= 3) return { title: "Seats are limited", text: left };
+  if (seatsFree >= plenty) return { title: "Plenty of seats", text: `${seatsFree} seats are free right now.` };
+  if (seatsFree >= limited) return { title: "Seats are limited", text: left };
   return { title: "Likely full", text: seatsFree === 0 ? "No seat is free right now." : left };
 };
 
@@ -173,7 +176,7 @@ const BusDetails = ({ id }) => {
   const title = bus ? `Bus ${bus.busNumber}` : "Bus details";
   const away = state && target ? distanceM(target, state) : null;
   const heading = state ? `Heading to ${TOWARD[state.direction] ?? "its terminal"}` : "Not heard from yet";
-  const seatOutlook = state && !stale ? outlook(state.seatsFree) : null;
+  const seatOutlook = state && !stale ? outlook(state.seatsFree, bus.seatCount) : null;
 
   return (
     <Page className="bg-[#f5f8fb]">
@@ -322,7 +325,7 @@ const BusDetails = ({ id }) => {
                 )}
               </div>
 
-              <SeatMap seats={state?.seats ?? []} unknown={stale || !state} />
+              <SeatMap seats={state?.seats ?? []} seatCount={bus.seatCount} unknown={stale || !state} />
 
               {stale || !state ? (
                 <>

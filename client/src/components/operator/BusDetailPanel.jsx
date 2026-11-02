@@ -3,6 +3,7 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import Dialog, { outlineButton, primaryButton } from "@/components/operator/Dialog";
+import EditBusDialog from "@/components/operator/EditBusDialog";
 import StatusChip from "@/components/operator/StatusChip";
 import { crewText, routeText, seatsText } from "@/lib/fleet";
 import { send } from "@/lib/operatorApi";
@@ -17,7 +18,7 @@ const Row = ({ label, children }) => (
 // The details of one bus, shown in a modal. Reset PIN and Disable / Enable ask first (Figma OP5 and OP6).
 // `onChanged` makes the page ask for the fleet again.
 const BusDetailPanel = ({ bus, onClose, onChanged }) => {
-  const [step, setStep] = useState(null); // "reset" | "pin" | "active"
+  const [step, setStep] = useState(null); // "edit" | "reset" | "pin" | "active"
   const [pin, setPin] = useState(""); // the new PIN, kept only while its dialog is open
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -82,12 +83,16 @@ const BusDetailPanel = ({ bus, onClose, onChanged }) => {
           <StatusChip status={bus.status} />
         </Row>
         <Row label="Seats free">{seatsText(bus)}</Row>
+        <Row label="Total seats">{bus.seatCount}</Row>
         <Row label="Speed">{bus.speedKmh === null ? "Unknown" : `${bus.speedKmh} km/h`}</Row>
         <Row label="Route">{routeText(bus.direction)}</Row>
         <Row label="Crew">{crewText(bus)}</Row>
         <Row label="Last update">{bus.lastUpdate}</Row>
       </dl>
 
+      <button type="button" onClick={() => open("edit")} className={outlineButton}>
+        Edit bus
+      </button>
       <div className="grid grid-cols-2 gap-3">
         <button type="button" onClick={() => open("reset")} className={primaryButton}>
           Reset PIN
@@ -96,6 +101,8 @@ const BusDetailPanel = ({ bus, onClose, onChanged }) => {
           {bus.active ? "Disable bus" : "Enable bus"}
         </button>
       </div>
+
+      {step === "edit" && <EditBusDialog bus={bus} onClose={close} onSaved={onChanged} />}
 
       {step === "reset" && (
         <Dialog title={`Reset the PIN for bus ${bus.busNumber}?`} onClose={close}>

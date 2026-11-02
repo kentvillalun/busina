@@ -2,26 +2,8 @@
 
 import { useState } from "react";
 import Dialog, { outlineButton, primaryButton } from "@/components/operator/Dialog";
+import { Field, bare } from "@/components/operator/FormField";
 import { send } from "@/lib/operatorApi";
-
-// The input look of Ecoaid: a box with a 1px outline that turns primary on focus; a dropdown is a plain select with no border of
-// its own inside that box, and starts on a hidden "Select ..." placeholder.
-const box = "flex min-h-11 w-full items-center rounded-lg px-3.5 py-2.5 text-base text-ink outline-1 outline-line transition-colors focus-within:outline-primary";
-const bare = "w-full bg-transparent outline-none placeholder:text-muted/60";
-
-const Field = ({ label, htmlFor, error, children }) => (
-  <div className="flex w-full flex-col gap-1.5">
-    <label htmlFor={htmlFor} className="text-start text-sm font-medium text-ink">
-      {label}
-    </label>
-    <div className={box}>{children}</div>
-    {error && (
-      <p role="alert" className="text-xs text-fault">
-        {error}
-      </p>
-    )}
-  </div>
-);
 
 // Add a driver or conductor, or edit one (`person` given). A roster entry is a record only: drivers still sign in with their
 // bus code and PIN, and the bus here only says who works on it. `buses` is [{ id, busNumber, name }]; `onSaved` reloads the list.
