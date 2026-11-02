@@ -3,8 +3,10 @@ import { busOnRoad, STALE_AFTER_MS } from "./eta.js";
 // A bus that pinged in the last 30 seconds still has live seats and speed; an older ping is only a last known position.
 const isFresh = (state, now = Date.now()) => Boolean(state) && now - state.lastPingAt.getTime() <= STALE_AFTER_MS;
 
-// What the operator sees for one bus. A driver who put the bus at rest wins over a missing signal: that bus is off duty.
-const fleetStatus = ({ serviceStatus, state }, now = Date.now()) => {
+// What the operator sees for one bus. A bus the operator disabled comes first; a driver who put the bus at rest wins over a
+// missing signal: that bus is off duty.
+const fleetStatus = ({ active = true, serviceStatus, state }, now = Date.now()) => {
+  if (!active) return "disabled";
   if (serviceStatus === "AT_REST") return "at_rest";
   if (!state) return "no_signal";
   if (!isFresh(state, now)) return "stale";
@@ -23,7 +25,7 @@ const fleetBus = ({ id, busNumber, name, seatCount, active, serviceStatus, route
     seatCount,
     active,
     routeName: route.name,
-    status: fleetStatus({ serviceStatus, state }, now),
+    status: fleetStatus({ active, serviceStatus, state }, now),
     direction: null,
     position: null,
     speedKmh: null,

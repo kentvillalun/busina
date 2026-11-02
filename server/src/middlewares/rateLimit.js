@@ -79,6 +79,16 @@ const operatorLoginLimiter = rateLimit({
   handler: onLimit("Too many wrong passwords, please try again in 15 minutes"),
 });
 
+// Per signed-in operator (so it runs after authenticateOperator). Resetting a PIN hashes a new one, so this is also a cap on that work.
+const operatorActionLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 30,
+  keyGenerator: (req) => `operator:${req.user.id}`,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Too many changes, please slow down"),
+});
+
 // Per commuter (so it runs after authenticateCommuter). Sharing or stopping is a tap; 20 a minute is far more than a person makes.
 const waitingLimiter = rateLimit({
   windowMs: 60_000,
@@ -99,4 +109,4 @@ const staffActionLimiter = rateLimit({
   handler: onLimit("Too many changes, please slow down"),
 });
 
-export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter, operatorLoginLimiter, staffActionLimiter, waitingLimiter };
+export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter, operatorLoginLimiter, operatorActionLimiter, staffActionLimiter, waitingLimiter };

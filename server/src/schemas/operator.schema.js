@@ -6,4 +6,8 @@ const loginSchema = z.object({
   password: z.string().min(1).max(72),
 });
 
-export { loginSchema };
+const busParamsSchema = z.object({ id: z.uuid() });
+
+const activeSchema = z.object({ active: z.boolean() });
+
+export { loginSchema, busParamsSchema, activeSchema };
