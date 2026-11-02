@@ -19,7 +19,7 @@ const BUS = {
   plateNumber: "DEMO-0015",
   name: "Demo bus",
   photoUrl: null, // paste a Cloudinary URL here later
-  seatCount: 40,
+  seatCount: 4, // the prototype has 4 seats; must equal SEAT_COUNT in the firmware (the API refuses a ping with another number)
   deviceId: "esp32-0015",
 };
 const OPERATOR = { username: "operator", firstName: "Demo", lastName: "Operator" };
@@ -84,8 +84,10 @@ async function main() {
   // Bus: the device key is created only the first time, so re-running never invalidates it.
   let bus = await prisma.bus.findUnique({ where: { plateNumber: BUS.plateNumber } });
   if (bus) {
-    // Only the links are refreshed: the operator may have edited the name, plate number or seat count since the first seed.
-    bus = await prisma.bus.update({ where: { id: bus.id }, data: { companyId: company.id, routeId: route.id } });
+    bus = await prisma.bus.update({
+      where: { id: bus.id },
+      data: { ...BUS, companyId: company.id, routeId: route.id },
+    });
   } else {
     const deviceKey = randomBytes(32).toString("hex");
     bus = await prisma.bus.create({

@@ -18,13 +18,13 @@ deployed API and the web app treat it exactly like the simulator.
 | Serial message | Meaning |
 | :--- | :--- |
 | `No fresh GPS fix; ping skipped` | Normal indoors. Take the GPS antenna near a window or outside. |
-| `400: payload rejected` | `SEAT_COUNT` does not match the bus's `seatCount` (40 in the seed). |
+| `400: payload rejected` | `SEAT_COUNT` does not match the bus's `seatCount` (4 in the seed). |
 | `401` | `DEVICE_ID` / `DEVICE_KEY` wrong, or the seed was run on a different database. |
 | `HTTP status 6xx` | Modem-side network, DNS or TLS error. Check the APN and signal. |
 
 ## What the prototype reports
 
-- **Seats:** one load cell = seat index `0` (`SENSOR_SEAT_INDEX`). The other 39 seats are always sent as free.
+- **Seats:** one load cell = seat index `0` (`SENSOR_SEAT_INDEX`). The other 3 seats are always sent as free.
 - **Door:** one IR sensor counts entries (`doorIn`). `doorOut` is always 0, so the app's "on board" and
   "standing" numbers only grow until the device restarts.
 - **Position:** a ping is only sent with a GPS fix younger than 10 s. Every 5 s cycle is still written to the SD card.

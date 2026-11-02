@@ -41,8 +41,9 @@ constexpr uint8_t PIN_IR_SENSOR  = 27;
 
 constexpr char     LOG_FILENAME[]        = "/datalog.csv";
 
-// Must equal Bus.seatCount in the database (seed: 40), or the API rejects the ping with SEAT_COUNT_MISMATCH.
-constexpr uint8_t  SEAT_COUNT            = 40;
+// Must equal Bus.seatCount in the database (seed: 4), or the API rejects the ping with SEAT_COUNT_MISMATCH.
+// The two are set together by the developers: this number belongs to the hardware, so an operator cannot change it.
+constexpr uint8_t  SEAT_COUNT            = 4;
 // The prototype has one load cell; it reports this seat. The other seats are sent as free.
 constexpr uint8_t  SENSOR_SEAT_INDEX     = 0;
 

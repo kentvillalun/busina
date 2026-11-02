@@ -17,12 +17,11 @@ const fleetStatus = ({ active = true, serviceStatus, state }, now = Date.now()) 
 // Seats and speed are given only for a fresh ping, so a silent bus never shows numbers that went stale; it keeps its last
 // position so the map can show where it went quiet. The fields are listed one by one, so a secret (deviceKeyHash, pinHash)
 // can never leak into the answer by someone widening the query.
-const fleetBus = ({ id, busNumber, name, plateNumber, seatCount, active, serviceStatus, route, staff = [], state }, road, now = Date.now()) => {
+const fleetBus = ({ id, busNumber, name, seatCount, active, serviceStatus, route, staff = [], state }, road, now = Date.now()) => {
   const result = {
     id,
     busNumber,
     name,
-    plateNumber,
     seatCount,
     active,
     routeName: route.name,

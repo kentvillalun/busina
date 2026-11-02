@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { createStaff, fleet, listStaff, login, logout, me, resetPin, setBusActive, updateBus, updateStaff } from "../controllers/operator.controller.js";
+import { createStaff, fleet, listStaff, login, logout, me, resetPin, setBusActive, updateStaff } from "../controllers/operator.controller.js";
 import { authenticateOperator } from "../middlewares/auth.js";
 import { authLimiter, operatorActionLimiter, operatorLoginLimiter } from "../middlewares/rateLimit.js";
 import { validate } from "../middlewares/validate.js";
-import { activeSchema, createStaffSchema, loginSchema, updateBusSchema, updateStaffSchema } from "../schemas/operator.schema.js";
+import { activeSchema, createStaffSchema, loginSchema, updateStaffSchema } from "../schemas/operator.schema.js";
 
 const router = Router();
 
@@ -15,7 +15,6 @@ router.get("/fleet", authenticateOperator, fleet);
 
 // Bus actions: the bus id in the URL is looked up inside the operator's own company, never trusted on its own.
 router.post("/buses/:id/reset-pin", authenticateOperator, operatorActionLimiter, resetPin);
-router.patch("/buses/:id", validate(updateBusSchema), authenticateOperator, operatorActionLimiter, updateBus);
 router.patch("/buses/:id/active", validate(activeSchema), authenticateOperator, operatorActionLimiter, setBusActive);
 
 // The staff roster (records only; staff do not sign in). Every query is limited to the operator's company.
