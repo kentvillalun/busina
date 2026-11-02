@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.gobusina.twa",
+    "sha256_cert_fingerprints": ["DD:88:4E:E5:96:10:D9:E3:01:62:14:B7:A4:EB:77:05:6B:97:42:42:A0:3F:74:43:7B:03:4F:6A:8C:6F:87:66"]
+  }
+}]
