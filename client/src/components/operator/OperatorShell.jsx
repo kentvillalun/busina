@@ -41,8 +41,8 @@ const Menu = ({ operator, onPick }) => {
             <img src="/logo.svg" alt="Busina" width={110} height={36} />
           </div>
           <div className="flex flex-col">
-            <p className="text-base font-medium text-ink">{operator?.companyName ?? " "}</p>
-            <p className="text-xs text-muted">{operator ? `Operator · ${operator.name}` : " "}</p>
+            <p className="text-base font-medium text-ink">{operator?.name ?? "Operator"}</p>
+            <p className="text-xs text-muted">{operator?.companyName ?? " "}</p>
           </div>
         </div>
 

@@ -7,7 +7,6 @@ import DataTable from "@/components/operator/DataTable";
 import Dialog from "@/components/operator/Dialog";
 import StatusChip from "@/components/operator/StatusChip";
 import useFleet from "@/hooks/useFleet";
-import useMediaQuery from "@/hooks/useMediaQuery";
 import { BUS_LABELS, NEEDS_ATTENTION, routeText, seatsText } from "@/lib/fleet";
 
 const TABS = [
@@ -19,26 +18,23 @@ const TABS = [
 ];
 
 // Crew joins the table with the staff roster.
-const COLUMNS = {
-  bus: { header: "Bus", render: (bus) => bus.busNumber },
-  route: { header: "Route", render: (bus) => routeText(bus.direction) },
-  status: { header: "Status", render: (bus) => <StatusChip status={bus.status} /> },
-  seats: { header: "Seats free", render: seatsText },
-  speed: { header: "Speed", render: (bus) => (bus.speedKmh === null ? "—" : `${bus.speedKmh} km/h`) },
-  update: { header: "Last update", render: (bus) => bus.lastUpdate },
-};
+const COLUMNS = [
+  { header: "Bus", render: (bus) => bus.busNumber },
+  { header: "Route", render: (bus) => routeText(bus.direction) },
+  { header: "Status", render: (bus) => <StatusChip status={bus.status} /> },
+  { header: "Seats free", render: seatsText },
+  { header: "Speed", render: (bus) => (bus.speedKmh === null ? "—" : `${bus.speedKmh} km/h`) },
+  { header: "Last update", render: (bus) => bus.lastUpdate },
+];
 
-// Figma OP3 and OP4. From lg the details open beside the table, which then keeps four columns; on smaller screens (cards, or a
-// narrow table) a tap opens the details in a modal.
+// Figma OP3. The table (cards on a phone) takes the whole width; a tap on a bus opens its details in a modal on every screen size.
 export default function OperatorBusesPage() {
   const { fleet, loaded, offline, reload } = useFleet();
-  const wide = useMediaQuery("(min-width: 1024px)");
   const [tab, setTab] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
 
   const rows = fleet.filter(TABS.find((item) => item.name === tab).test);
   const selected = fleet.find((bus) => bus.id === selectedId);
-  const columns = (selected && wide ? ["bus", "status", "seats", "update"] : ["bus", "route", "status", "seats", "speed", "update"]).map((key) => COLUMNS[key]);
   const labels = { ...BUS_LABELS, empty: fleet.length === 0 ? BUS_LABELS.empty : [`No buses in "${tab}"`, "Buses with this status will show up here."] };
   const close = () => setSelectedId(null);
 
@@ -72,24 +68,20 @@ export default function OperatorBusesPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-        <DataTable
-          columns={columns}
-          rows={rows}
-          card={(bus) => <BusCard bus={bus} />}
-          onRowClick={setSelectedId}
-          selectedId={selectedId}
-          loading={!loaded && !offline}
-          error={!loaded && offline}
-          onRetry={reload}
-          labels={labels}
-        />
-        {selected && wide && <BusDetailPanel key={selected.id} bus={selected} onClose={close} onChanged={reload} />}
-      </div>
+      <DataTable
+        columns={COLUMNS}
+        rows={rows}
+        card={(bus) => <BusCard bus={bus} />}
+        onRowClick={setSelectedId}
+        loading={!loaded && !offline}
+        error={!loaded && offline}
+        onRetry={reload}
+        labels={labels}
+      />
 
-      {selected && !wide && (
+      {selected && (
         <Dialog title={`Bus ${selected.busNumber}`} onClose={close} bare>
-          <BusDetailPanel key={selected.id} bus={selected} onClose={close} onChanged={reload} plain />
+          <BusDetailPanel key={selected.id} bus={selected} onClose={close} onChanged={reload} />
         </Dialog>
       )}
     </div>
