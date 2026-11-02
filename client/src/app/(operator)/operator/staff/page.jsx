@@ -59,7 +59,7 @@ export default function OperatorStaffPage() {
         </button>
       </div>
 
-      <DataTable columns={columns} rows={people} />
+      <DataTable columns={columns} rows={people} emptyMessage="No staff yet. Add the first employee." />
 
       {adding && (
         <Dialog title="Add employee" onClose={() => setAdding(false)}>

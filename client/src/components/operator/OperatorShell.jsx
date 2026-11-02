@@ -102,7 +102,7 @@ const OperatorShell = ({ children }) => {
         <Menu operator={operator} />
       </aside>
 
-      <div className={`fixed inset-0 z-40 md:hidden ${open ? "" : "pointer-events-none"}`}>
+      <div className={`fixed inset-0 z-60 md:hidden ${open ? "" : "pointer-events-none"}`}>
         <button
           type="button"
           aria-label="Close menu"
@@ -122,7 +122,7 @@ const OperatorShell = ({ children }) => {
       </div>
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-white/95 px-4 backdrop-blur md:hidden">
+        <header className="sticky top-0 z-50 flex h-14 items-center gap-3 border-b border-line bg-white/95 px-4 backdrop-blur md:hidden">
           <button
             type="button"
             aria-label="Open menu"

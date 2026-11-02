@@ -15,7 +15,7 @@ const Dialog = ({ title, onClose, children }) => {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
       <div onClick={onClose} aria-hidden="true" className="absolute inset-0 bg-ink/40" />
       <div role="dialog" aria-modal="true" aria-label={title} className="relative flex w-full max-w-110 flex-col gap-3.5 rounded-2xl bg-white p-7">
         <h2 className="font-display text-2xl leading-8 text-ink">{title}</h2>

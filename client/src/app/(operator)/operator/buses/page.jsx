@@ -31,8 +31,7 @@ export default function OperatorBusesPage() {
   const [tab, setTab] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
 
-  if (!loaded) return <p className="mx-auto max-w-300 text-sm text-muted">{offline ? "Could not load the fleet. Check your connection." : "Loading the fleet..."}</p>;
-
+  const loadError = !loaded && offline ? "Could not load the fleet. Check your connection." : "";
   const rows = fleet.filter(TABS.find((item) => item.name === tab).test);
   const selected = fleet.find((bus) => bus.id === selectedId);
   const columns = (selected ? ["bus", "status", "seats", "update"] : ["bus", "route", "status", "seats", "speed", "update"]).map((key) => COLUMNS[key]);
@@ -42,7 +41,8 @@ export default function OperatorBusesPage() {
       <div className="flex flex-col gap-0.5">
         <h1 className="font-display text-[28px] leading-8 text-ink">Buses</h1>
         <p className="text-[13px] text-muted">
-          {fleet.length} {fleet.length === 1 ? "bus" : "buses"} · select a bus for details{offline ? " · connection lost, showing the last data" : ""}
+          {loaded ? `${fleet.length} ${fleet.length === 1 ? "bus" : "buses"} · select a bus for details` : " "}
+          {loaded && offline ? " · connection lost, showing the last data" : ""}
         </p>
       </div>
 
@@ -67,7 +67,15 @@ export default function OperatorBusesPage() {
       </div>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-        <DataTable columns={columns} rows={rows} onRowClick={setSelectedId} selectedId={selectedId} />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          onRowClick={setSelectedId}
+          selectedId={selectedId}
+          loading={!loaded && !offline}
+          error={loadError}
+          emptyMessage={fleet.length === 0 ? "Your company has no buses yet." : `No buses in "${tab}".`}
+        />
         {selected && <BusDetailPanel key={selected.id} bus={selected} onClose={() => setSelectedId(null)} onChanged={reload} />}
       </div>
     </div>
