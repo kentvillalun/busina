@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, logout, me } from "../controllers/operator.controller.js";
+import { fleet, login, logout, me } from "../controllers/operator.controller.js";
 import { authenticateOperator } from "../middlewares/auth.js";
 import { authLimiter, operatorLoginLimiter } from "../middlewares/rateLimit.js";
 import { validate } from "../middlewares/validate.js";
@@ -11,5 +11,6 @@ const router = Router();
 router.post("/login", validate(loginSchema), operatorLoginLimiter, login);
 router.post("/logout", authLimiter, logout);
 router.get("/me", authenticateOperator, me);
+router.get("/fleet", authenticateOperator, fleet);
 
 export default router;
