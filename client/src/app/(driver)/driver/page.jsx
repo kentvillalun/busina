@@ -10,12 +10,13 @@ import MenuButton from "@/components/driver/MenuButton";
 import TopGradient from "@/components/layout/TopGradient";
 import useDriverOverview from "@/hooks/useDriverOverview";
 import { useRoutes } from "@/hooks/useRoutes";
+import useSavedSetting from "@/hooks/useSavedSetting";
 import { DIRECTION_LABEL, driverMode, MODE_COPY } from "@/lib/driverMode";
 import { roadFor } from "@/lib/eta";
-import { routeBetween } from "@/lib/geo";
+import { headingAt, routeBetween } from "@/lib/geo";
 import { secondsSince } from "@/lib/time";
 
-const BusMap = dynamic(() => import("@/components/map/BusMap"), { ssr: false });
+const DriverMap = dynamic(() => import("@/components/map/DriverMap"), { ssr: false });
 
 const LAOAG = [18.1978, 120.5936]; // map center until the bus has reported a position
 
@@ -34,6 +35,22 @@ const StatusPill = ({ mode, seconds }) => (
     {PILL_LABEL[mode]}
     {mode === "live" && seconds != null && <span className="font-medium text-muted">{seconds}s</span>}
   </span>
+);
+
+// Switches the map between "heading up" (ahead is up the screen) and north up. The needle always points to north.
+const CompassButton = ({ headingUp, heading, onToggle }) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    aria-pressed={headingUp}
+    aria-label={headingUp ? "Heading up. Tap for north up" : "North up. Tap for heading up"}
+    className="pointer-events-auto flex size-9 items-center justify-center rounded-full bg-white shadow-sm active:opacity-80"
+  >
+    <svg viewBox="0 0 24 24" className="size-5 transition-transform duration-500" style={{ transform: `rotate(${headingUp ? -heading : 0}deg)` }} aria-hidden="true">
+      <path d="M12 3 16 13H8Z" fill="#b3402b" />
+      <path d="M12 21 8 13h8Z" fill="#9aa9b8" />
+    </svg>
+  </button>
 );
 
 // Which bus, which way and what commuters see: over the map on a phone, at the top of the side panel from md up.
@@ -58,6 +75,7 @@ export default function DriverPage() {
   const { data, offline, error, changeStatus } = useDriverOverview();
   const routes = useRoutes();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headingUp, setHeadingUp] = useSavedSetting("busina:driverHeadingUp", true); // false = north up
 
   if (!data) {
     return (
@@ -77,8 +95,14 @@ export default function DriverPage() {
     : [];
   const seconds = position ? secondsSince(data.serverTime, position.lastPingAt) : null;
 
-  // The solid blue stretch of road from the bus to the next pickup, like the stretch to the commuter on their map.
   const route = routes.find((item) => item.id === bus.routeId);
+
+  // Which way the bus faces, from the road ahead of it: with "Heading up" the map turns so ahead is up the screen.
+  // null while the bus has none (the end of the road, no signal): the map then keeps its turn instead of snapping to north.
+  const heading =
+    route && position?.direction && position.progressM != null ? headingAt(roadFor(route, position.direction), position.progressM, position.direction) : null;
+
+  // The solid blue stretch of road from the bus to the next pickup, like the stretch to the commuter on their map.
   const next = pickups?.[0];
   const ahead =
     route && position?.direction && position.progressM != null && next
@@ -92,7 +116,8 @@ export default function DriverPage() {
   return (
     <main className="fixed inset-0 isolate bg-stage">
       <div className="absolute inset-0 z-0 md:right-82">
-        <BusMap
+        <DriverMap
+          heading={headingUp ? heading : 0}
           buses={buses}
           routes={route ? [route] : []}
           direction={position?.direction ?? undefined}
@@ -111,7 +136,10 @@ export default function DriverPage() {
             <MenuButton onClick={() => setMenuOpen(true)} />
             <img src="/logo.svg" alt="Busina" width={96} height={31} />
           </div>
-          <StatusPill mode={mode} seconds={seconds} />
+          <div className="flex items-center gap-2">
+            <StatusPill mode={mode} seconds={seconds} />
+            <CompassButton headingUp={headingUp} heading={heading ?? 0} onToggle={() => setHeadingUp(!headingUp)} />
+          </div>
         </div>
         <div className="mt-3 px-2 md:hidden">
           <Intro bus={bus} directionLabel={directionLabel} mode={mode} />

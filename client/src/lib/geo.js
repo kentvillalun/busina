@@ -71,4 +71,22 @@ const routeBetween = (polyline, fromM, toM) => {
   return points;
 };
 
-export { distanceM, formatDistance, routeBetween, snapToRoute };
+// Compass bearing in degrees (0 = north, 90 = east, clockwise) of the way from one [lat, lng] point to another.
+const bearingDeg = ([lat1, lng1], [lat2, lng2]) => {
+  const rad = (deg) => (deg * Math.PI) / 180;
+  const dLng = rad(lng2 - lng1);
+  const y = Math.sin(dLng) * Math.cos(rad(lat2));
+  const x = Math.cos(rad(lat1)) * Math.sin(rad(lat2)) - Math.sin(rad(lat1)) * Math.cos(rad(lat2)) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+};
+
+// Which way a bus on `road` ([lng, lat] points) at `progressM` is facing, as a compass bearing: the road a short way ahead of it
+// (progress grows toward Vigan, so a northbound bus looks at smaller values). null near the end of the road.
+const headingAt = (road, progressM, direction) => {
+  const sign = direction === "SOUTHBOUND" ? 1 : -1;
+  const points = routeBetween(road, progressM, progressM + sign * 80); // always from the smaller progress to the larger
+  if (points.length < 2) return null;
+  return sign === 1 ? bearingDeg(points[0], points.at(-1)) : bearingDeg(points.at(-1), points[0]);
+};
+
+export { bearingDeg, distanceM, formatDistance, headingAt, routeBetween, snapToRoute };

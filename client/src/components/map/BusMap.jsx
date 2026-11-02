@@ -171,14 +171,16 @@ const CenterReporter = ({ onChange }) => {
 };
 
 // `center` is [lat, lng]; `routes` come from GET /routes; `direction` draws only that way's road (both when left out); `ahead` is the [lat, lng] stretch from the selected bus to you; `spot` is the saved boarding spot ({ lat, lng }). Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
-// `pickups` (driver app) is [{ lat, lng, count, distanceM }].
-const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, pickups = [], selectedId, center, focus, onSelect, onCenterChange }) => (
+// `pickups` (driver app) is [{ lat, lng, count, distanceM }]. `mapOptions` and `children` let the driver map add the rotation
+// plugin's options and a child that sets the bearing, without this file knowing about the plugin.
+const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, pickups = [], selectedId, center, focus, onSelect, onCenterChange, mapOptions, children }) => (
   <MapContainer
     center={center}
     zoom={15}
     zoomControl={false}
     attributionControl={false}
     className="size-full"
+    {...mapOptions}
   >
     <TileLayer
       className={tiles?.className}
@@ -227,6 +229,7 @@ const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, picku
     ))}
     {spot && <Marker position={[spot.lat, spot.lng]} icon={spotIcon} zIndexOffset={500} interactive={false} />}
     {me && <Marker position={[me.lat, me.lng]} icon={meIcon} />}
+    {children}
   </MapContainer>
 );
 
