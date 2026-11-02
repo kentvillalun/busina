@@ -7,7 +7,7 @@ import DataTable from "@/components/operator/DataTable";
 import Dialog from "@/components/operator/Dialog";
 import StatusChip from "@/components/operator/StatusChip";
 import useFleet from "@/hooks/useFleet";
-import { BUS_LABELS, NEEDS_ATTENTION, routeText, seatsText } from "@/lib/fleet";
+import { BUS_LABELS, NEEDS_ATTENTION, crewText, routeText, seatsText } from "@/lib/fleet";
 
 const TABS = [
   { name: "All", test: () => true },
@@ -17,13 +17,12 @@ const TABS = [
   { name: "Stopover", test: (bus) => bus.status === "stopover" },
 ];
 
-// Crew joins the table with the staff roster.
 const COLUMNS = [
   { header: "Bus", render: (bus) => bus.busNumber },
   { header: "Route", render: (bus) => routeText(bus.direction) },
   { header: "Status", render: (bus) => <StatusChip status={bus.status} /> },
   { header: "Seats free", render: seatsText },
-  { header: "Speed", render: (bus) => (bus.speedKmh === null ? "—" : `${bus.speedKmh} km/h`) },
+  { header: "Crew", render: crewText },
   { header: "Last update", render: (bus) => bus.lastUpdate },
 ];
 

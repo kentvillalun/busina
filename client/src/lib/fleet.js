@@ -26,3 +26,6 @@ export const routeText = (direction) => {
 };
 
 export const seatsText = (bus) => (bus.seatsFree === null ? "Unknown" : `${bus.seatsFree} / ${bus.seatCount}`);
+
+// "Juan Dela Cruz +1" for the table, "Not assigned" when nobody works on the bus (crew is [{ name, role }]).
+export const crewText = (bus) => (bus.crew.length === 0 ? "Not assigned" : bus.crew.length === 1 ? bus.crew[0].name : `${bus.crew[0].name} +${bus.crew.length - 1}`);

@@ -4,7 +4,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import Dialog, { outlineButton, primaryButton } from "@/components/operator/Dialog";
 import StatusChip from "@/components/operator/StatusChip";
-import { routeText, seatsText } from "@/lib/fleet";
+import { crewText, routeText, seatsText } from "@/lib/fleet";
 import { send } from "@/lib/operatorApi";
 
 const Row = ({ label, children }) => (
@@ -84,6 +84,7 @@ const BusDetailPanel = ({ bus, onClose, onChanged }) => {
         <Row label="Seats free">{seatsText(bus)}</Row>
         <Row label="Speed">{bus.speedKmh === null ? "Unknown" : `${bus.speedKmh} km/h`}</Row>
         <Row label="Route">{routeText(bus.direction)}</Row>
+        <Row label="Crew">{crewText(bus)}</Row>
         <Row label="Last update">{bus.lastUpdate}</Row>
       </dl>
 
