@@ -27,7 +27,7 @@ const COLUMNS = {
 
 // Figma OP3 and OP4. With a bus selected the table keeps four columns and the details open beside it.
 export default function OperatorBusesPage() {
-  const { fleet, loaded, offline } = useFleet();
+  const { fleet, loaded, offline, reload } = useFleet();
   const [tab, setTab] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
 
@@ -68,7 +68,7 @@ export default function OperatorBusesPage() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         <DataTable columns={columns} rows={rows} onRowClick={setSelectedId} selectedId={selectedId} />
-        {selected && <BusDetailPanel key={selected.id} bus={selected} onClose={() => setSelectedId(null)} />}
+        {selected && <BusDetailPanel key={selected.id} bus={selected} onClose={() => setSelectedId(null)} onChanged={reload} />}
       </div>
     </div>
   );

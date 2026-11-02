@@ -19,6 +19,7 @@ const OperatorLoginForm = () => {
   const next = safeOperatorNext(params.get("next"));
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(params.get("expired") ? "Your session ended. Please sign in again." : "");
 
@@ -81,15 +82,25 @@ const OperatorLoginForm = () => {
 
         <label className="mt-4 block text-[13px] font-semibold text-ink">
           Password
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className={inputClass}
-            type="password"
-            placeholder="••••••••"
-            autoComplete="current-password"
-            maxLength={72}
-          />
+          <span className="relative block">
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className={`${inputClass} pr-20`}
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              maxLength={72}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((shown) => !shown)}
+              aria-pressed={showPassword}
+              className="absolute inset-y-0 right-0 mt-2 px-4 text-sm font-semibold text-primary"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </span>
         </label>
 
         {error && (

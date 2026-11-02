@@ -8,7 +8,7 @@ const MAX_FAILURES = 2;
 
 // The operator's fleet from GET /api/operator/fleet, refreshed every few seconds and as soon as the app comes back to the front.
 // Not useFetch: that one sends a 401 to the commuter sign-in, and an operator belongs on /operator/login.
-// Returns { fleet, loaded, offline }; `fleet` keeps the last answer while the connection is down.
+// Returns { fleet, loaded, offline, reload }; `fleet` keeps the last answer while the connection is down.
 const useFleet = () => {
   const [fleet, setFleet] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -57,7 +57,7 @@ const useFleet = () => {
     };
   }, [load]);
 
-  return { fleet, loaded, offline };
+  return { fleet, loaded, offline, reload: load };
 };
 
 export default useFleet;

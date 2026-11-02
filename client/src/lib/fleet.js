@@ -6,6 +6,7 @@ export const STATUS = {
   at_rest: { label: "At rest", look: "bg-uncertain-bg text-uncertain" },
   stale: { label: "Signal lost", look: "bg-uncertain-bg text-fault" },
   no_signal: { label: "No signal yet", look: "bg-uncertain-bg text-uncertain" },
+  disabled: { label: "Disabled", look: "bg-uncertain-bg text-uncertain" },
 };
 
 export const NEEDS_ATTENTION = ["stale", "no_signal"];
