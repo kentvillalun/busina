@@ -40,7 +40,7 @@ const Card = ({ className = "", children }) => (
 );
 
 const OfflinePill = ({ minutes }) => (
-  <div className="flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 shadow-sm">
+  <div className="flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 shadow-sm/5">
     <span className="size-4 rounded-full bg-uncertain" />
     <span className="text-xs font-bold text-navy">Offline</span>
     {minutes != null && <span className="text-xs font-medium text-muted">{minutes}m</span>}

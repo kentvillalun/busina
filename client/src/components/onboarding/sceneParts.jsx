@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 // Pieces shared by the three onboarding scenes. Every scene is drawn on a 350 x 380 stage
 // with absolute positions copied from the Figma frames (O1, O2, O3).
 
-export const cardShadow = "shadow-[0_4px_7px_rgba(16,59,96,0.18)]";
+export const cardShadow = "shadow-[0_4px_7px_rgba(16,59,96,0.05)]";
 
 // How the pieces appear. The Scene wrapper is the parent: when it switches to "show", its pieces
 // come in one after another, in the order they are written. `pop` slides up and grows a little,

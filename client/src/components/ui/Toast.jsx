@@ -6,7 +6,7 @@ const Toast = ({ message, type = "success", action = null, ms = 2500 }) => (
     <p
       role="status"
       style={{ animationDuration: `${ms}ms` }}
-      className={`flex min-h-14 animate-toast items-center gap-3 rounded-full bg-navy py-2.5 pl-2.5 pr-5 text-left text-[13px] font-medium leading-4.5 text-white shadow-lg ${
+      className={`flex min-h-14 animate-toast items-center gap-3 rounded-full bg-navy py-2.5 pl-2.5 pr-5 text-left text-[13px] font-medium leading-4.5 text-white shadow-lg/5 ${
         action ? "w-full max-w-sm" : "w-[40vw] min-w-56 max-w-sm md:w-auto md:min-w-0"
       }`}
     >

@@ -266,7 +266,7 @@ export default function HomePage() {
         </div>
 
         {/* Phone: header on top, sheet at the bottom. md and up: one white panel next to the nav rail. */}
-        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between md:inset-y-4 md:left-24 md:right-auto md:w-100 md:justify-start md:overflow-hidden md:rounded-[28px] md:bg-white md:shadow-[0_10px_30px_rgba(15,33,51,0.18)]">
+        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between md:inset-y-4 md:left-24 md:right-auto md:w-100 md:justify-start md:overflow-hidden md:rounded-[28px] md:bg-white md:shadow-[0_10px_30px_rgba(15,33,51,0.05)]">
           <header className="pointer-events-auto relative isolate px-6 pb-6 pt-4 md:pb-2">
             <TopGradient className="-z-10 md:hidden" />
             <div className="flex items-center justify-between">
@@ -275,7 +275,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={retry}
-                  className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-primary shadow-sm"
+                  className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-primary shadow-sm/5"
                 >
                   Can&apos;t connect. Try again
                 </button>
@@ -314,7 +314,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="-mx-2 mt-4 flex gap-1 rounded-[18px] shadow-[0_-4px_20px_rgba(15,33,51,0.03)] bg-white p-1.5">
+            <div className="-mx-2 mt-4 flex gap-1 rounded-[18px] shadow-[0_-4px_20px_rgba(15,33,51,0.05)] bg-white p-1.5">
               {DIRECTIONS.map((item) => (
                 <DirectionTab
                   key={item.key}

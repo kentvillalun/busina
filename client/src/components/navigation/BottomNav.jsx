@@ -30,7 +30,7 @@ export const BottomNav = () => {
       <motion.div
         layout
         transition={spring}
-        className="flex items-center gap-1 md:flex-col rounded-full border border-white/70 bg-white/25 p-1.5 shadow-[0_10px_30px_rgba(15,33,51,0.18),inset_0_1px_0_rgba(255,255,255,0.9),inset_0_-1px_0_rgba(255,255,255,0.3)] backdrop-blur-2xl backdrop-saturate-200"
+        className="flex items-center gap-1 md:flex-col rounded-full border border-white/70 bg-white/25 p-1.5 shadow-[0_10px_30px_rgba(15,33,51,0.05),inset_0_1px_0_rgba(255,255,255,0.9),inset_0_-1px_0_rgba(255,255,255,0.3)] backdrop-blur-2xl backdrop-saturate-200"
       >
         {items.map(({ href, label, Icon }) => {
           const active = pathname.startsWith(href);

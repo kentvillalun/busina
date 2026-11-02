@@ -20,7 +20,7 @@ const AlertsScene = ({
 
     {/* notification preview */}
     <Pop
-      className="absolute flex w-[321.64px] gap-[10.32px] rounded-[20.64px] bg-[#fbfcfe] px-[13.76px] py-[12.04px] shadow-[0_6.88px_10px_rgba(15,33,51,0.28)]"
+      className="absolute flex w-[321.64px] gap-[10.32px] rounded-[20.64px] bg-[#fbfcfe] px-[13.76px] py-[12.04px] shadow-[0_6.88px_10px_rgba(15,33,51,0.05)]"
       style={{ left: 14, top: 165 }}
     >
       <img src="/app-icon.svg" alt="" width={34.4} height={34.4} className="shrink-0" />

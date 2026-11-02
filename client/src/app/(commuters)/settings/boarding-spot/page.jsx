@@ -100,7 +100,7 @@ export default function BoardingSpotPage() {
         <Image src="/spot/pin.svg" alt="" width={44} height={56} className="relative -translate-y-7" />
       </div>
 
-      <div className="absolute inset-x-4 top-14 z-20 mx-auto flex max-w-107.5 items-center gap-3 rounded-[28px] bg-white py-2.5 pl-2.5 pr-4.5 shadow-[0_2px_10px_rgba(16,59,96,0.1)]">
+      <div className="absolute inset-x-4 top-14 z-20 mx-auto flex max-w-107.5 items-center gap-3 rounded-[28px] bg-white py-2.5 pl-2.5 pr-4.5 shadow-[0_2px_10px_rgba(16,59,96,0.05)]">
         <Link
           href="/settings"
           aria-label="Back to settings"

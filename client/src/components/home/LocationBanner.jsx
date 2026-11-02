@@ -40,7 +40,7 @@ const LocationBanner = ({ permission, onTurnOn, onCheckAgain }) => {
   }
 
   return (
-    <div className="-mx-2 mt-3 flex items-center gap-3 rounded-[18px] bg-white p-3 shadow-[0_2px_10px_rgba(16,59,96,0.1)]">
+    <div className="-mx-2 mt-3 flex items-center gap-3 rounded-[18px] bg-white p-3 shadow-[0_2px_10px_rgba(16,59,96,0.05)]">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-stage text-navy">
         <IconLocationOff />
       </span>

@@ -57,7 +57,7 @@ const DriverSheet = ({ mode, pickups, status, onStatus, error, intro }) => {
 
   return (
     <section
-      className="fixed inset-x-0 bottom-0 z-20 flex flex-col gap-3 rounded-t-[28px] bg-white px-5 pt-2.5 pb-[max(1.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,34,51,0.14)] md:inset-x-auto md:inset-y-0 md:right-0 md:w-82 md:gap-4 md:rounded-none md:border-l md:border-line md:px-6 md:py-8 md:shadow-none"
+      className="fixed inset-x-0 bottom-0 z-20 flex flex-col gap-3 rounded-t-[28px] bg-white px-5 pt-2.5 pb-[max(1.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,34,51,0.05)] md:inset-x-auto md:inset-y-0 md:right-0 md:w-82 md:gap-4 md:rounded-none md:border-l md:border-line md:px-6 md:py-8 md:shadow-none"
     >
       <span className="mx-auto h-1 w-10 rounded-full bg-line md:hidden" />
       {intro && <div className="hidden md:block">{intro}</div>}

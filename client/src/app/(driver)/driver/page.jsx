@@ -30,7 +30,7 @@ const PILL_LABEL = { live: "Live", rest: "At rest", stopover: "Stopover", lost: 
 const BANNER = { rest: "bg-uncertain-bg text-ink", stopover: "bg-stage text-ink", lost: "bg-fault/10 text-fault" };
 
 const StatusPill = ({ mode, seconds }) => (
-  <span className={`flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-[13px] font-bold shadow-sm ${PILL[mode].text}`}>
+  <span className={`flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-[13px] font-bold shadow-sm/5 ${PILL[mode].text}`}>
     <span className={`size-2 rounded-full ${PILL[mode].dot}`} />
     {PILL_LABEL[mode]}
     {mode === "live" && seconds != null && <span className="font-medium text-muted">{seconds}s</span>}
@@ -44,7 +44,7 @@ const CompassButton = ({ headingUp, heading, onToggle }) => (
     onClick={onToggle}
     aria-pressed={headingUp}
     aria-label={headingUp ? "Heading up. Tap for north up" : "North up. Tap for heading up"}
-    className="pointer-events-auto flex size-9 items-center justify-center rounded-full bg-white shadow-sm active:opacity-80"
+    className="pointer-events-auto flex size-9 items-center justify-center rounded-full bg-white shadow-sm/5 active:opacity-80"
   >
     <svg viewBox="0 0 24 24" className="size-5 transition-transform duration-500" style={{ transform: `rotate(${headingUp ? -heading : 0}deg)` }} aria-hidden="true">
       <path d="M12 3 16 13H8Z" fill="#b3402b" />
@@ -145,7 +145,7 @@ export default function DriverPage() {
           <Intro bus={bus} directionLabel={directionLabel} mode={mode} />
         </div>
         {offline && (
-          <p role="status" className="mt-3 rounded-[14px] bg-white px-3.5 py-2 text-[13px] font-semibold text-fault shadow-sm">
+          <p role="status" className="mt-3 rounded-[14px] bg-white px-3.5 py-2 text-[13px] font-semibold text-fault shadow-sm/5">
             Connection lost. Showing the last update.
           </p>
         )}
