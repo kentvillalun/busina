@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../config/db.js";
 import { HttpError } from "../utils/HttpError.js";
+import { canOperate } from "../utils/operatorUser.js";
 import { OPERATOR_COOKIE, cookieMaxAgeMs, cookieOptions, hashToken, signOperatorToken, verifyToken } from "../utils/token.js";
 
 // Compared when the user does not exist, so an unknown username takes as long as a wrong password.
@@ -14,7 +15,7 @@ const login = async (req, res) => {
 
   const user = await prisma.user.findUnique({ where: { username }, include: { company: { select: { name: true } } } });
   const passwordOk = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
-  if (!user || user.role !== "OPERATOR" || !user.active || !user.passwordHash || !passwordOk) {
+  if (!canOperate(user) || !passwordOk) {
     throw new HttpError(401, "Wrong username or password", { code: "INVALID_CREDENTIALS" });
   }
 

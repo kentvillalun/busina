@@ -1,5 +1,6 @@
 import { prisma } from "../config/db.js";
 import { HttpError } from "../utils/HttpError.js";
+import { canOperate } from "../utils/operatorUser.js";
 import { COMMUTER_COOKIE, OPERATOR_COOKIE, STAFF_COOKIE, cookieOptions, hashToken, verifyToken } from "../utils/token.js";
 
 // A cookie that failed any check is removed, so the browser stops sending a dead session.
@@ -90,7 +91,7 @@ const authenticateOperator = async (req, res, next) => {
 
   // Reloaded on every request so a disabled account, or one whose role changed, stops working at once.
   const user = await prisma.user.findUnique({ where: { id: payload.id }, include: { company: { select: { name: true } } } });
-  if (!user?.active || user.role !== "OPERATOR" || !user.passwordHash) {
+  if (!canOperate(user)) {
     return rejectSession(res, next, "Invalid session", "INVALID_SESSION", OPERATOR_COOKIE);
   }
 
