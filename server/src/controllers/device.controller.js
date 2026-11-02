@@ -23,7 +23,8 @@ const ping = async (req, res) => {
   });
 
   const now = new Date(); // server time: the device clock can be wrong
-  const route = before ? await getRoute(bus.routeId) : null;
+  // The direction is a bonus: if the route cannot be read right now (a database blip on a cache miss), the ping must still be saved.
+  const route = before ? await getRoute(bus.routeId).catch(() => null) : null;
   const moved = route
     ? directionFromMove({ from: before, to: { lat, lng }, speedKmh, gapMs: now - before.lastPingAt, route })
     : null;
