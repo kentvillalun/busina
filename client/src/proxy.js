@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 const COOKIE = "commuter_token";
 const STAFF_COOKIE = "staff_token";
+const OPERATOR_COOKIE = "operator_token";
 const SEEN_COOKIE = "hasSeenOnboarding"; // set by the onboarding page (lib/session.js)
 
 // Who may see what:
@@ -49,10 +50,34 @@ const guardDriver = async (request) => {
   return response;
 };
 
+// The operator app, the same way: its own cookie, its own login at /operator/login, and the OPERATOR role.
+const guardOperator = async (request) => {
+  const { pathname, search } = request.nextUrl;
+  const token = request.cookies.get(OPERATOR_COOKIE)?.value;
+  const { valid, expired } = await isValid(token, "OPERATOR");
+
+  if (pathname === "/operator/login") {
+    if (valid) return NextResponse.redirect(new URL("/operator", request.url));
+    const response = NextResponse.next();
+    if (token) response.cookies.delete(OPERATOR_COOKIE);
+    return response;
+  }
+
+  if (valid) return NextResponse.next();
+
+  const login = new URL("/operator/login", request.url);
+  login.searchParams.set("next", pathname + search);
+  if (expired) login.searchParams.set("expired", "1");
+  const response = NextResponse.redirect(login);
+  if (token) response.cookies.delete(OPERATOR_COOKIE);
+  return response;
+};
+
 export async function proxy(request) {
   const { pathname, search } = request.nextUrl;
 
   if (pathname === "/driver" || pathname.startsWith("/driver/")) return guardDriver(request);
+  if (pathname === "/operator" || pathname.startsWith("/operator/")) return guardOperator(request);
 
   // The app opens on /home (manifest start_url), so this is where a first-time visitor is caught.
   if (pathname === "/home") {
@@ -80,5 +105,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/home", "/settings/alerts", "/settings/boarding-spot", "/login", "/driver", "/driver/:path*"],
+  matcher: ["/home", "/settings/alerts", "/settings/boarding-spot", "/login", "/driver", "/driver/:path*", "/operator", "/operator/:path*"],
 };

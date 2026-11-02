@@ -18,6 +18,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useOperator } from "@/hooks/useOperator";
+import { operatorLogout } from "@/lib/operatorSession";
 
 // Routes, Alerts and Reports are not built, so they are not listed. The active page shows the solid icon.
 const NAV = [
@@ -29,7 +31,7 @@ const NAV = [
 
 // The menu looks like the driver's (Figma D6): logo with a rule under it, who is signed in, the active page as a gradient row,
 // Logout at the bottom. Icons show from md up; on a phone the drawer has text only.
-const Menu = ({ onPick }) => {
+const Menu = ({ operator, onPick }) => {
   const pathname = usePathname();
   return (
     <>
@@ -39,8 +41,8 @@ const Menu = ({ onPick }) => {
             <img src="/logo.svg" alt="Busina" width={110} height={36} />
           </div>
           <div className="flex flex-col">
-            <p className="text-base font-medium text-ink">PITCO (Demo)</p>
-            <p className="text-xs text-muted">Operator console</p>
+            <p className="text-base font-medium text-ink">{operator?.companyName ?? " "}</p>
+            <p className="text-xs text-muted">{operator ? `Operator · ${operator.name}` : " "}</p>
           </div>
         </div>
 
@@ -69,14 +71,14 @@ const Menu = ({ onPick }) => {
       </div>
 
       <div className="mt-auto p-4 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
-        {/* shortcut: leads to the sign-in screen only; it will end the session once operator sign-in exists */}
-        <Link
-          href="/operator/login"
+        <button
+          type="button"
+          onClick={() => operatorLogout()}
           className="flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left text-base text-muted transition-colors hover:bg-primary/10 hover:text-primary"
         >
           <ArrowRightStartOnRectangleIcon className="hidden size-5 shrink-0 md:block" aria-hidden="true" />
           Logout
-        </Link>
+        </button>
       </div>
     </>
   );
@@ -85,6 +87,7 @@ const Menu = ({ onPick }) => {
 // A sidebar from md up; on a phone a hamburger opens the same menu as a drawer.
 const OperatorShell = ({ children }) => {
   const [open, setOpen] = useState(false);
+  const operator = useOperator();
 
   useEffect(() => {
     if (!open) return;
@@ -96,7 +99,7 @@ const OperatorShell = ({ children }) => {
   return (
     <div className="min-h-dvh bg-[#f5f8fb] md:flex">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r-[0.5px] border-line bg-white md:flex">
-        <Menu />
+        <Menu operator={operator} />
       </aside>
 
       <div className={`fixed inset-0 z-40 md:hidden ${open ? "" : "pointer-events-none"}`}>
@@ -114,7 +117,7 @@ const OperatorShell = ({ children }) => {
             open ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <Menu onPick={() => setOpen(false)} />
+          <Menu operator={operator} onPick={() => setOpen(false)} />
         </aside>
       </div>
 

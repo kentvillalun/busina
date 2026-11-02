@@ -3,18 +3,58 @@
 /* eslint-disable @next/next/no-img-element -- the logo is a small SVG; next/image would only add work */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { haptic, hapticTrigger } from "@/lib/haptics";
+
+// Only the operator app: a sign-in sent from /operator/... goes back there, never to another page or site.
+const safeOperatorNext = (next) => (next && /^\/operator(\/|$)/.test(next) && !next.startsWith("/operator/login") ? next : "/operator");
 
 const inputClass =
   "mt-2 h-14 w-full rounded-2xl border-[1.5px] border-line bg-white px-4 text-[17px] font-medium text-ink outline-none placeholder:text-muted/60 focus:border-primary";
 
-// Username and password, as in Figma OP1. Not connected to the server yet: operator sign-in is the next slice.
+// Username and password, as in Figma OP1. The server gives one answer for every wrong sign-in, so this does too.
 const OperatorLoginForm = () => {
-  const [error, setError] = useState("");
+  const params = useSearchParams();
+  const next = safeOperatorNext(params.get("next"));
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(params.get("expired") ? "Your session ended. Please sign in again." : "");
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    setError("Operator sign-in is not connected yet.");
+    if (busy) return;
+    if (!username.trim() || !password) {
+      setError(username.trim() ? "Enter your password." : "Enter your username.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/operator/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      if (response.ok) {
+        haptic.success();
+        window.location.replace(next); // a full page load, so the proxy sees the new cookie
+        return;
+      }
+      haptic.error();
+      setError(
+        response.status === 429
+          ? "Too many wrong passwords. Try again in 15 minutes."
+          : response.status === 401 || response.status === 400
+            ? "Wrong username or password."
+            : "Something went wrong. Please try again.",
+      );
+    } catch {
+      setError("No connection. Check your internet and try again.");
+    }
+    setBusy(false);
   };
 
   return (
@@ -26,12 +66,30 @@ const OperatorLoginForm = () => {
 
         <label className="mt-6 block text-[13px] font-semibold text-ink">
           Username
-          <input className={inputClass} placeholder="operator" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={50} />
+          <input
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            className={inputClass}
+            placeholder="operator"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={50}
+          />
         </label>
 
         <label className="mt-4 block text-[13px] font-semibold text-ink">
           Password
-          <input className={inputClass} type="password" placeholder="••••••••" autoComplete="current-password" maxLength={72} />
+          <input
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className={inputClass}
+            type="password"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            maxLength={72}
+          />
         </label>
 
         {error && (
@@ -40,8 +98,8 @@ const OperatorLoginForm = () => {
           </p>
         )}
 
-        <button type="submit" className="gradient-button active:opacity-80">
-          Sign in
+        <button type="submit" ref={hapticTrigger} disabled={busy} className="gradient-button active:opacity-80 disabled:opacity-50">
+          {busy ? "Signing in..." : "Sign in"}
         </button>
       </form>
 
