@@ -9,9 +9,12 @@ const ping = async (req, res) => {
   const { bus } = req;
   const { lat, lng, speedKmh, seats, doorIn, doorOut, direction } = req.body;
 
+  // Strict on purpose: seatCount is the bus's real number of seats, and "full, with people standing" is decided against it.
+  // The answer carries the number (details.seatCount here, seatCount in a 200), so a device can learn it instead of hard-coding it.
   if (seats.length !== bus.seatCount) {
     throw new HttpError(400, `seats must have exactly ${bus.seatCount} entries`, {
       code: "SEAT_COUNT_MISMATCH",
+      details: { seatCount: bus.seatCount },
     });
   }
 
@@ -52,7 +55,7 @@ const ping = async (req, res) => {
   const signalReturned = !before || state.lastPingAt.getTime() - before.lastPingAt.getTime() > STALE_AFTER_MS;
   notifyBusPing({ bus, state: saved, signalReturned }).catch((error) => console.error("[push]", error));
 
-  return res.json({ ok: true });
+  return res.json({ ok: true, seatCount: bus.seatCount });
 };
 
 export { ping };
