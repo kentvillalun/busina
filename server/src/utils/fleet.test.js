@@ -74,3 +74,7 @@ test("the crew is the active staff of the bus, by full name and role", () => {
   assert.deepEqual(fleetBus({ ...row(state(5)), staff }, road, now).crew, [{ name: "Juan Dela Cruz", role: "DRIVER" }, { name: "Ana Reyes", role: "CONDUCTOR" }]);
   assert.deepEqual(fleetBus(row(state(5)), road, now).crew, []);
 });
+
+test("seats free never go below zero when a sensor counts too many", () => {
+  assert.equal(fleetBus(row({ ...state(5), occupied: 43 }), road, now).seatsFree, 0);
+});

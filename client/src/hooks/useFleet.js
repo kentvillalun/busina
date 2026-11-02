@@ -8,8 +8,9 @@ const MAX_FAILURES = 2;
 
 // The operator's fleet from GET /api/operator/fleet, refreshed every few seconds and as soon as the app comes back to the front.
 // Not useFetch: that one sends a 401 to the commuter sign-in, and an operator belongs on /operator/login.
+// `poll: false` loads once (and on coming back to the front) for a screen that only needs the list of buses.
 // Returns { fleet, loaded, offline, reload }; `fleet` keeps the last answer while the connection is down.
-const useFleet = () => {
+const useFleet = ({ poll = true } = {}) => {
   const [fleet, setFleet] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [offline, setOffline] = useState(false);
@@ -44,18 +45,18 @@ const useFleet = () => {
   useEffect(() => {
     const first = setTimeout(load, 0); // not a direct call: the lint rule keeps setState out of the effect body
     const refresh = () => document.visibilityState === "visible" && load();
-    const timer = setInterval(refresh, POLL_MS);
+    const timer = poll ? setInterval(refresh, POLL_MS) : null;
     document.addEventListener("visibilitychange", refresh);
     window.addEventListener("online", refresh);
     window.addEventListener("focus", refresh);
     return () => {
       clearTimeout(first);
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
       window.removeEventListener("online", refresh);
       window.removeEventListener("focus", refresh);
     };
-  }, [load]);
+  }, [load, poll]);
 
   return { fleet, loaded, offline, reload: load };
 };

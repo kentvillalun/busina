@@ -41,7 +41,7 @@ const fleetBus = ({ id, busNumber, name, seatCount, active, serviceStatus, route
   result.lastPingAt = state.lastPingAt;
   if (isFresh(state, now)) {
     result.speedKmh = speedKmh;
-    result.seatsFree = seatCount - state.occupied;
+    result.seatsFree = Math.max(0, seatCount - state.occupied); // a sensor that counts too many must not show negative seats
   }
   return result;
 };

@@ -2,7 +2,7 @@
   "id": "/operator",
   "name": "Busina Operator",
   "short_name": "Operator",
-  "description": "Operator insights for Busina: see which departures run full or nearly empty.",
+  "description": "Busina for operators: see your fleet live, manage buses and staff, and reset driver PINs.",
   "start_url": "/operator",
   "scope": "/operator",
   "display": "standalone",

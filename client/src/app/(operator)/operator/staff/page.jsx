@@ -25,7 +25,7 @@ const LABELS = {
 // works on it. `dialog` is null, "add", or the person being edited.
 export default function OperatorStaffPage() {
   const { staff, loaded, failed, reload } = useStaff();
-  const { fleet } = useFleet();
+  const { fleet } = useFleet({ poll: false });
   const [dialog, setDialog] = useState(null);
   const busNumber = (busId) => (busId ? (fleet.find((bus) => bus.id === busId)?.busNumber ?? "—") : "Not assigned");
 

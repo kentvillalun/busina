@@ -2,10 +2,11 @@ import { Empty, ErrorState, Loading } from "@/components/operator/states";
 
 // The table of Ecoaid: a card with a hairline border, a header row with a rule under it, 16px cell padding, 14px text and a thin
 // line between rows. `columns` is [{ header, render(row) }]; the first column is bold, the rest muted.
-// Below md the same rows are cards: `card(row)` renders the inside of one. With `onRowClick` a row or card is clickable.
+// Below md the same rows are cards: `card(row)` renders the inside of one. With `onRowClick` a row or card is clickable, and a row
+// can also be reached with Tab and opened with Enter or Space.
 // With no rows, a message of fixed height takes the place of the rows (in the table body and in the card list):
 // `error` (with a button that calls `onRetry`) wins, then `loading`, then the empty message.
-// `labels` is { loading, empty, error } as [main, sub] pairs; `retry` is the button text.
+// `labels` is { loading, empty, error } as [main, sub] pairs.
 const DataTable = ({ columns, rows, card, onRowClick, selectedId, loading = false, error = false, onRetry, labels = {} }) => {
   const [loadingText, loadingSub] = labels.loading ?? [];
   const [emptyText, emptySub] = labels.empty ?? [];
@@ -42,7 +43,16 @@ const DataTable = ({ columns, rows, card, onRowClick, selectedId, loading = fals
                 <tr
                   key={row.id}
                   onClick={onRowClick && (() => onRowClick(row.id))}
-                  className={`text-start transition-colors ${onRowClick ? "cursor-pointer hover:bg-stage/60" : ""} ${row.id === selectedId ? "bg-stage" : ""}`}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={
+                    onRowClick &&
+                    ((event) => {
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      onRowClick(row.id);
+                    })
+                  }
+                  className={`text-start transition-colors ${onRowClick ? "cursor-pointer hover:bg-stage/60 focus-visible:bg-stage focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary" : ""} ${row.id === selectedId ? "bg-stage" : ""}`}
                 >
                   {columns.map((column, index) => (
                     <td key={column.header} className={`p-4 ${index === 0 ? "font-semibold text-ink" : "text-muted"}`}>
