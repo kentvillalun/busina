@@ -1,4 +1,4 @@
-import { MAX_SEATS, rowSize, seatSlot } from "@/lib/seatLayout";
+import { MAX_SEATS, seatBox } from "@/lib/seatLayout";
 
 // Figma S2 / S3: the bus seen from above, drawn on a 328 x 156 canvas. Every position below is the
 // Figma one in pixels, turned into percentages so the map scales with its card.
@@ -6,13 +6,6 @@ const W = 328;
 const H = 156;
 const x = (value) => `${(value / W) * 100}%`;
 const y = (value) => `${(value / H) * 100}%`;
-
-// The seats are numbered from the front and from the right-hand side (see lib/seatLayout.js); a bus with fewer seats fills only the
-// front rows.
-const COLUMN_X = (column) => 9 + column * 27; // column 0 = rear
-// Top of a seat by lane, counted from the right-hand side of the bus (the bottom of the drawing). A 4-per-row bus has two lanes on
-// each side of the aisle; a van with 2 per row has one seat on each side.
-const LANE_Y = { 4: [98, 71, 35, 8], 2: [78, 30] };
 
 const seatClass = {
   free: "border-[1.5px] border-success bg-success-tint",
@@ -62,18 +55,9 @@ const SeatMap = ({ seats, seatCount, unknown = false }) => {
     <Piece left={243} top={131} width={34} height={6} className="rounded-[3px] bg-primary" />
 
     {Array.from({ length: Math.min(seatCount, MAX_SEATS) }, (_, i) => {
-      const { column, lane } = seatSlot(i, seatCount);
+      const { left, top, width, height } = seatBox(i, seatCount);
       const state = !readable ? "unknown" : seats[i] ? "taken" : "free";
-      return (
-        <Piece
-          key={i}
-          left={COLUMN_X(column)}
-          top={LANE_Y[rowSize(seatCount)][lane]}
-          width={24}
-          height={24}
-          className={`rounded-md ${seatClass[state]}`}
-        />
-      );
+      return <Piece key={i} left={left} top={top} width={width} height={height} className={`rounded-md ${seatClass[state]}`} />;
     })}
 
     <span className="absolute text-[11px] font-medium text-muted" style={{ left: 0, top: y(142) }}>
