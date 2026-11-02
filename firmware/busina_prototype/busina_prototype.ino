@@ -45,8 +45,8 @@ constexpr uint8_t PIN_HX711_SCK  = 33;
 constexpr uint8_t PIN_IR_A       = 27; // Outer doorway sensor (D27)
 constexpr uint8_t PIN_IR_B       = 14; // Inner doorway sensor (D14)
 
-// Set true to send pings over ESP32 Wi-Fi / Phone Hotspot (no Air780E needed).
-constexpr bool     USE_WIFI_HOTSPOT      = true;
+// Set false to use Air780E 4G LTE Cat-1 Modem on UART2 (RX=25, TX=26), or true for Wi-Fi Hotspot.
+constexpr bool     USE_WIFI_HOTSPOT      = false;
 // Set true so indoor bench testing still sends coordinates along the seeded Laoag route when GPS has no sky lock yet.
 constexpr bool     INDOOR_GPS_FALLBACK   = true;
 // Must be "NORTHBOUND" or "SOUTHBOUND" so the web app's direction tabs display the bus.
@@ -54,8 +54,8 @@ constexpr char     DEFAULT_DIRECTION[]   = "NORTHBOUND";
 
 constexpr char     LOG_FILENAME[]        = "/datalog.csv";
 
-// Must equal Bus.seatCount in the database (seed: 40), or the API rejects the ping with SEAT_COUNT_MISMATCH.
-constexpr uint8_t  SEAT_COUNT            = 40;
+// Must equal Bus.seatCount in the database (4 seats for the prototype), or the API rejects the ping with SEAT_COUNT_MISMATCH.
+constexpr uint8_t  SEAT_COUNT            = 4;
 constexpr uint8_t  SENSOR_SEAT_INDEX     = 0;
 
 constexpr float    SEAT_THRESHOLD_KG     = 2.0f;
@@ -172,6 +172,7 @@ enum class ModemState : uint8_t {
   WAIT_SAPBR_APN,
   WAIT_SAPBR_OPEN,
   WAIT_HTTPINIT,
+  WAIT_HTTPSSL,
   WAIT_HTTPPARA_CID,
   WAIT_HTTPPARA_URL,
   WAIT_HTTPPARA_CONTENT,
@@ -360,6 +361,17 @@ void updateModemStateMachine() {
       break;
 
     case ModemState::WAIT_HTTPINIT:
+      if (hasOK || hasError) {
+        if (strncmp(API_BASE_URL, "https://", 8) == 0) {
+          sendATCommand("AT+HTTPSSL=1", ModemState::WAIT_HTTPSSL);
+        } else {
+          sendATCommand("AT+HTTPPARA=\"CID\",1", ModemState::WAIT_HTTPPARA_CID);
+        }
+      }
+      break;
+
+    case ModemState::WAIT_HTTPSSL:
+      // Some Air780E firmware versions require AT+HTTPSSL=1; others enable TLS from https:// and return ERROR here. Both are safe.
       if (hasOK || hasError) sendATCommand("AT+HTTPPARA=\"CID\",1", ModemState::WAIT_HTTPPARA_CID);
       break;
 
