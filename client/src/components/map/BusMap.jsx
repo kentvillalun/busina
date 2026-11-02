@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { roadFor } from "@/lib/eta";
+import { formatDistance } from "@/lib/geo";
 import { LANDMARKS } from "@/lib/landmarks";
 import { AttributionControl, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
@@ -96,6 +97,19 @@ const Landmarks = () => {
   ));
 };
 
+// Driver map: people waiting ahead, as a navy circle with how many and a chip with how far. Grouped and anonymous.
+const pickupIcon = (count, distance) =>
+  cached(`pickup-${count}-${distance}`, () =>
+    L.divIcon({
+      className: "",
+      iconSize: [0, 0],
+      html: `<div class="relative size-9 -translate-x-1/2 -translate-y-1/2">
+        <span class="flex size-9 items-center justify-center rounded-full border-[3px] border-white bg-navy text-[15px] font-bold text-white shadow-md">${count}</span>
+        <span class="absolute left-full top-1/2 ml-1.5 -translate-y-1/2 whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-navy shadow-md">${distance}</span>
+      </div>`,
+    }),
+  );
+
 // "You are here": the dot sits exactly on the position, with a soft pulse and a label above it.
 const meIcon = L.divIcon({
   className: "",
@@ -157,7 +171,8 @@ const CenterReporter = ({ onChange }) => {
 };
 
 // `center` is [lat, lng]; `routes` come from GET /routes; `direction` draws only that way's road (both when left out); `ahead` is the [lat, lng] stretch from the selected bus to you; `spot` is the saved boarding spot ({ lat, lng }). Map clicks and zoom buttons are off: the sheet and tabs sit on top of it.
-const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, selectedId, center, focus, onSelect, onCenterChange }) => (
+// `pickups` (driver app) is [{ lat, lng, count, distanceM }].
+const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, pickups = [], selectedId, center, focus, onSelect, onCenterChange }) => (
   <MapContainer
     center={center}
     zoom={15}
@@ -199,6 +214,15 @@ const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, selec
         icon={busIcon(bus, bus.id === selectedId)}
         zIndexOffset={bus.id === selectedId ? 1000 : 0}
         eventHandlers={{ click: () => onSelect?.(bus.id) }}
+      />
+    ))}
+    {pickups.map((pickup) => (
+      <Marker
+        key={`${pickup.lat}-${pickup.lng}`}
+        position={[pickup.lat, pickup.lng]}
+        icon={pickupIcon(pickup.count, formatDistance(pickup.distanceM))}
+        zIndexOffset={600}
+        interactive={false}
       />
     ))}
     {spot && <Marker position={[spot.lat, spot.lng]} icon={spotIcon} zIndexOffset={500} interactive={false} />}
