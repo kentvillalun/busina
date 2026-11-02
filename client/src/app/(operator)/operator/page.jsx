@@ -62,7 +62,7 @@ export default function OperatorOverviewPage() {
         </div>
         <section className="flex flex-col gap-3 rounded-2xl border border-[#e3eaf1] bg-white p-4">
           <h2 className="font-display text-lg text-ink">Needs attention</h2>
-          {attention.length === 0 && <p className="text-sm text-muted">Every bus is reporting.</p>}
+          {attention.length === 0 && <p className="text-sm text-muted">{fleet.length === 0 ? "Your company has no buses yet." : "No bus needs attention."}</p>}
           {attention.map((bus) => (
             <div key={bus.id} className="flex items-start gap-3 border-t border-[#e3eaf1] pt-3">
               <span className="rounded-lg bg-uncertain-bg px-2.5 py-1 text-sm font-bold text-uncertain">{bus.busNumber}</span>
