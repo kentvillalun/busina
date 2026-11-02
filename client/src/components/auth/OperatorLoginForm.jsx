@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element -- the logo is a small SVG; next/image would only add work */
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { haptic, hapticTrigger } from "@/lib/haptics";
@@ -59,7 +58,7 @@ const OperatorLoginForm = () => {
   };
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-[#f5f8fb] px-4 py-10">
+    <main className="flex min-h-svh flex-col items-center justify-center bg-[#f5f8fb] px-4 py-10">
       <form onSubmit={submit} noValidate className="w-full max-w-105 rounded-3xl border-[0.5px] border-line bg-white p-6 md:p-10">
         <img src="/logo.svg" alt="Busina" width={132} height={43} />
         <h1 className="mt-9 font-display text-[30px] leading-9 text-ink">Operator sign in</h1>
@@ -114,12 +113,6 @@ const OperatorLoginForm = () => {
         </button>
       </form>
 
-      <p className="text-[13px] font-medium text-muted">
-        Not an operator?{" "}
-        <Link href="/home" className="text-primary hover:underline">
-          Open the Busina commuter app.
-        </Link>
-      </p>
     </main>
   );
 };
