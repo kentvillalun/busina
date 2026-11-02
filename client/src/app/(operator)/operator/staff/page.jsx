@@ -139,7 +139,7 @@ export default function OperatorStaffPage() {
                 ))}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <button type="button" onClick={closeForm} className={outlineButton}>
                 Cancel
               </button>
