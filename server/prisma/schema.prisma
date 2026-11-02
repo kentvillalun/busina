@@ -171,6 +171,27 @@ model Commuter {
   updatedAt DateTime @updatedAt
 
   pushSubscriptions PushSubscription[]
+  waitingSpot       WaitingSpot?
+}
+
+// "I'm waiting here": a commuter who agreed to let drivers see an anonymous marker where they wait. One row per commuter. It
+// expires by itself (expiresAt), and is deleted when they stop sharing or sign out. Separate from PushSubscription on purpose:
+// sharing works without notifications, and the alert spots are never shown to drivers.
+model WaitingSpot {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  commuterId String   @unique @db.Uuid
+  commuter   Commuter @relation(fields: [commuterId], references: [id], onDelete: Cascade)
+
+  lat       Float
+  lng       Float
+  direction Direction
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
 }
 
 // Tokens that were logged out before they expired. Only the SHA-256 hash is stored, so a leaked table cannot be used as sessions.

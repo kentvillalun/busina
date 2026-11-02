@@ -62,6 +62,10 @@ const logout = async (req, res) => {
           create: { tokenHash: hashToken(token), expiresAt: new Date(exp * 1000) },
         });
       }
+
+      // Signing out ends the sharing too: a marker must not outlive the person's session on a shared phone.
+      // Last, so the session is revoked first whatever happens here.
+      await prisma.waitingSpot.deleteMany({ where: { commuterId: id } });
     } catch {
       // forged or malformed: nothing to remove
     }

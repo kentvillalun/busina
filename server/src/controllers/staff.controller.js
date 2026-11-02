@@ -60,7 +60,8 @@ const SPOT_MAX_FROM_ROAD_M = 1000; // a saved spot farther than this from the ro
 
 // Everything the driver screen needs in one poll: the bus, where it is, and who is waiting ahead.
 // The bus comes from the token (req.user.busId), never from the URL, so a driver can only ever see their own bus.
-// Pickups are anonymous: only where and how many, never who (no commuter id leaves the database).
+// Pickups are the commuters who tapped "Share with drivers" (WaitingSpot, 30 minutes) and nobody else: anonymous, only where
+// and how many, never who (no commuter id leaves the database). Alert spots (PushSubscription) are never shown to drivers.
 const overview = async (req, res) => {
   const bus = await prisma.bus.findUnique({
     where: { id: req.user.busId },
@@ -87,14 +88,14 @@ const overview = async (req, res) => {
   // No honest pickups without a fresh position on the road and a direction, or while the bus is off duty.
   let pickups = null;
   if (!stale && !offRoute && state.direction && bus.serviceStatus !== "AT_REST") {
-    const subscriptions = await prisma.pushSubscription.findMany({
-      where: { OR: [{ targetBusId: bus.id }, { targetBusId: null, direction: state.direction }] },
-      select: { spotLat: true, spotLng: true },
+    const waiting = await prisma.waitingSpot.findMany({
+      where: { direction: state.direction, expiresAt: { gt: new Date() } },
+      select: { lat: true, lng: true },
     });
     const road = roadFor(route, state.direction);
-    // shortcut: one commuter with alerts on two browsers counts twice; the numbers are a hint, not a headcount.
-    const spots = subscriptions
-      .map((sub) => snapToRoute([sub.spotLng, sub.spotLat], road))
+    // shortcut: every route's commuters are considered; with a second route, filter by it.
+    const spots = waiting
+      .map((spot) => snapToRoute([spot.lng, spot.lat], road))
       .filter((spot) => spot && spot.distanceFromRouteM <= SPOT_MAX_FROM_ROAD_M);
     pickups = groupPickups({ busProgressM: progressM, direction: state.direction, spots });
   }

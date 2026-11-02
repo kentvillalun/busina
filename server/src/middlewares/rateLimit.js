@@ -67,6 +67,16 @@ const staffLoginLimiter = rateLimit({
   handler: onLimit("Too many wrong PINs, please try again in 15 minutes"),
 });
 
+// Per commuter (so it runs after authenticateCommuter). Sharing or stopping is a tap; 20 a minute is far more than a person makes.
+const waitingLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 20,
+  keyGenerator: (req) => `waiting:${req.user.id}`,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Too many changes, please slow down"),
+});
+
 // Per signed-in bus (so it runs after authenticateStaff). A driver taps a toggle now and then; more is a stuck button or a script.
 const staffActionLimiter = rateLimit({
   windowMs: 60_000,
@@ -77,4 +87,4 @@ const staffActionLimiter = rateLimit({
   handler: onLimit("Too many changes, please slow down"),
 });
 
-export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter, staffActionLimiter };
+export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter, staffActionLimiter, waitingLimiter };
