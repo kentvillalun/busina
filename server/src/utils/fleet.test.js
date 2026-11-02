@@ -61,10 +61,16 @@ test("a bus that never pinged has nothing but its name and a status", () => {
 
 test("the row has exactly the listed fields: no secrets, no raw state", () => {
   const keys = Object.keys(fleetBus({ ...row(state(5)), deviceId: "esp-1", deviceKeyHash: "x", pinHash: "y" }, road, now)).sort();
-  assert.deepEqual(keys, ["active", "busNumber", "direction", "id", "lastPingAt", "name", "position", "routeName", "seatCount", "seatsFree", "speedKmh", "status"]);
+  assert.deepEqual(keys, ["active", "busNumber", "crew", "direction", "id", "lastPingAt", "name", "position", "routeName", "seatCount", "seatsFree", "speedKmh", "status"]);
 });
 
 test("a disabled bus shows as disabled, whatever its signal says", () => {
   assert.equal(fleetStatus({ active: false, serviceStatus: "IN_SERVICE", state: pinged(5) }, now), "disabled");
   assert.equal(fleetBus({ ...row(state(5)), active: false }, road, now).status, "disabled");
+});
+
+test("the crew is the active staff of the bus, by full name and role", () => {
+  const staff = [{ firstName: "Juan", lastName: "Dela Cruz", role: "DRIVER", busId: "b1" }, { firstName: "Ana", lastName: "Reyes", role: "CONDUCTOR" }];
+  assert.deepEqual(fleetBus({ ...row(state(5)), staff }, road, now).crew, [{ name: "Juan Dela Cruz", role: "DRIVER" }, { name: "Ana Reyes", role: "CONDUCTOR" }]);
+  assert.deepEqual(fleetBus(row(state(5)), road, now).crew, []);
 });

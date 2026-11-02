@@ -13,11 +13,11 @@ const fleetStatus = ({ active = true, serviceStatus, state }, now = Date.now()) 
   return serviceStatus === "STOPOVER" ? "stopover" : "live";
 };
 
-// One bus of GET /operator/fleet. `bus` is a Bus row with its `route` ({ name }) and `state`; `road` is the route's polylines.
+// One bus of GET /operator/fleet. `bus` is a Bus row with its `route` ({ name }), the active `staff` working on it and its `state`; `road` is the route's polylines.
 // Seats and speed are given only for a fresh ping, so a silent bus never shows numbers that went stale; it keeps its last
 // position so the map can show where it went quiet. The fields are listed one by one, so a secret (deviceKeyHash, pinHash)
 // can never leak into the answer by someone widening the query.
-const fleetBus = ({ id, busNumber, name, seatCount, active, serviceStatus, route, state }, road, now = Date.now()) => {
+const fleetBus = ({ id, busNumber, name, seatCount, active, serviceStatus, route, staff = [], state }, road, now = Date.now()) => {
   const result = {
     id,
     busNumber,
@@ -25,6 +25,7 @@ const fleetBus = ({ id, busNumber, name, seatCount, active, serviceStatus, route
     seatCount,
     active,
     routeName: route.name,
+    crew: staff.map((person) => ({ name: `${person.firstName} ${person.lastName}`, role: person.role })),
     status: fleetStatus({ active, serviceStatus, state }, now),
     direction: null,
     position: null,

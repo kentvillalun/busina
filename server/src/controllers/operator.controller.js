@@ -60,7 +60,10 @@ const fleet = async (req, res) => {
   const buses = await prisma.bus.findMany({
     where: { companyId: req.user.companyId },
     orderBy: { busNumber: "asc" },
-    select: { id: true, busNumber: true, name: true, seatCount: true, serviceStatus: true, active: true, routeId: true, route: { select: { name: true } }, state: true },
+    select: { id: true, busNumber: true, name: true, seatCount: true, serviceStatus: true, active: true, routeId: true, route: { select: { name: true } },
+      staff: { where: { active: true }, orderBy: [{ role: "asc" }, { lastName: "asc" }], select: { firstName: true, lastName: true, role: true } },
+      state: true,
+    },
   });
 
   // Each route is read once, before the buses are mapped: on a cold cache, asking per bus would read the same long polylines many times at once.
