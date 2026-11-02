@@ -100,7 +100,7 @@ export default function BoardingSpotPage() {
         <Image src="/spot/pin.svg" alt="" width={44} height={56} className="relative -translate-y-7" />
       </div>
 
-      <div className="absolute inset-x-4 top-14 z-20 mx-auto flex max-w-107.5 items-center gap-3 rounded-3xl bg-white py-2.5 pl-2.5 pr-4.5 shadow-[0_4px_14px_rgba(16,59,96,0.18)]">
+      <div className="absolute inset-x-4 top-14 z-20 mx-auto flex max-w-107.5 items-center gap-3 rounded-[28px] bg-white py-2.5 pl-2.5 pr-4.5 shadow-[0_2px_10px_rgba(16,59,96,0.1)]">
         <Link
           href="/settings"
           aria-label="Back to settings"
@@ -114,7 +114,7 @@ export default function BoardingSpotPage() {
         </div>
       </div>
 
-      <section className="absolute inset-x-0 bottom-0 z-20 mx-auto flex h-69 max-w-107.5 flex-col rounded-t-4xl bg-white px-6 pb-6 pt-3 shadow-[0_-4px_14px_rgba(16,59,96,0.18)]">
+      <section className="absolute inset-x-0 bottom-0 z-20 mx-auto flex h-69 max-w-107.5 flex-col rounded-t-[28px] bg-white px-6 pb-6 pt-3 shadow-[0_-4px_20px_rgba(15,33,51,0.05)]">
         <span className="mx-auto h-1.25 w-10 rounded-full bg-line" />
         <div className="mt-4.5 flex items-center justify-between gap-3">
           <h2 className="font-display text-[22px] leading-7 text-ink">Your boarding spot</h2>

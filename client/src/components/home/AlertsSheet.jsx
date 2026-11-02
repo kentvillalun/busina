@@ -67,7 +67,7 @@ const AlertsSheet = ({ open, busy = false, onAllow, onDismiss }) => {
           />
 
           <motion.div
-            className="relative w-full max-w-md rounded-t-4xl bg-white px-6 pb-[calc(32px+env(safe-area-inset-bottom))] pt-3 md:rounded-4xl md:pb-8"
+            className="relative w-full max-w-md rounded-t-4xl bg-white px-6 pb-[calc(32px+env(safe-area-inset-bottom))] pt-3 md:rounded-4xl md:p-8"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
