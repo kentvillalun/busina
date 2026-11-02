@@ -16,8 +16,8 @@ const COMPANY_NAME = "PITCO (Demo)";
 const ROUTE_NAME = "Laoag - Vigan";
 const BUS = {
   busNumber: "0015",
-  plateNumber: "DEMO-0015",
-  name: "Demo bus",
+  plateNumber: "NDA 4015",
+  name: "Laoag-Vigan Express",
   photoUrl: null, // paste a Cloudinary URL here later
   seatCount: 4, // the prototype has 4 seats; must equal SEAT_COUNT in the firmware (the API refuses a ping with another number)
   deviceId: "esp32-0015",
@@ -82,7 +82,7 @@ async function main() {
   const secretsToSave = {};
 
   // Bus: the device key is created only the first time, so re-running never invalidates it.
-  let bus = await prisma.bus.findUnique({ where: { plateNumber: BUS.plateNumber } });
+  let bus = await prisma.bus.findUnique({ where: { deviceId: BUS.deviceId } }); // by device, so the plate or name can change without making a second bus
   if (bus) {
     bus = await prisma.bus.update({
       where: { id: bus.id },
