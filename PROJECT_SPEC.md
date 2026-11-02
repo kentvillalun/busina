@@ -1,5 +1,11 @@
 # Busina — Project Spec (single source of truth)
 
+> **Read this first (Nov 2, 2026).** This spec was written on Oct 25 for a React Native app. Since then the product became a
+> **PWA** (Next.js `client/` + Express `server/`), and the sections below on the mobile app, Expo, Android-only, anonymous
+> device ids, "operator dropped" and the Oct 25 status are **historical**. For the current state read `AGENTS.md`
+> (sections 1 and 12) and `docs/requirements.md` (Decisions). The latest status is at the end of this file.
+> Commuter side and **driver side are done**; the **operator side is next**.
+
 Competition: UMAK ITSO 2026, Application Development using Android Programming, **IoT category**. Date: Nov 4 (confirm).
 Format: 3 students + coach, 5–10 min presentation, then Q&A. Judged by 3 IT professionals.
 
@@ -32,7 +38,7 @@ Busina shows commuters where the bus is, how many seats are free, and tells them
 
 - **Commuter** — views buses, seats, ETA; sets a waiting spot; gets "time to leave" alerts; taps "I'm here, waiting".
 - **Driver / conductor** — new, suggested by the instructor. Sees passengers waiting ahead along the route.
-- **Operator** — dropped from the MVP (no web dashboard). Buses, routes and devices are created by seed script or directly in the database.
+- **Operator** — *(was dropped; reinstated Oct 30 as part of one staff area)* signs in with username + password, sees every bus of the company. Being built now, see the Nov 2 status.
 
 **Decision: commuters are anonymous.** They only view buses and seats, so there is no login. On first launch the app generates a random device id (kept in `expo-secure-store`) and registers it with the server together with its push token; the server returns a short-lived signed token with role `commuter`. Boarding spots and alerts are tied to the device id. The driver has a real login. The server enforces roles on every protected route. A subscription or account can be added later by linking a device id to an account (free for now).
 
@@ -312,3 +318,23 @@ Day counting: it is past midnight but the user's day has not ended, so the next 
 2. Pick the first feature slice (suggested: a bus and its live position, since the ETA logic builds on it) and do its model, API and screen.
 3. Agree the ESP32 JSON payload with the IoT teammate (section 8).
 4. Choose the test route and stop coordinates (section 15).
+
+## 17. Status (Nov 2, 2026) — driver side done, operator side next
+
+**Stack now:** Next.js 16 PWA in `client/` (Tailwind 4, Leaflet), Express 5 + Prisma 7 + Neon in `server/`, deployed on Vercel
+(`gobusina.vercel.app`) and Render. ESP32 firmware prototype in `firmware/`.
+
+**Done**
+- Commuter: onboarding, Home map and bus list, bus details and 40-seat map, ETA range, boarding spot, Settings, Google
+  sign-in (guests can browse; alerts and boarding spot need an account), Web Push "time to leave" alerts, share-where-I-wait
+  with drivers (`WaitingSpot`, 30 min, asked first, anonymous to drivers), installable with an offline page.
+- Device: ping API with per-device key, route snapping, direction inferred from movement, simulator.
+- Driver: bus code + PIN sign-in (`staff_token`, rate limited), `/driver` rotating map with pickups ahead, drawer, At rest and
+  Stopover (`Bus.serviceStatus`; commuters do not see resting buses and get no ETA for a stopped one), own manifest.
+- Terms and privacy pages, store screenshots, `docs/web-push.md`.
+
+**Next (operator side)**: operator login on `User` (OPERATOR) with the same safeguards as the driver login; a fleet endpoint
+scoped by `companyId` in the token; Overview/Buses screens for the fleet in `OperatorShell`; reset a bus PIN; Insights stays
+simulated (no trip history). Details and cut order: `AGENTS.md` section 12.
+
+**Timeline left:** Nov 3 rehearsal and Makati demo route (`docs/makati-demo-plan.md`), Nov 4 competition. Only demo-critical fixes now.

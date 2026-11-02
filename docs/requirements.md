@@ -7,7 +7,7 @@ The Figma frames (AGENTS.md section 8) are the visual reference for the requirem
 Competition: Nov 4, 2026. Level 1 is the fallback if time runs short.
 
 The app is a **PWA** (Next.js in `client/`, Express API in `server/`). It is meant to be installable, and later wrapped as
-an Android APK with PWABuilder (TWA). Last updated Oct 30, 2026.
+an Android APK with PWABuilder (TWA). Last updated Nov 2, 2026 (statuses below reflect that date; commuter and driver sides done, operator side next).
 
 ## Approach
 
@@ -34,19 +34,19 @@ before the demo.
 | FR4 | Show the commuter the live buses for a chosen direction, closest first | 1 | Done |
 | FR5 | Show a bus's 40-seat map and on-board estimate | 1 | Done (seat order still to confirm on the real device) |
 | FR6 | Show a clear signal-lost state when a bus stops reporting | 1 | Done |
-| FR16 | Be installable: manifest, icons, service worker, and an Android APK from PWABuilder (TWA) | 1 | Todo |
-| FR17 | Run the API and the client over HTTPS, so a real phone can use location and notifications | 1 | Todo |
-| FR18 | Draw the route on the map from the stored polyline (needs a public `GET /routes`) | 1 | Todo |
-| FR8 | Show the ETA of a bus to the commuter's spot as a range with a safety margin | 1 | Todo |
-| FR7 | Let the commuter pick a boarding spot and a travel time to it | 2 | Todo |
-| FR9 | Send staged "time to leave" alerts (the headline feature, see Decisions) | 2 | Todo |
-| FR10 | Let the commuter tap "I'm here, waiting" so the driver sees them | 3 | Todo |
-| FR13 | Let staff sign in to one staff area: a driver with bus code and PIN, an operator with username and password | 3 | Todo |
-| FR14 | Show the driver the passengers waiting ahead on the route | 3 | Todo |
-| FR20 | Show the operator every bus of the company (live or signal lost, seats free) | stretch | Todo |
-| FR15 | Let a commuter sign in with Google (optional, see Decisions) | optional | Not planned yet |
-| FR11 | Handle location off, blocked and alerts denied gracefully | cut first | Mostly done (location banner, alerts sheet; explain re-enabling in Settings is left) |
-| FR12 | Settings screen (direction, spot, travel time, permissions) | cut first | Static layout only |
+| FR16 | Be installable: manifest, icons, service worker, and an Android APK from PWABuilder (TWA) | 1 | Done (manifests for commuter, driver and operator; APK from PWABuilder still to do) |
+| FR17 | Run the API and the client over HTTPS, so a real phone can use location and notifications | 1 | Done (Vercel + Render, HTTPS) |
+| FR18 | Draw the route on the map from the stored polyline (needs a public `GET /routes`) | 1 | Done |
+| FR8 | Show the ETA of a bus to the commuter's spot as a range with a safety margin | 1 | Done |
+| FR7 | Let the commuter pick a boarding spot and a travel time to it | 2 | Done (needs sign-in) |
+| FR9 | Send staged "time to leave" alerts (the headline feature, see Decisions) | 2 | Done (Web Push; iPhone tested, Android not yet) |
+| FR10 | Let the commuter tap "I'm here, waiting" so the driver sees them | 3 | Done (opt-in "share where I wait", 30 min, anonymous to drivers) |
+| FR13 | Let staff sign in to one staff area: a driver with bus code and PIN, an operator with username and password | 3 | Driver done (bus code + PIN, rate limited); operator login Todo |
+| FR14 | Show the driver the passengers waiting ahead on the route | 3 | Done (pickups ahead on the driver map) |
+| FR20 | Show the operator every bus of the company (live or signal lost, seats free) | stretch | Next (operator side) |
+| FR15 | Let a commuter sign in with Google (optional, see Decisions) | optional | Done (Google sign-in; guests keep Home, bus details and Settings) |
+| FR11 | Handle location off, blocked and alerts denied gracefully | cut first | Done |
+| FR12 | Settings screen (direction, spot, travel time, permissions) | cut first | Done |
 
 Out of scope: seat reservation and any payment (see Decisions).
 
@@ -164,3 +164,16 @@ Each entry has the date and the reason, so nobody has to ask again.
   without it there is no alert. Unannounced silence stays "signal lost": no seats, no ETA.
 - **Manifest screenshots come last (Oct 31).** Device-framed images from the final screens; see
   `docs/pwa-platform-notes.md` section 8.
+
+### Decisions added Nov 2
+
+- **Driver is the bus (Nov 2).** A driver signs in with bus code + PIN (`Bus.pinHash`, `npm run bus:pin`), cookie `staff_token`,
+  role `DRIVER`; a driver can act only on the bus in the token. No personal driver accounts. 5 wrong PINs per 15 minutes per IP + bus locks the attempt.
+- **Service status (Nov 2).** `Bus.serviceStatus` is `IN_SERVICE`, `AT_REST` or `STOPOVER` (this replaced the
+  `RUNNING/ON_BREAK/OFF_DUTY` idea of Oct 31). `AT_REST` hides the bus from commuters; `STOPOVER` shows "Stopped" with no ETA. It lives on
+  `Bus` so pings cannot overwrite it. No resume time and no time picker.
+- **Pickups come only from consent (Nov 2).** Drivers see commuters who tapped "share where I wait" (`WaitingSpot`, 30 minutes,
+  anonymous: only where and how many). Alert spots (`PushSubscription`) are never shown to drivers. Pickups cover anywhere ahead on the route.
+- **Commuter login (Nov 2).** Google sign-in is built and gates only alerts and the boarding spot; guests can browse.
+- **Next: operator side (Nov 2).** Username + password on `User` (OPERATOR), whole-company fleet view scoped by `companyId` from the token,
+  reset bus PIN. Insights remain simulated data and say so.
