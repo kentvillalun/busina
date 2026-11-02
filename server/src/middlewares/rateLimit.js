@@ -67,6 +67,18 @@ const staffLoginLimiter = rateLimit({
   handler: onLimit("Too many wrong PINs, please try again in 15 minutes"),
 });
 
+// Operator password guesses: only failed attempts count, 5 per 15 minutes for each IP and username (runs after validate).
+// shortcut: counted per IP, so many IPs together could still guess one username; add a per-username failure count if that matters.
+const operatorLoginLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  limit: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `operator-login:${ipKeyGenerator(req.ip)}:${req.body.username}`,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: onLimit("Too many wrong passwords, please try again in 15 minutes"),
+});
+
 // Per commuter (so it runs after authenticateCommuter). Sharing or stopping is a tap; 20 a minute is far more than a person makes.
 const waitingLimiter = rateLimit({
   windowMs: 60_000,
@@ -87,4 +99,4 @@ const staffActionLimiter = rateLimit({
   handler: onLimit("Too many changes, please slow down"),
 });
 
-export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter, staffActionLimiter, waitingLimiter };
+export { generalLimiter, devicePingLimiter, pushLimiter, pushTestLimiter, authLimiter, staffLoginLimiter, operatorLoginLimiter, staffActionLimiter, waitingLimiter };

@@ -1,7 +1,7 @@
 // Run with: node --test src/utils/token.test.js
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { signCommuterToken, signStaffToken, verifyToken } from "./token.js";
+import { signCommuterToken, signOperatorToken, signStaffToken, verifyToken } from "./token.js";
 
 process.env.JWT_SECRET = "test-secret-only-for-this-file";
 
@@ -13,6 +13,12 @@ test("a driver token says DRIVER and names the bus", () => {
 
 test("a commuter token says COMMUTER, so the two portals can tell them apart", () => {
   assert.equal(verifyToken(signCommuterToken({ id: "c-1" })).role, "COMMUTER");
+});
+
+test("an operator token says OPERATOR, so it cannot open the driver or commuter side", () => {
+  const payload = verifyToken(signOperatorToken({ id: "u-1", companyId: "co-1" }));
+  assert.equal(payload.role, "OPERATOR");
+  assert.equal(payload.id, "u-1");
 });
 
 test("a driver token lasts one shift, not a week", () => {

@@ -12,6 +12,7 @@ import authRoute from "./routes/auth.route.js";
 import busRoute from "./routes/bus.route.js";
 import deviceRoute from "./routes/device.route.js";
 import healthRoute from "./routes/health.route.js";
+import operatorRoute from "./routes/operator.route.js";
 import pushRoute from "./routes/push.route.js";
 import routesRoute from "./routes/routes.route.js";
 import staffRoute from "./routes/staff.route.js";
@@ -48,6 +49,7 @@ app.use("/buses", busRoute);
 app.use("/routes", routesRoute);
 app.use("/push", pushRoute);
 app.use("/staff", staffRoute);
+app.use("/operator", operatorRoute);
 app.use("/waiting", waitingRoute);
 
 app.use(notFound);
