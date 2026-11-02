@@ -16,7 +16,7 @@ test("a northbound bus sees the spots with a smaller progress", () => {
 });
 
 test("spots behind the bus and spots too far ahead are left out; just passed still counts", () => {
-  const spots = [spot(500), spot(990), spot(40_000)];
+  const spots = [spot(500), spot(990), spot(150_000)];
   assert.deepEqual(groupPickups({ busProgressM: 1000, direction: "SOUTHBOUND", spots }).map((g) => g.distanceM), [0]);
 });
 

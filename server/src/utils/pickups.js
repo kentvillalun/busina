@@ -1,7 +1,7 @@
 // "Who is waiting ahead of this bus": the saved boarding spots of commuters who set an alert, grouped so the driver sees
 // where to expect passengers, never who they are. Pure; the controller does the database and the snapping.
 
-const MAX_AHEAD_M = 15_000; // farther than this is not worth the driver's attention yet
+const MAX_AHEAD_M = 100_000; // the whole route (Laoag to Vigan is about 85 km): a driver should know about passengers far ahead too
 const BEHIND_TOLERANCE_M = 30; // just past a spot still counts, like etaFor
 const GROUP_GAP_M = 150; // spots this close along the road are one stop
 
