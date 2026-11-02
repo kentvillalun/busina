@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
-
-export default function Home() {
-  redirect("/home")
+// A visitor typing the bare address meets the landing page first. Installed apps never come through here: the manifest
+// start_url is /home.
+export default function Root() {
+  redirect("/get");
 }
