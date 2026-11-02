@@ -11,11 +11,11 @@ export const FLEET = [
 ];
 
 export const STAFF = [
-  { id: "s1", name: "Juan Dela Cruz", role: "DRIVER", active: true, busId: "b1" },
-  { id: "s2", name: "Ana Reyes", role: "CONDUCTOR", active: true, busId: "b1" },
-  { id: "s3", name: "Mario Santos", role: "DRIVER", active: true, busId: "b2" },
-  { id: "s4", name: "Pedro Ramos", role: "DRIVER", active: true, busId: "b3" },
-  { id: "s5", name: "Liza Bautista", role: "CONDUCTOR", active: true, busId: "b5" },
-  { id: "s6", name: "Carlo Mendoza", role: "DRIVER", active: true, busId: null },
-  { id: "s7", name: "Rita Flores", role: "CONDUCTOR", active: false, busId: null },
+  { id: "s1", firstName: "Juan", lastName: "Dela Cruz", role: "DRIVER", active: true, busId: "b1" },
+  { id: "s2", firstName: "Ana", lastName: "Reyes", role: "CONDUCTOR", active: true, busId: "b1" },
+  { id: "s3", firstName: "Mario", lastName: "Santos", role: "DRIVER", active: true, busId: "b2" },
+  { id: "s4", firstName: "Pedro", lastName: "Ramos", role: "DRIVER", active: true, busId: "b3" },
+  { id: "s5", firstName: "Liza", lastName: "Bautista", role: "CONDUCTOR", active: true, busId: "b5" },
+  { id: "s6", firstName: "Carlo", lastName: "Mendoza", role: "DRIVER", active: true, busId: null },
+  { id: "s7", firstName: "Rita", lastName: "Flores", role: "CONDUCTOR", active: false, busId: null },
 ];
