@@ -9,6 +9,13 @@ export const STATUS = {
   disabled: { label: "Disabled", look: "bg-uncertain-bg text-uncertain" },
 };
 
+// The three messages of a bus list: a main line and a smaller line that says more (Figma-free copy, same shape as Ecoaid's).
+export const BUS_LABELS = {
+  loading: ["Loading buses", "We are fetching the buses of your company."],
+  empty: ["No buses yet", "No bus is registered to your company yet. Registered buses will show up here."],
+  error: ["Could not load the buses", "Check your connection, then try again."],
+};
+
 export const NEEDS_ATTENTION = ["stale", "no_signal"];
 
 // shortcut: the two ends are written for the demo route (Laoag - Vigan); a second route needs the names from the route itself.

@@ -29,7 +29,8 @@ const send = async (url, method, body) => {
 };
 
 // Reset PIN and Disable / Enable ask first (Figma OP4 to OP6). `onChanged` makes the page ask for the fleet again.
-const BusDetailPanel = ({ bus, onClose, onChanged }) => {
+// `plain` drops the card look, for when the panel sits inside a modal.
+const BusDetailPanel = ({ bus, onClose, onChanged, plain = false }) => {
   const [step, setStep] = useState(null); // "reset" | "pin" | "active"
   const [pin, setPin] = useState(""); // the new PIN, kept only while its dialog is open
   const [busy, setBusy] = useState(false);
@@ -79,7 +80,7 @@ const BusDetailPanel = ({ bus, onClose, onChanged }) => {
   );
 
   return (
-    <aside className="flex flex-col gap-3 rounded-xl border-[0.5px] border-line bg-white p-5">
+    <aside className={`flex flex-col gap-3 ${plain ? "" : "rounded-xl border-[0.5px] border-line bg-white p-5"}`}>
       <div className="flex items-start gap-3">
         <div className="flex flex-col gap-0.5">
           <p className="font-display text-[26px] leading-8 text-ink">Bus {bus.busNumber}</p>

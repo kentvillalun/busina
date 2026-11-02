@@ -1,10 +1,12 @@
 "use client";
 
+import BusCard from "@/components/operator/BusCard";
 import DataTable from "@/components/operator/DataTable";
 import FleetMap from "@/components/operator/FleetMap";
+import { Empty, ErrorState, Loading } from "@/components/operator/states";
 import StatusChip from "@/components/operator/StatusChip";
 import useFleet from "@/hooks/useFleet";
-import { NEEDS_ATTENTION, routeText, seatsText } from "@/lib/fleet";
+import { BUS_LABELS, NEEDS_ATTENTION, routeText, seatsText } from "@/lib/fleet";
 
 const COLUMNS = [
   { header: "Bus", render: (bus) => bus.busNumber },
@@ -18,8 +20,8 @@ const COLUMNS = [
 // Figma OP2: the live fleet of the signed-in operator's company. The layout is always there; before the first answer the
 // numbers are dashes and the table says it is loading, and if the first answer never comes the table says so in red.
 export default function OperatorOverviewPage() {
-  const { fleet, loaded, offline } = useFleet();
-  const loadError = !loaded && offline ? "Could not load the fleet. Check your connection." : "";
+  const { fleet, loaded, offline, reload } = useFleet();
+  const loadError = !loaded && offline;
 
   const reporting = fleet.filter((bus) => bus.status === "live" || bus.status === "stopover").length;
   const known = fleet.filter((bus) => bus.seatsFree !== null);
@@ -35,8 +37,6 @@ export default function OperatorOverviewPage() {
     { label: "Needs attention", value: dash(attention.length), note: loaded ? `${lost} signal lost · ${attention.length - lost} no signal yet` : " ", alert: loaded && attention.length > 0 },
     { label: "Fleet size", value: dash(fleet.length), note: "Buses of your company" },
   ];
-
-  const attentionEmpty = loadError || (!loaded ? "Loading..." : fleet.length === 0 ? "Your company has no buses yet." : "No bus needs attention.");
 
   return (
     <div className="mx-auto flex max-w-300 flex-col gap-4 md:gap-5">
@@ -62,11 +62,18 @@ export default function OperatorOverviewPage() {
         <div className="relative isolate h-80 overflow-hidden rounded-2xl border border-[#e3eaf1] bg-white md:h-96 lg:h-auto lg:min-h-80">
           <FleetMap fleet={fleet} />
         </div>
-        <section className="flex min-h-56 flex-col gap-3 rounded-2xl border border-[#e3eaf1] bg-white p-4">
+        <section className="flex flex-col gap-3 rounded-2xl border border-[#e3eaf1] bg-white p-4">
           <h2 className="font-display text-lg text-ink">Needs attention</h2>
-          {attention.length === 0 && (
-            <p className={`flex flex-1 items-center justify-center text-center text-sm ${loadError ? "font-medium text-fault" : "text-muted"}`}>{attentionEmpty}</p>
-          )}
+          {attention.length === 0 &&
+            (loadError ? (
+              <ErrorState onRetry={reload} text={BUS_LABELS.error[0]} subtext={BUS_LABELS.error[1]} />
+            ) : !loaded ? (
+              <Loading text={BUS_LABELS.loading[0]} subtext={BUS_LABELS.loading[1]} />
+            ) : fleet.length === 0 ? (
+              <Empty text={BUS_LABELS.empty[0]} subtext={BUS_LABELS.empty[1]} />
+            ) : (
+              <Empty text="No bus needs attention" subtext="Every bus is reporting or off duty." />
+            ))}
           {attention.map((bus) => (
             <div key={bus.id} className="flex items-start gap-3 border-t border-[#e3eaf1] pt-3">
               <span className="rounded-lg bg-uncertain-bg px-2.5 py-1 text-sm font-bold text-uncertain">{bus.busNumber}</span>
@@ -81,7 +88,7 @@ export default function OperatorOverviewPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-lg text-ink">Buses</h2>
-        <DataTable columns={COLUMNS} rows={fleet} loading={!loaded && !offline} error={loadError} emptyMessage="Your company has no buses yet." />
+        <DataTable columns={COLUMNS} rows={fleet} card={(bus) => <BusCard bus={bus} />} loading={!loaded && !offline} error={loadError} onRetry={reload} labels={BUS_LABELS} />
       </section>
     </div>
   );

@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import BusCard from "@/components/operator/BusCard";
 import BusDetailPanel from "@/components/operator/BusDetailPanel";
 import DataTable from "@/components/operator/DataTable";
+import Dialog from "@/components/operator/Dialog";
 import StatusChip from "@/components/operator/StatusChip";
 import useFleet from "@/hooks/useFleet";
-import { NEEDS_ATTENTION, routeText, seatsText } from "@/lib/fleet";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import { BUS_LABELS, NEEDS_ATTENTION, routeText, seatsText } from "@/lib/fleet";
 
 const TABS = [
   { name: "All", test: () => true },
@@ -25,16 +28,19 @@ const COLUMNS = {
   update: { header: "Last update", render: (bus) => bus.lastUpdate },
 };
 
-// Figma OP3 and OP4. With a bus selected the table keeps four columns and the details open beside it.
+// Figma OP3 and OP4. From lg the details open beside the table, which then keeps four columns; on smaller screens (cards, or a
+// narrow table) a tap opens the details in a modal.
 export default function OperatorBusesPage() {
   const { fleet, loaded, offline, reload } = useFleet();
+  const wide = useMediaQuery("(min-width: 1024px)");
   const [tab, setTab] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
 
-  const loadError = !loaded && offline ? "Could not load the fleet. Check your connection." : "";
   const rows = fleet.filter(TABS.find((item) => item.name === tab).test);
   const selected = fleet.find((bus) => bus.id === selectedId);
-  const columns = (selected ? ["bus", "status", "seats", "update"] : ["bus", "route", "status", "seats", "speed", "update"]).map((key) => COLUMNS[key]);
+  const columns = (selected && wide ? ["bus", "status", "seats", "update"] : ["bus", "route", "status", "seats", "speed", "update"]).map((key) => COLUMNS[key]);
+  const labels = { ...BUS_LABELS, empty: fleet.length === 0 ? BUS_LABELS.empty : [`No buses in "${tab}"`, "Buses with this status will show up here."] };
+  const close = () => setSelectedId(null);
 
   return (
     <div className="mx-auto flex max-w-300 flex-col gap-4 md:gap-5">
@@ -70,14 +76,22 @@ export default function OperatorBusesPage() {
         <DataTable
           columns={columns}
           rows={rows}
+          card={(bus) => <BusCard bus={bus} />}
           onRowClick={setSelectedId}
           selectedId={selectedId}
           loading={!loaded && !offline}
-          error={loadError}
-          emptyMessage={fleet.length === 0 ? "Your company has no buses yet." : `No buses in "${tab}".`}
+          error={!loaded && offline}
+          onRetry={reload}
+          labels={labels}
         />
-        {selected && <BusDetailPanel key={selected.id} bus={selected} onClose={() => setSelectedId(null)} onChanged={reload} />}
+        {selected && wide && <BusDetailPanel key={selected.id} bus={selected} onClose={close} onChanged={reload} />}
       </div>
+
+      {selected && !wide && (
+        <Dialog title={`Bus ${selected.busNumber}`} onClose={close} bare>
+          <BusDetailPanel key={selected.id} bus={selected} onClose={close} onChanged={reload} plain />
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -6,6 +6,11 @@ import Dialog, { outlineButton, primaryButton } from "@/components/operator/Dial
 import { FLEET, STAFF } from "@/lib/fleetSample";
 
 const ROLE = { DRIVER: "Driver", CONDUCTOR: "Conductor" };
+const statusChip = (person) => (
+  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${person.active ? "bg-success-tint text-success" : "bg-uncertain-bg text-uncertain"}`}>
+    {person.active ? "Active" : "Inactive"}
+  </span>
+);
 const fieldClass = "mt-1.5 h-12 w-full rounded-xl border border-line bg-white px-3.5 text-[15px] text-ink outline-none focus:border-primary";
 
 // Figma OP7 and OP8. A roster, not logins: drivers still sign in with their bus code and PIN, and assigning a bus only records
@@ -19,14 +24,7 @@ export default function OperatorStaffPage() {
     { header: "Name", render: (person) => person.name },
     { header: "Role", render: (person) => ROLE[person.role] },
     { header: "Bus", render: (person) => busNumber(person.busId) },
-    {
-      header: "Status",
-      render: (person) => (
-        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${person.active ? "bg-success-tint text-success" : "bg-uncertain-bg text-uncertain"}`}>
-          {person.active ? "Active" : "Inactive"}
-        </span>
-      ),
-    },
+    { header: "Status", render: statusChip },
     {
       header: "Action",
       render: () => (
@@ -59,7 +57,22 @@ export default function OperatorStaffPage() {
         </button>
       </div>
 
-      <DataTable columns={columns} rows={people} emptyMessage="No staff yet. Add the first employee." />
+      <DataTable
+        columns={columns}
+        rows={people}
+        card={(person) => (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold text-ink">{person.name}</p>
+              {statusChip(person)}
+            </div>
+            <p className="text-xs text-muted">
+              {ROLE[person.role]} · {busNumber(person.busId)}
+            </p>
+          </div>
+        )}
+        labels={{ empty: ["No staff yet", "Press the Add employee button above to register your first driver or conductor."] }}
+      />
 
       {adding && (
         <Dialog title="Add employee" onClose={() => setAdding(false)}>
