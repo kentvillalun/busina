@@ -1,0 +1,28 @@
+"use client";
+
+import { useEffect } from "react";
+
+// Buttons are rectangles with a 12px radius, never pills; in a dialog they fill the width, and two share a row in two columns.
+export const primaryButton = "h-12 rounded-xl bg-linear-to-b from-primary-light to-primary-dark px-5 text-sm font-bold text-white active:opacity-80 disabled:opacity-50";
+export const outlineButton = "h-12 rounded-xl border border-line bg-white px-5 text-sm font-semibold text-ink active:bg-stage";
+
+// A centered dialog over a dimmed page. Escape or a tap on the dimmed area closes it.
+const Dialog = ({ title, onClose, children }) => {
+  useEffect(() => {
+    const onKey = (event) => event.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div onClick={onClose} aria-hidden="true" className="absolute inset-0 bg-ink/40" />
+      <div role="dialog" aria-modal="true" aria-label={title} className="relative flex w-full max-w-110 flex-col gap-3.5 rounded-2xl bg-white p-7">
+        <h2 className="font-display text-2xl leading-8 text-ink">{title}</h2>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export default Dialog;
