@@ -92,7 +92,7 @@ const DriverLoginForm = () => {
                 className={`${inputClass} tracking-[0.3em]`}
                 type="password"
                 inputMode="numeric"
-                placeholder="••••"
+                placeholder="••••••"
                 autoComplete="current-password"
                 maxLength={8}
               />

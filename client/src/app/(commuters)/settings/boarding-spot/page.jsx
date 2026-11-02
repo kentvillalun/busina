@@ -6,14 +6,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import IconChevron from "@/components/icons/IconChevron";
+import ShareSheet from "@/components/share/ShareSheet";
 import { useBuses } from "@/hooks/useBuses";
 import { ALERT_BUS_KEY } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
+import useShareSheet from "@/hooks/useShareSheet";
 import { MAX_SPOT_FROM_ROUTE_M } from "@/lib/eta";
 import { formatDistance, snapToRoute } from "@/lib/geo";
 import { placeName } from "@/lib/geocode";
 import { getCurrentPosition } from "@/lib/permissions";
+import { stopWaiting } from "@/lib/waiting";
 
 const BusMap = dynamic(() => import("@/components/map/BusMap"), { ssr: false });
 
@@ -32,6 +35,7 @@ export default function BoardingSpotPage() {
   const [saving, setSaving] = useState(false);
   const [userPos, setUserPos] = useState(null);
   const [spot, setSpot] = useState(null); // { lat, lng } under the pin; null until the map has moved once
+  const share = useShareSheet();
 
   useEffect(() => {
     getCurrentPosition().then(setUserPos);
@@ -59,12 +63,13 @@ export default function BoardingSpotPage() {
     else hint = `${formatDistance(fromRoadM)} from the road. We'll alert you for the nearest point on it.`;
   }
 
+  // After saving, a signed-in commuter is asked whether drivers may see them waiting here; the answer sends them back to Settings.
   const confirm = async () => {
     setSaving(true);
     saveSpot({ lat: pin.lat, lng: pin.lng, name: await placeName(pin) });
     clearAlertBus(); // the chosen bus was timed to the old spot
     setTarget("spot");
-    router.push("/settings");
+    share.ask(pin, () => router.push("/settings"), { force: true });
     setSaving(false); // this page is kept alive while hidden, so "Saving..." would still be there on return
   };
 
@@ -72,6 +77,7 @@ export default function BoardingSpotPage() {
     saveSpot(null);
     clearAlertBus();
     setTarget(null); // no spot: back to the default, your location
+    stopWaiting(); // the marker for drivers was this spot
     router.push("/settings");
   };
 
@@ -133,6 +139,8 @@ export default function BoardingSpotPage() {
           {saving ? "Saving..." : "Confirm spot"}
         </button>
       </section>
+
+      <ShareSheet open={share.open} busy={share.busy} onShare={share.share} onDismiss={share.dismiss} />
     </main>
   );
 }

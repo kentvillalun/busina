@@ -7,6 +7,7 @@ import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { askAlerts, getAlertsPermission } from "@/lib/permissions";
 import { requestPushSync, sendTestPush } from "@/lib/push";
+import { stopWaiting, waitingStatus } from "@/lib/waiting";
 
 const MINUTES = [5, 10, 15];
 
@@ -34,6 +35,18 @@ export default function AlertsPage() {
   useEffect(() => {
     getAlertsPermission().then(setPermission);
   }, []);
+
+  // Whether drivers can see this commuter now: { minutes } while sharing, otherwise null.
+  const [sharing, setSharing] = useState(null);
+  useEffect(() => {
+    waitingStatus().then((status) =>
+      setSharing(status?.sharing ? { minutes: Math.max(1, Math.round((new Date(status.expiresAt) - Date.now()) / 60000)) } : null),
+    );
+  }, []);
+  const stopSharing = async () => {
+    setSharing(null);
+    await stopWaiting();
+  };
 
   const turnOn = async () => {
     setTurningOn(true);
@@ -92,6 +105,19 @@ export default function AlertsPage() {
           )}
         </div>
         <Body>Pick a bus on its details page to be alerted for that bus only.</Body>
+      </Card>
+      <Card>
+        <h2 className="font-medium text-ink">Share with drivers</h2>
+        <Body>
+          {sharing
+            ? `Drivers of buses heading your way can see an anonymous marker where you wait, for about ${sharing.minutes} more minutes.`
+            : "Drivers cannot see you. You are asked before anything is shared, when you set a boarding spot or switch to My location."}
+        </Body>
+        {sharing && (
+          <button type="button" onClick={stopSharing} className="mt-1 h-11 rounded-full bg-stage text-[15px] font-bold text-ink">
+            Stop sharing
+          </button>
+        )}
       </Card>
       <Card>
         <h2 className="font-medium text-ink">Check that alerts work</h2>

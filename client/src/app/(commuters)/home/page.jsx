@@ -14,11 +14,13 @@ import LocationBanner from "@/components/home/LocationBanner";
 import TargetToggle from "@/components/home/TargetToggle";
 import LiveStatus from "@/components/home/LiveStatus";
 import TopGradient from "@/components/layout/TopGradient";
+import ShareSheet from "@/components/share/ShareSheet";
 import IconLocationOff from "@/components/icons/IconLocationOff";
 import { useBuses } from "@/hooks/useBuses";
 import useNearBusAlert, { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES, notifyPassed } from "@/hooks/useNearBusAlert";
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
+import useShareSheet from "@/hooks/useShareSheet";
 import { etaFor, etaOrder, roadFor } from "@/lib/eta";
 import { distanceM, formatDistance, routeBetween } from "@/lib/geo";
 import {
@@ -86,6 +88,7 @@ export default function HomePage() {
 
   const { data, isLoading, gaveUp, retry } = useBuses();
   const routes = useRoutes();
+  const share = useShareSheet();
 
   // What the browser says about location (null until checked, so the banner does not flash).
   const [permission, setPermission] = useState(null);
@@ -147,6 +150,8 @@ export default function HomePage() {
     if (key === "spot" && !spot) return router.push("/settings/boarding-spot");
     setStoredTarget(key);
     if (key === "location" && locationOff) turnOnLocation();
+    // Waiting where you stand: ask before drivers may see it (only if the position is known and no "yes" is running).
+    if (key === "location" && userPos) share.ask(userPos);
   };
 
   const serverTime = data?.serverTime;
@@ -386,6 +391,7 @@ export default function HomePage() {
         onAllow={allowAlerts}
         onDismiss={dismissAlerts}
       />
+      <ShareSheet open={share.open} busy={share.busy} onShare={share.share} onDismiss={share.dismiss} />
     </>
   );
 }
