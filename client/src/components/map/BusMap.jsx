@@ -25,11 +25,13 @@ const tiles = GEOAPIFY_KEY
 
 // The driver's map turns, and the names printed in raster tiles turn with it (upside down when heading south). Tiles without
 // names are used there instead; the place names come from the upright <Landmarks /> markers below.
+// Esri's light grey base map: roads and water, no names and no API key (CARTO's free tiles now answer "API KEY REQUIRED").
+// It has no tiles past zoom 16, so Leaflet stretches the zoom 16 tiles when the driver zooms in further.
 const noLabelTiles = {
-  url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
-  attribution: "© OpenStreetMap contributors © CARTO",
+  url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+  attribution: "Tiles © Esri",
   className: "map-tiles-light",
-  subdomains: "abcd",
+  layerOptions: { maxNativeZoom: 16 },
 };
 const tileSet = (labels) => (labels === false ? noLabelTiles : tiles);
 
@@ -196,8 +198,8 @@ const LeafletMap = ({ buses, routes = [], direction, ahead = [], me, spot, picku
       className={tileSet(labels).className}
       url={tileSet(labels).url}
       attribution={tileSet(labels).attribution}
-      // Only when the tiles have {s}: an explicit undefined replaces Leaflet's default "abc" and crashes it (tile.length).
-      {...(tileSet(labels).subdomains && { subdomains: tileSet(labels).subdomains })}
+      // Extra options only when the tile set has them: an explicit undefined replaces a Leaflet default (it once crashed the map).
+      {...tileSet(labels).layerOptions}
       maxZoom={19}
     />
     <Recenter center={center} />

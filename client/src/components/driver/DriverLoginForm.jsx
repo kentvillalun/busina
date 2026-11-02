@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element -- the logo is a small SVG; next/image would only add work */
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { haptic, hapticTrigger } from "@/lib/haptics";
@@ -109,13 +108,6 @@ const DriverLoginForm = () => {
             </button>
           </form>
         </div>
-
-        <p className="mt-8 text-center text-[13px] font-medium text-muted">
-          Not a driver?{" "}
-          <Link href="/home" className="font-bold text-primary">
-            Open the Busina commuter app.
-          </Link>
-        </p>
       </main>
     </div>
   );
