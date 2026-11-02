@@ -133,6 +133,8 @@ export default function SettingsPage() {
             note="Seat outlook and passenger counts are estimates."
           >
             <Row href="/settings/estimates" label="How estimates work" />
+            <Row href="/settings/terms" label="Terms and Conditions" />
+            <Row href="/settings/privacy" label="Privacy Policy" />
           </Section>
         </div>
       </PageContent>

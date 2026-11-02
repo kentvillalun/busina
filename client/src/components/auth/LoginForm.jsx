@@ -84,6 +84,17 @@ const LoginForm = () => {
               <GoogleG />
               Continue with Google
             </a>
+            <p className="mt-3 text-center text-[13px] leading-5 text-muted">
+              By continuing with Google you agree to our{" "}
+              <Link href="/settings/terms" className="font-medium text-primary underline">
+                Terms and Conditions
+              </Link>{" "}
+              and{" "}
+              <Link href="/settings/privacy" className="font-medium text-primary underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
             <Link href="/home" className="mt-1 block w-full py-3 text-center text-[15px] font-bold text-muted">
               Continue as guest
             </Link>

@@ -1,5 +1,4 @@
-import Link from "next/link";
-import IconChevron from "@/components/icons/IconChevron";
+import BackButton from "@/components/settings/BackButton";
 import { Page } from "@/components/layout/Page";
 import { PageContent } from "@/components/layout/PageContent";
 import TopGradient from "@/components/layout/TopGradient";
@@ -11,13 +10,7 @@ export const DetailPage = ({ title, children }) => (
     <PageContent top="top-0" className="items-center gap-4 px-6 pt-14 md:px-24 md:pt-16" withBottomNav={true}>
       <div className="flex w-full max-w-107.5 flex-col gap-4 md:max-w-xl">
         <div className="flex items-center gap-2.5">
-          <Link
-            href="/settings"
-            aria-label="Back to settings"
-            className="-ml-1 flex size-9 items-center justify-center rounded-full text-ink active:bg-white/60"
-          >
-            <IconChevron className="size-6 rotate-180" />
-          </Link>
+          <BackButton />
           <h1 className="font-display text-[28px] leading-8 text-ink">{title}</h1>
         </div>
         {children}
