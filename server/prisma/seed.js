@@ -84,10 +84,8 @@ async function main() {
   // Bus: the device key is created only the first time, so re-running never invalidates it.
   let bus = await prisma.bus.findUnique({ where: { plateNumber: BUS.plateNumber } });
   if (bus) {
-    bus = await prisma.bus.update({
-      where: { id: bus.id },
-      data: { ...BUS, companyId: company.id, routeId: route.id },
-    });
+    // Only the links are refreshed: the operator may have edited the name, plate number or seat count since the first seed.
+    bus = await prisma.bus.update({ where: { id: bus.id }, data: { companyId: company.id, routeId: route.id } });
   } else {
     const deviceKey = randomBytes(32).toString("hex");
     bus = await prisma.bus.create({

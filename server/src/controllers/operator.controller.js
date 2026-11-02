@@ -60,7 +60,7 @@ const fleet = async (req, res) => {
   const buses = await prisma.bus.findMany({
     where: { companyId: req.user.companyId },
     orderBy: { busNumber: "asc" },
-    select: { id: true, busNumber: true, name: true, seatCount: true, serviceStatus: true, active: true, routeId: true, route: { select: { name: true } },
+    select: { id: true, busNumber: true, name: true, plateNumber: true, seatCount: true, serviceStatus: true, active: true, routeId: true, route: { select: { name: true } },
       staff: { where: { active: true }, orderBy: [{ role: "asc" }, { lastName: "asc" }], select: { firstName: true, lastName: true, role: true } },
       state: true,
     },
@@ -102,6 +102,24 @@ const setBusActive = async (req, res) => {
   return res.json({ busNumber: bus.busNumber, active });
 };
 
+// The details of one bus. A new seat count clears the last seat reading: it was taken with the old count, so until the device
+// sends the new number of seats there is nothing honest to show. A plate number is unique across all companies.
+const updateBus = async (req, res) => {
+  const bus = await ownBus(req);
+  const changes = req.body;
+  const select = { id: true, busNumber: true, name: true, plateNumber: true, seatCount: true };
+  try {
+    const [updated] = await prisma.$transaction([
+      prisma.bus.update({ where: { id: bus.id }, data: changes, select }),
+      ...(changes.seatCount === undefined ? [] : [prisma.busState.deleteMany({ where: { busId: bus.id } })]),
+    ]);
+    return res.json({ bus: updated });
+  } catch (error) {
+    if (error.code === "P2002") throw new HttpError(409, "That plate number is already used by another bus", { code: "PLATE_TAKEN" });
+    throw error;
+  }
+};
+
 // The staff roster: drivers and conductors of the operator's company, as records only. Operators are never listed or edited here.
 const STAFF_ROLES = ["DRIVER", "CONDUCTOR"];
 const staffSelect = { id: true, firstName: true, lastName: true, role: true, active: true, busId: true };
@@ -131,4 +149,4 @@ const updateStaff = async (req, res) => {
   return res.json({ person: updated });
 };
 
-export { login, logout, me, fleet, resetPin, setBusActive, listStaff, createStaff, updateStaff };
+export { login, logout, me, fleet, resetPin, setBusActive, updateBus, listStaff, createStaff, updateStaff };
