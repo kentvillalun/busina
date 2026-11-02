@@ -27,17 +27,16 @@ const primaryButton = "flex h-14 items-center justify-center rounded-[14px] bg-l
 const outlineButton = "flex h-14 items-center justify-center rounded-[14px] border border-line bg-white px-6 text-base font-bold text-ink active:bg-stage";
 const container = "mx-auto w-full max-w-310 px-5 md:px-10";
 
-// The placeholder screens are the raw screenshots in public/screenshots. Replace them with phone-framed PNGs (transparent
-// background) and drop the radius and border on the two <Image>s in the hero.
+// The mockups in public/hero are 1080x1920 transparent PNGs with the phone frame drawn in, so the image carries its own shape.
 const Phone = ({ src, alt, className }) => (
   <Image
     src={src}
     alt={alt}
-    width={1170}
-    height={2532}
-    sizes="(min-width: 768px) 273px, 203px"
+    width={1080}
+    height={1920}
+    sizes="(min-width: 768px) 340px, 200px"
     priority
-    className={`absolute h-auto w-50.75 rounded-[2.2rem] border border-line drop-shadow-[0_18px_28px_rgba(15,34,51,0.16)] md:w-68.25 ${className}`}
+    className={`absolute h-auto w-50 drop-shadow-[0_18px_28px_rgba(15,34,51,0.16)] md:w-85 ${className}`}
   />
 );
 
@@ -67,9 +66,9 @@ export default function GetPage() {
             </p>
           </div>
 
-          <div className="relative h-117.5 w-87.5 shrink-0 md:h-160 md:w-146">
-            <Phone src="/screenshots/bus-details.png" alt="Bus details: the seats of a bus and its arrival time" className="left-2 top-9 md:left-0 md:top-14" />
-            <Phone src="/screenshots/home.png" alt="Home: the road and the buses on it" className="left-35 top-0 md:left-75" />
+          <div className="relative h-100 w-87.5 shrink-0 md:h-160 md:w-146">
+            <Phone src="/hero/hero-1.png" alt="Bus details: the seats of a bus and its arrival time" className="left-0 top-9 md:top-12" />
+            <Phone src="/hero/hero-2.png" alt="Home: the road and the buses on it" className="left-37.5 top-0 md:left-61" />
           </div>
         </div>
       </section>
@@ -167,7 +166,7 @@ export default function GetPage() {
       <footer className="border-t-[0.8px] border-line bg-white py-8 md:py-10">
         <div className={`${container} flex flex-col items-center gap-3.5 md:flex-row md:justify-between`}>
           <img src="/logo.svg" alt="Busina" width={104} height={34} />
-          <p className="text-center text-xs text-muted md:text-sm">© 2026 Busina · UMAK ITSO 2026 · IoT category</p>
+          <p className="text-center text-xs text-muted md:text-sm">© Busina 2026</p>
           <nav aria-label="Legal" className="flex gap-6 text-sm font-medium text-muted">
             <Link href="/settings/terms">Terms</Link>
             <Link href="/settings/privacy">Privacy</Link>
