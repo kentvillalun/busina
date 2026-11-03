@@ -19,7 +19,7 @@ const BUS = {
   plateNumber: "NDA 4015",
   name: "Laoag-Vigan Express",
   photoUrl: null, // paste a Cloudinary URL here later
-  seatCount: 4, // the prototype has 4 seats; must equal SEAT_COUNT in the firmware (the API refuses a ping with another number)
+  seatCount: 40, // the simulated Laoag - Vigan bus has a full 40-seat map
   deviceId: "esp32-0015",
 };
 const OPERATOR = { username: "operator", firstName: "Demo", lastName: "Operator" };
@@ -122,7 +122,7 @@ async function main() {
       busNumber: demo.busNumber,
       plateNumber: demo.plateNumber,
       name: demo.busName,
-      seatCount: BUS.seatCount,
+      seatCount: 4, // the prototype has 4 seats; must equal SEAT_COUNT in the firmware (the API refuses a ping with another number)
       deviceId: `esp32-${demo.busNumber}`,
     };
     let makatiBus = await prisma.bus.findUnique({ where: { deviceId: fields.deviceId } });
