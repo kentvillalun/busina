@@ -45,19 +45,16 @@ const readRoad = (file) => JSON.parse(readFileSync(new URL(`./routes/${file}`, i
 const ROUTE_POINTS = readRoad("laoag-vigan.json");
 const ROUTE_POINTS_NORTHBOUND = readRoad("laoag-vigan-northbound.json");
 
-// Demo routes in Makati for the competition venue, one bus each (OSRM, scripts/fetch-route.js, same [lng, lat] order).
-// The first point is the "north" end, so a southbound bus has progress growing toward the second name. The same road
-// serves both directions (the carriageways are well within the 100 m off-route limit), so there is no northbound line.
-// 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); its route is the one that passes the venue (UMak),
-// because a bus only snaps to its own route; 0017 to 0019 are for `npm run simulate`.
+// Demo route in Makati for the competition venue (the University of Makati, 14.56396, 121.05656). It is edited by hand in
+// geojson.io and saved over prisma/routes/makati-demo.geojson (a FeatureCollection with one LineString, [lng, lat] points).
+// The first point is the "north" end, so a southbound bus has progress growing toward the second name of the route name.
+// Bus 0016 is the real ESP32 (esp32-0016 and DEVICE_KEY_0016 in its secrets.h). Its route must pass where the device really is,
+// because a bus only snaps to its own route.
 const MAKATI_ROUTES = [
-  { file: "makati-ayala-umak.json", name: "Ayala - UMak", busNumber: "0016", plateNumber: "NDA 4016", busName: "Makati Ave Demo" },
-  { file: "makati-ortigas-ayala.json", name: "Ortigas - Ayala", busNumber: "0017", plateNumber: "NDA 4017", busName: "EDSA Carousel Demo" },
-  { file: "makati-umak-roxas.json", name: "UMak - Roxas Boulevard", busNumber: "0018", plateNumber: "NDA 4018", busName: "Kalayaan Demo" },
-  { file: "makati-tiendesitas-marketmarket.json", name: "Tiendesitas - Market Market", busNumber: "0019", plateNumber: "NDA 4019", busName: "C-5 Demo" },
+  { file: "makati-demo.geojson", name: "UMak - Market Market", busNumber: "0016", plateNumber: "NDA 4016", busName: "Makati Demo" },
 ];
-// Seeded earlier, then dropped from the demo: kept in the database but off the map.
-const RETIRED_DEMO_BUSES = ["esp32-0020", "esp32-0021"];
+// Seeded on Nov 3 and dropped from the demo: kept off the map if they still exist in the database.
+const RETIRED_DEMO_BUSES = ["esp32-0017", "esp32-0018", "esp32-0019", "esp32-0020", "esp32-0021"];
 
 // A long random key is safe to store as a plain SHA-256 hash (bcrypt is for short, guessable passwords).
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -114,7 +111,8 @@ async function main() {
   // Makati demo routes and their buses. Same rule as above: a bus key is created once and saved as DEVICE_KEY_<number>.
   const makatiBuses = [];
   for (const demo of MAKATI_ROUTES) {
-    const points = readRoad(demo.file);
+    const geojson = readRoad(demo.file);
+    const points = geojson.features.find((feature) => feature.geometry.type === "LineString").geometry.coordinates;
     const makatiRoute = await prisma.route.upsert({
       where: { companyId_name: { companyId: company.id, name: demo.name } },
       update: { polyline: points, lengthM: pathLengthM(points) },
