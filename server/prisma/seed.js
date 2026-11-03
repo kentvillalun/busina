@@ -50,9 +50,9 @@ const ROUTE_POINTS_NORTHBOUND = readRoad("laoag-vigan-northbound.json");
 // serves both directions (the carriageways are well within the 100 m off-route limit), so there is no northbound line.
 // 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); 0017 and 0018 are for `npm run simulate`.
 const MAKATI_ROUTES = [
-  { file: "makati-guadalupe-ayala.json", name: "Guadalupe - Ayala", busNumber: "0016", plateNumber: "NDA 4016", busName: "EDSA Carousel Demo" },
-  { file: "makati-paseo-edsa.json", name: "Paseo de Roxas - EDSA", busNumber: "0017", plateNumber: "NDA 4017", busName: "Ayala Avenue Demo" },
-  { file: "makati-buendia-taft.json", name: "Buendia - Taft", busNumber: "0018", plateNumber: "NDA 4018", busName: "Buendia Demo" },
+  { file: "makati-ortigas-ayala.json", name: "Ortigas - Ayala", busNumber: "0016", plateNumber: "NDA 4016", busName: "EDSA Carousel Demo" },
+  { file: "makati-cityhall-ayala.json", name: "Makati City Hall - Ayala", busNumber: "0017", plateNumber: "NDA 4017", busName: "Makati Ave Demo" },
+  { file: "makati-buendia-roxas.json", name: "Buendia - Roxas Boulevard", busNumber: "0018", plateNumber: "NDA 4018", busName: "Buendia Demo" },
 ];
 
 // A long random key is safe to store as a plain SHA-256 hash (bcrypt is for short, guessable passwords).

@@ -10,9 +10,9 @@ are untouched):
 
 | Route (north end first) | Bus | Use |
 |---|---|---|
-| Guadalupe - Ayala (EDSA Carousel corridor, 3.6 km) | 0016 | the real ESP32 (`esp32-0016`, key `DEVICE_KEY_0016` in `.env`) |
-| Paseo de Roxas - EDSA (Ayala Ave, 1.7 km) | 0017 | `BUS=0017 npm run simulate` |
-| Buendia - Taft (Gil Puyat Ave, 3.9 km) | 0018 | `BUS=0018 npm run simulate` |
+| Ortigas - Ayala (EDSA Carousel corridor, 5.7 km) | 0016 | the real ESP32 (`esp32-0016`, key `DEVICE_KEY_0016` in `.env`) |
+| Makati City Hall - Ayala (Makati Ave, Buendia, EDSA, 3.4 km) | 0017 | `BUS=0017 npm run simulate` |
+| Buendia - Roxas Boulevard (Gil Puyat Ave, 5.2 km) | 0018 | `BUS=0018 npm run simulate` |
 
 `npm run seed` writes to the production Neon database: run it once, on purpose. Never let the simulator and the ESP32 ping
 the same bus (the position would flicker between them).
