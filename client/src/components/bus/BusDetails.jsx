@@ -17,13 +17,12 @@ import { ALERT_BUS_KEY, ALERT_MINUTES_KEY, DEFAULT_ALERT_MINUTES } from "@/hooks
 import { useRoutes } from "@/hooks/useRoutes";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import { etaFor, formatEta, formatSpeed, isOnRoad } from "@/lib/eta";
+import { headingTo } from "@/lib/direction";
 import { distanceM, formatDistance } from "@/lib/geo";
 import { haptic, hapticTrigger } from "@/lib/haptics";
 import { alertPlan, targetMode } from "@/lib/target";
 import { askAlerts, getAlertsPermission, getCurrentPosition } from "@/lib/permissions";
 import { ago, secondsSince } from "@/lib/time";
-
-const TOWARD = { NORTHBOUND: "Laoag", SOUTHBOUND: "Vigan" };
 
 // Figma S2 has a forecast ("3 to 5 seats may be left"). We cannot make one yet (no ETA, no boarding
 // rate), so this only describes the seats that are free right now.
@@ -175,7 +174,7 @@ const BusDetails = ({ id }) => {
 
   const title = bus ? `Bus ${bus.busNumber}` : "Bus details";
   const away = state && target ? distanceM(target, state) : null;
-  const heading = state ? `Heading to ${TOWARD[state.direction] ?? "its terminal"}` : "Not heard from yet";
+  const heading = state ? `Heading to ${headingTo(bus.route.name, state.direction) ?? "its terminal"}` : "Not heard from yet";
   const seatOutlook = state && !stale ? outlook(state.seatsFree, bus.seatCount) : null;
 
   return (

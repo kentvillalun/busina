@@ -1,3 +1,5 @@
+import { DIRECTION_WORDS } from "./direction.js";
+
 // What the driver screen is showing: "live" (in service with a fresh position), "rest" (At rest), "stopover", or "lost"
 // (in service but no fresh position). The driver's own choice wins over the signal.
 export const driverMode = (data) => {
@@ -16,6 +18,6 @@ export const MODE_COPY = {
 };
 
 export const DIRECTION_LABEL = {
-  NORTHBOUND: "Northbound toward Laoag",
-  SOUTHBOUND: "Southbound toward Vigan",
+  NORTHBOUND: `${DIRECTION_WORDS.NORTHBOUND.title}, ${DIRECTION_WORDS.NORTHBOUND.hint}`,
+  SOUTHBOUND: `${DIRECTION_WORDS.SOUTHBOUND.title}, ${DIRECTION_WORDS.SOUTHBOUND.hint}`,
 };

@@ -2,11 +2,9 @@
 
 import { DetailPage } from "@/components/settings/DetailPage";
 import useSavedSetting from "@/hooks/useSavedSetting";
+import { DIRECTION_WORDS } from "@/lib/direction";
 
-const OPTIONS = [
-  { value: "NORTHBOUND", label: "Toward Laoag", hint: "Northbound buses" },
-  { value: "SOUTHBOUND", label: "Toward Vigan", hint: "Southbound buses" },
-];
+const OPTIONS = ["NORTHBOUND", "SOUTHBOUND"].map((value) => ({ value, label: DIRECTION_WORDS[value].title, hint: DIRECTION_WORDS[value].hint }));
 
 export default function DirectionPage() {
   const [direction, setDirection] = useSavedSetting("busina:direction", "NORTHBOUND");

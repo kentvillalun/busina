@@ -81,7 +81,7 @@ const bearingDeg = ([lat1, lng1], [lat2, lng2]) => {
 };
 
 // Which way a bus on `road` ([lng, lat] points) at `progressM` is facing, as a compass bearing: the road a short way ahead of it
-// (progress grows toward Vigan, so a northbound bus looks at smaller values). null near the end of the road.
+// (progress grows toward the end of the route, so a northbound bus looks at smaller values). null near the end of the road.
 const headingAt = (road, progressM, direction) => {
   const sign = direction === "SOUTHBOUND" ? 1 : -1;
   const points = routeBetween(road, progressM, progressM + sign * 80); // always from the smaller progress to the larger

@@ -31,7 +31,7 @@ const etaFor = (bus, route, userPos) => {
   const spot = snapToRoute(userPos, roadFor(route, state.direction));
   if (!spot || spot.distanceFromRouteM > MAX_SPOT_FROM_ROUTE_M) return null;
 
-  // progressM grows toward Vigan, so a southbound bus still has to cover (spot - bus) and a northbound one the opposite.
+  // progressM grows toward the end of the route, so a southbound bus still has to cover (spot - bus) and a northbound one the opposite.
   const remainingM = (state.direction === "SOUTHBOUND" ? 1 : -1) * (spot.progressM - state.progressM);
   if (remainingM < -PASSED_AFTER_M) return { passed: true, spotM: spot.progressM };
 

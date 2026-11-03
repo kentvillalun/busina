@@ -9,6 +9,7 @@ import { PageContent } from "@/components/layout/PageContent";
 import useSavedSetting from "@/hooks/useSavedSetting";
 import useSession from "@/hooks/useSession";
 import { logout } from "@/lib/session";
+import { DIRECTION_WORDS } from "@/lib/direction";
 import { spotLabel } from "@/lib/geocode";
 import { getAlertsPermission, getLocationPermission, permissionLabel } from "@/lib/permissions";
 
@@ -105,7 +106,7 @@ export default function SettingsPage() {
               value={status === "guest" ? "Sign in" : spot ? "Change" : "Not set"}
               accent={status === "guest" || !!spot}
             />
-            <Row href="/settings/direction" label="Direction" value={direction === "SOUTHBOUND" ? "Toward Vigan" : "Toward Laoag"} />
+            <Row href="/settings/direction" label="Direction" value={DIRECTION_WORDS[direction]?.title ?? DIRECTION_WORDS.NORTHBOUND.title} />
           </Section>
 
           {/* Nothing until the server has answered, so the wrong block does not flash. */}

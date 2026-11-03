@@ -1,6 +1,6 @@
 import { haptic, hapticTrigger } from "@/lib/haptics";
 
-// One half of the Northbound / Southbound switch. `item` is { title, hint }.
+// One half of the Inbound / Outbound switch. `item` is { title, hint }.
 const DirectionTab = ({ item, selected, onPress }) => (
   <button
     type="button"

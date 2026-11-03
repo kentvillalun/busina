@@ -30,6 +30,7 @@ import {
   getCurrentPosition,
   getLocationPermission,
 } from "@/lib/permissions";
+import { DIRECTION_WORDS } from "@/lib/direction";
 import { alertBusesFor, targetOutcome } from "@/lib/nearBus";
 import { targetMode } from "@/lib/target";
 import { secondsSince } from "@/lib/time";
@@ -49,10 +50,7 @@ const alertsDismissed = () => {
 const LAOAG = { lat: 18.1978, lng: 120.5936 }; // map center until the user's location is known
 const LIVE_WITHIN_S = 30; // same as the server: older than this means signal lost
 
-const DIRECTIONS = [
-  { key: "NORTHBOUND", title: "Northbound", hint: "toward Laoag" },
-  { key: "SOUTHBOUND", title: "Southbound", hint: "toward Vigan" },
-];
+const DIRECTIONS = ["NORTHBOUND", "SOUTHBOUND"].map((key) => ({ key, ...DIRECTION_WORDS[key] }));
 
 // The permission state and, when allowed, the position. Reads only; the page decides what to show.
 const readLocation = async () => {

@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { crewText, routeText, seatsText } from "./fleet.js";
 
-test("the direction the API sends (SOUTHBOUND / NORTHBOUND) becomes the two ends of the route", () => {
-  assert.equal(routeText("SOUTHBOUND"), "Laoag to Vigan");
-  assert.equal(routeText("NORTHBOUND"), "Vigan to Laoag");
+test("the direction the API sends (SOUTHBOUND / NORTHBOUND) becomes Outbound or Inbound", () => {
+  assert.equal(routeText("SOUTHBOUND"), "Outbound");
+  assert.equal(routeText("NORTHBOUND"), "Inbound");
   assert.equal(routeText(null), "—");
 });
 
