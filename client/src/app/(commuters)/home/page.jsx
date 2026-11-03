@@ -49,6 +49,7 @@ const alertsDismissed = () => {
 
 const LAOAG = { lat: 18.1978, lng: 120.5936 }; // map center until the user's location is known
 const LIVE_WITHIN_S = 30; // same as the server: older than this means signal lost
+const HIDE_AFTER_S = 10 * 60; // silent for this long: the bus leaves the list and the map instead of showing "Signal lost"
 
 const DIRECTIONS = ["NORTHBOUND", "SOUTHBOUND"].map((key) => ({ key, ...DIRECTION_WORDS[key] }));
 
@@ -153,8 +154,8 @@ export default function HomePage() {
   };
 
   const serverTime = data?.serverTime;
-  // A bus that has never pinged has no state yet, so it cannot be shown.
-  const allBuses = (data?.buses ?? []).filter((bus) => bus.state);
+  // A bus that has never pinged has no state yet, so it cannot be shown; one silent for long is parked, not in a tunnel.
+  const allBuses = (data?.buses ?? []).filter((bus) => bus.state && secondsSince(serverTime, bus.state.lastPingAt) < HIDE_AFTER_S);
 
   // Soonest bus first. A bus that lost its signal has an old position, so it goes last.
   // Without an ETA we fall back to the closest; without the user's location the order stays as the API sent it.
