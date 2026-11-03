@@ -3,6 +3,20 @@
 Decided on Nov 1, 2026. The product is for the Laoag to Vigan corridor only. For the demo in Makati we add one extra
 route so the map, ETA and alerts can be shown live. Nothing here is built yet on purpose; we do it on site.
 
+## Built on Nov 3 (branch `feat/makati-routes`, not yet seeded)
+
+Three Makati lines in `server/prisma/routes/makati-*.json`, one bus each, added by `seed.js` (the Ilocos route and bus 0015
+are untouched):
+
+| Route (north end first) | Bus | Use |
+|---|---|---|
+| Guadalupe - Ayala (EDSA Carousel corridor, 3.6 km) | 0016 | the real ESP32 (`esp32-0016`, key `DEVICE_KEY_0016` in `.env`) |
+| Paseo de Roxas - EDSA (Ayala Ave, 1.7 km) | 0017 | `BUS=0017 npm run simulate` |
+| Buendia - Taft (Gil Puyat Ave, 3.9 km) | 0018 | `BUS=0018 npm run simulate` |
+
+`npm run seed` writes to the production Neon database: run it once, on purpose. Never let the simulator and the ESP32 ping
+the same bus (the position would flicker between them).
+
 ## Why this and not the other ideas
 
 - **Field test Vigan to Manila with friends** is a bonus, never a dependency. If it fails we would have nothing to show.

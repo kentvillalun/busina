@@ -8,6 +8,7 @@
 //   SPEED_KMH    default 25; up to 200, which the API accepts
 //   START_KM     how far from Laoag the bus starts, in km (default 0)
 //   DIRECTION    "south" (toward Vigan, default) or "north" (toward Laoag)
+//   BUS          a Makati demo bus number (0017 or 0018); default is bus 0015
 // For a demo: set a boarding spot in the app, then start the bus a few km before it, e.g. with PowerShell
 //   $env:API_URL="https://busina-fxrt.onrender.com"; $env:START_KM="20"; $env:SPEED_KMH="90"; npm run simulate
 import { disconnectDB, prisma } from "../src/config/db.js";
@@ -17,9 +18,12 @@ const API_URL = process.env.API_URL ?? "http://localhost:4000";
 const SPEED_KMH = Number(process.env.SPEED_KMH ?? 25); // SPEED_KMH=300 npm run simulate to cross 82 km in minutes
 const INTERVAL_S = 3; // seconds between pings
 
-const { DEVICE_ID, DEVICE_KEY } = process.env;
+// BUS=0017 simulates a Makati demo bus (keys DEVICE_ID_0017 / DEVICE_KEY_0017); without it, bus 0015.
+const suffix = process.env.BUS ? `_${process.env.BUS}` : "";
+const DEVICE_ID = process.env[`DEVICE_ID${suffix}`];
+const DEVICE_KEY = process.env[`DEVICE_KEY${suffix}`];
 if (!DEVICE_ID || !DEVICE_KEY) {
-  console.error("DEVICE_ID and DEVICE_KEY are missing from server/.env. Run `npm run seed` first.");
+  console.error(`DEVICE_ID${suffix} and DEVICE_KEY${suffix} are missing from server/.env. Run \`npm run seed\` first.`);
   process.exit(1);
 }
 
