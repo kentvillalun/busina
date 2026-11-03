@@ -45,6 +45,19 @@ const readRoad = (file) => JSON.parse(readFileSync(new URL(`./routes/${file}`, i
 const ROUTE_POINTS = readRoad("laoag-vigan.json");
 const ROUTE_POINTS_NORTHBOUND = readRoad("laoag-vigan-northbound.json");
 
+// Demo routes in Makati for the competition venue, one bus each (OSRM, scripts/fetch-route.js, same [lng, lat] order).
+// The first point is the "north" end, so a southbound bus has progress growing toward the second name. The same road
+// serves both directions (the carriageways are well within the 100 m off-route limit), so there is no northbound line.
+// 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); 0017 to 0019 are for `npm run simulate`.
+const MAKATI_ROUTES = [
+  { file: "makati-ortigas-ayala.json", name: "Ortigas - Ayala", busNumber: "0016", plateNumber: "NDA 4016", busName: "EDSA Carousel Demo" },
+  { file: "makati-ayala-umak.json", name: "Ayala - UMak", busNumber: "0017", plateNumber: "NDA 4017", busName: "Makati Ave Demo" },
+  { file: "makati-umak-roxas.json", name: "UMak - Roxas Boulevard", busNumber: "0018", plateNumber: "NDA 4018", busName: "Kalayaan Demo" },
+  { file: "makati-tiendesitas-marketmarket.json", name: "Tiendesitas - Market Market", busNumber: "0019", plateNumber: "NDA 4019", busName: "C-5 Demo" },
+];
+// Seeded earlier, then dropped from the demo: kept in the database but off the map.
+const RETIRED_DEMO_BUSES = ["esp32-0020", "esp32-0021"];
+
 // A long random key is safe to store as a plain SHA-256 hash (bcrypt is for short, guessable passwords).
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
@@ -97,6 +110,38 @@ async function main() {
     secretsToSave.DEVICE_KEY = deviceKey;
   }
 
+  // Makati demo routes and their buses. Same rule as above: a bus key is created once and saved as DEVICE_KEY_<number>.
+  const makatiBuses = [];
+  for (const demo of MAKATI_ROUTES) {
+    const points = readRoad(demo.file);
+    const makatiRoute = await prisma.route.upsert({
+      where: { companyId_name: { companyId: company.id, name: demo.name } },
+      update: { polyline: points, lengthM: pathLengthM(points) },
+      create: { companyId: company.id, name: demo.name, polyline: points, lengthM: pathLengthM(points) },
+    });
+    const fields = {
+      busNumber: demo.busNumber,
+      plateNumber: demo.plateNumber,
+      name: demo.busName,
+      seatCount: BUS.seatCount,
+      deviceId: `esp32-${demo.busNumber}`,
+    };
+    let makatiBus = await prisma.bus.findUnique({ where: { deviceId: fields.deviceId } });
+    if (makatiBus) {
+      makatiBus = await prisma.bus.update({ where: { id: makatiBus.id }, data: { ...fields, active: true, companyId: company.id, routeId: makatiRoute.id } });
+    } else {
+      const deviceKey = randomBytes(32).toString("hex");
+      makatiBus = await prisma.bus.create({
+        data: { ...fields, companyId: company.id, routeId: makatiRoute.id, deviceKeyHash: sha256(deviceKey) },
+      });
+      secretsToSave[`DEVICE_ID_${demo.busNumber}`] = fields.deviceId;
+      secretsToSave[`DEVICE_KEY_${demo.busNumber}`] = deviceKey;
+    }
+    makatiBuses.push({ route: makatiRoute, bus: makatiBus });
+  }
+
+  await prisma.bus.updateMany({ where: { deviceId: { in: RETIRED_DEMO_BUSES } }, data: { active: false } });
+
   // Operator: the password is created only the first time.
   let operator = await prisma.user.findUnique({ where: { username: OPERATOR.username } });
   if (!operator) {
@@ -126,6 +171,9 @@ async function main() {
   console.log(`  company : ${company.name}`);
   console.log(`  route   : ${route.name} (${route.lengthM} m, ${ROUTE_POINTS.length} points)`);
   console.log(`  bus     : ${bus.busNumber} / ${bus.plateNumber} / ${bus.deviceId}, ${bus.seatCount} seats`);
+  for (const { route: makatiRoute, bus: makatiBus } of makatiBuses) {
+    console.log(`  makati  : ${makatiRoute.name} (${makatiRoute.lengthM} m), bus ${makatiBus.busNumber} / ${makatiBus.deviceId}`);
+  }
   console.log(`  user    : ${operator.username} (${operator.role})`);
   console.log(`  staff   : ${staff.length} drivers and conductors, ${staff.filter((person) => person.busId).length} on bus ${bus.busNumber}`);
   console.log(
