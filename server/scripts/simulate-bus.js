@@ -83,6 +83,8 @@ process.on("SIGINT", async () => {
 
 console.log(`Simulating bus ${bus.busNumber}: ${SPEED_KMH} km/h, a ping every ${INTERVAL_S} s -> ${API_URL}. Ctrl+C to stop.`);
 
+let hintShown = false;
+
 while (true) {
   // Move along the road, and turn around at each end.
   distance += heading * (SPEED_KMH / 3.6) * INTERVAL_S;
@@ -127,7 +129,12 @@ while (true) {
         ` -> ${response.status}${response.ok ? "" : " " + (await response.text())}`,
     );
   } catch (error) {
-    console.error(`Could not reach ${API_URL}: ${error.message}`);
+    // fetch says only "fetch failed"; the cause (ECONNREFUSED, ENOTFOUND...) is what tells what is wrong.
+    console.error(`Could not reach ${API_URL}: ${error.cause?.code ?? error.message}`);
+    if (!hintShown) {
+      hintShown = true;
+      console.error("Is the API running? Start it with `npm run dev` in server/, or send the pings to the deployed API with API_URL.");
+    }
   }
 
   await new Promise((resolve) => setTimeout(resolve, INTERVAL_S * 1000));
