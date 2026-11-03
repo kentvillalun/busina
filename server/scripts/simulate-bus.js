@@ -8,7 +8,7 @@
 //   SPEED_KMH    default 25; up to 200, which the API accepts
 //   START_KM     how far from Laoag the bus starts, in km (default 0)
 //   DIRECTION    "south" (toward Vigan, default) or "north" (toward Laoag)
-//   BUS          a Makati demo bus number (0017 or 0018); default is bus 0015
+//   BUS          a Makati demo bus number (0017 to 0021); default is bus 0015
 // For a demo: set a boarding spot in the app, then start the bus a few km before it, e.g. with PowerShell
 //   $env:API_URL="https://busina-fxrt.onrender.com"; $env:START_KM="20"; $env:SPEED_KMH="90"; npm run simulate
 import { disconnectDB, prisma } from "../src/config/db.js";

@@ -5,7 +5,7 @@ route so the map, ETA and alerts can be shown live. Nothing here is built yet on
 
 ## Built on Nov 3 (branch `feat/makati-routes`, not yet seeded)
 
-Three Makati lines in `server/prisma/routes/makati-*.json`, one bus each, added by `seed.js` (the Ilocos route and bus 0015
+Six Makati lines (the venue is the University of Makati, 14.56396, 121.05656) in `server/prisma/routes/makati-*.json`, one bus each, added by `seed.js` (the Ilocos route and bus 0015
 are untouched):
 
 | Route (north end first) | Bus | Use |
@@ -13,6 +13,9 @@ are untouched):
 | Ortigas - Ayala (EDSA Carousel corridor, 5.7 km) | 0016 | the real ESP32 (`esp32-0016`, key `DEVICE_KEY_0016` in `.env`) |
 | Makati City Hall - Ayala (Makati Ave, Buendia, EDSA, 3.4 km) | 0017 | `BUS=0017 npm run simulate` |
 | Buendia - Roxas Boulevard (Gil Puyat Ave, 5.2 km) | 0018 | `BUS=0018 npm run simulate` |
+| Makati City Hall - UMak (J. P. Rizal, 3.6 km) | 0019 | `BUS=0019 npm run simulate` |
+| UMak - Roxas Boulevard (J. P. Rizal Ext, Kalayaan, Buendia, 8.4 km) | 0020 | `BUS=0020 npm run simulate` |
+| Ortigas - UMak (EDSA, J. P. Rizal Ext, 4.4 km) | 0021 | `BUS=0021 npm run simulate` |
 
 `npm run seed` writes to the production Neon database: run it once, on purpose. Never let the simulator and the ESP32 ping
 the same bus (the position would flicker between them).

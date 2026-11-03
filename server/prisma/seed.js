@@ -48,11 +48,14 @@ const ROUTE_POINTS_NORTHBOUND = readRoad("laoag-vigan-northbound.json");
 // Demo routes in Makati for the competition venue, one bus each (OSRM, scripts/fetch-route.js, same [lng, lat] order).
 // The first point is the "north" end, so a southbound bus has progress growing toward the second name. The same road
 // serves both directions (the carriageways are well within the 100 m off-route limit), so there is no northbound line.
-// 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); 0017 and 0018 are for `npm run simulate`.
+// 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); 0017 to 0021 are for `npm run simulate`.
 const MAKATI_ROUTES = [
   { file: "makati-ortigas-ayala.json", name: "Ortigas - Ayala", busNumber: "0016", plateNumber: "NDA 4016", busName: "EDSA Carousel Demo" },
   { file: "makati-cityhall-ayala.json", name: "Makati City Hall - Ayala", busNumber: "0017", plateNumber: "NDA 4017", busName: "Makati Ave Demo" },
   { file: "makati-buendia-roxas.json", name: "Buendia - Roxas Boulevard", busNumber: "0018", plateNumber: "NDA 4018", busName: "Buendia Demo" },
+  { file: "makati-cityhall-umak.json", name: "Makati City Hall - UMak", busNumber: "0019", plateNumber: "NDA 4019", busName: "Poblacion Demo" },
+  { file: "makati-umak-roxas.json", name: "UMak - Roxas Boulevard", busNumber: "0020", plateNumber: "NDA 4020", busName: "Kalayaan Demo" },
+  { file: "makati-ortigas-umak.json", name: "Ortigas - UMak", busNumber: "0021", plateNumber: "NDA 4021", busName: "JP Rizal Demo" },
 ];
 
 // A long random key is safe to store as a plain SHA-256 hash (bcrypt is for short, guessable passwords).
