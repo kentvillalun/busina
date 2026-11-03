@@ -23,6 +23,7 @@ import useSavedSetting from "@/hooks/useSavedSetting";
 import useShareSheet from "@/hooks/useShareSheet";
 import { etaFor, etaOrder, roadFor } from "@/lib/eta";
 import { distanceM, formatDistance, routeBetween } from "@/lib/geo";
+import { hasSeenOnboarding } from "@/lib/session";
 import {
   askAlerts,
   askLocation,
@@ -100,11 +101,7 @@ export default function HomePage() {
   // can inherit that cookie from the browser but starts with empty localStorage (and its own permissions), so Home checks too.
   const router = useRouter();
   useEffect(() => {
-    let seen = true; // storage blocked: assume seen, or onboarding and Home would send each other around
-    try {
-      seen = Boolean(localStorage.getItem("hasSeenOnboarding"));
-    } catch {}
-    if (!seen) router.replace("/onboarding");
+    if (!hasSeenOnboarding()) router.replace("/onboarding");
   }, [router]);
 
   // Check on load and whenever the user comes back to the tab, e.g. from the browser's site settings.

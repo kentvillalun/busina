@@ -4,9 +4,26 @@ const PRIVATE_KEYS = ["busina:spot", "busina:alertBus", "busina:target"];
 
 // Onboarding is shown once. The proxy reads the cookie (it cannot read localStorage) to send first-time visitors to it
 // before Home is drawn. The localStorage copy is kept for people who finished it before the cookie existed.
+// The installed app (Home Screen, or the Android APK) shares its storage and cookies with the browser it came from, so it
+// keeps its own flag: opening it for the first time shows onboarding even if the website was already visited.
+const isInstalledApp = () =>
+  window.matchMedia("(display-mode: standalone)").matches ||
+  navigator.standalone === true ||
+  document.referrer.startsWith("android-app://");
+const seenKey = () => (isInstalledApp() ? "hasSeenOnboarding:app" : "hasSeenOnboarding");
+
+// Storage blocked: assume seen, or onboarding and Home would send each other around.
+export const hasSeenOnboarding = () => {
+  try {
+    return Boolean(localStorage.getItem(seenKey()));
+  } catch {
+    return true;
+  }
+};
+
 export const markOnboardingSeen = () => {
   try {
-    localStorage.setItem("hasSeenOnboarding", "true");
+    localStorage.setItem(seenKey(), "true");
   } catch {}
   document.cookie = "hasSeenOnboarding=1; path=/; max-age=31536000; samesite=lax";
 };

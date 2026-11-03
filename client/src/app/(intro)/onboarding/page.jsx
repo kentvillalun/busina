@@ -13,7 +13,7 @@ import SceneStage from "@/components/onboarding/SceneStage";
 import WaitScene from "@/components/onboarding/WaitScene";
 import { haptic, hapticTrigger } from "@/lib/haptics";
 import { askAlerts, askLocation } from "@/lib/permissions";
-import { markOnboardingSeen } from "@/lib/session";
+import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/session";
 
 const steps = [
   {
@@ -132,7 +132,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     // Seen before (this flag also exists from before the cookie did): carry on to Home, no login detour.
-    if (localStorage.getItem("hasSeenOnboarding")) {
+    if (hasSeenOnboarding()) {
       markOnboardingSeen();
       router.replace("/home");
     }
