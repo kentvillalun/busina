@@ -10,8 +10,8 @@ are untouched):
 
 | Route | Bus | Use |
 |---|---|---|
-| Ortigas - Ayala (EDSA Carousel corridor, 5.7 km) | 0016 | the real ESP32 (`esp32-0016`, key `DEVICE_KEY_0016` in `.env`) |
-| Ayala - UMak (A. Arnaiz, Makati Ave, City Hall, J. P. Rizal, 6.6 km) | 0017 | `BUS=0017 npm run simulate` |
+| Ayala - UMak (A. Arnaiz, Makati Ave, City Hall, J. P. Rizal, 6.6 km; 37 m from UMak) | 0016 | the real ESP32 (`esp32-0016`, key `DEVICE_KEY_0016` in `.env`): its route must pass where the device really is |
+| Ortigas - Ayala (EDSA Carousel corridor, 5.7 km) | 0017 | `BUS=0017 npm run simulate` |
 | UMak - Roxas Boulevard (J. P. Rizal Ext, Kalayaan, Buendia, 8.4 km) | 0018 | `BUS=0018 npm run simulate` |
 | Tiendesitas - Market Market (C-5, 5.3 km) | 0019 | `BUS=0019 npm run simulate` |
 

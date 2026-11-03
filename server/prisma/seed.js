@@ -48,10 +48,11 @@ const ROUTE_POINTS_NORTHBOUND = readRoad("laoag-vigan-northbound.json");
 // Demo routes in Makati for the competition venue, one bus each (OSRM, scripts/fetch-route.js, same [lng, lat] order).
 // The first point is the "north" end, so a southbound bus has progress growing toward the second name. The same road
 // serves both directions (the carriageways are well within the 100 m off-route limit), so there is no northbound line.
-// 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); 0017 to 0019 are for `npm run simulate`.
+// 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); its route is the one that passes the venue (UMak),
+// because a bus only snaps to its own route; 0017 to 0019 are for `npm run simulate`.
 const MAKATI_ROUTES = [
-  { file: "makati-ortigas-ayala.json", name: "Ortigas - Ayala", busNumber: "0016", plateNumber: "NDA 4016", busName: "EDSA Carousel Demo" },
-  { file: "makati-ayala-umak.json", name: "Ayala - UMak", busNumber: "0017", plateNumber: "NDA 4017", busName: "Makati Ave Demo" },
+  { file: "makati-ayala-umak.json", name: "Ayala - UMak", busNumber: "0016", plateNumber: "NDA 4016", busName: "Makati Ave Demo" },
+  { file: "makati-ortigas-ayala.json", name: "Ortigas - Ayala", busNumber: "0017", plateNumber: "NDA 4017", busName: "EDSA Carousel Demo" },
   { file: "makati-umak-roxas.json", name: "UMak - Roxas Boulevard", busNumber: "0018", plateNumber: "NDA 4018", busName: "Kalayaan Demo" },
   { file: "makati-tiendesitas-marketmarket.json", name: "Tiendesitas - Market Market", busNumber: "0019", plateNumber: "NDA 4019", busName: "C-5 Demo" },
 ];
