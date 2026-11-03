@@ -19,7 +19,7 @@ const BUS = {
   plateNumber: "NDA 4015",
   name: "Laoag-Vigan Express",
   photoUrl: null, // paste a Cloudinary URL here later
-  seatCount: 4, // the prototype has 4 seats; must equal SEAT_COUNT in the firmware (the API refuses a ping with another number)
+  seatCount: 40, // bus 0015 runs on the simulator (a full bus); the 4-seat prototype is bus 0016, see PROTOTYPE_SEATS
   deviceId: "esp32-0015",
 };
 const OPERATOR = { username: "operator", firstName: "Demo", lastName: "Operator" };
@@ -48,6 +48,8 @@ const ROUTE_POINTS_NORTHBOUND = readRoad("laoag-vigan-northbound.json");
 // Demo routes in Makati for the competition venue, one bus each (OSRM, scripts/fetch-route.js, same [lng, lat] order).
 // The first point is the "north" end, so a southbound bus has progress growing toward the second name. The same road
 // serves both directions (the carriageways are well within the 100 m off-route limit), so there is no northbound line.
+// The ESP32 prototype has 4 seats; this must equal SEAT_COUNT in the firmware (the API refuses a ping with another number).
+const PROTOTYPE_SEATS = 4;
 // 0016 is for the real ESP32 (put esp32-0016 and DEVICE_KEY_0016 in its secrets.h); 0017 to 0019 are for `npm run simulate`.
 const MAKATI_ROUTES = [
   { file: "makati-ortigas-ayala.json", name: "Ortigas - Ayala", busNumber: "0016", plateNumber: "NDA 4016", busName: "EDSA Carousel Demo" },
@@ -123,7 +125,7 @@ async function main() {
       busNumber: demo.busNumber,
       plateNumber: demo.plateNumber,
       name: demo.busName,
-      seatCount: BUS.seatCount,
+      seatCount: PROTOTYPE_SEATS,
       deviceId: `esp32-${demo.busNumber}`,
     };
     let makatiBus = await prisma.bus.findUnique({ where: { deviceId: fields.deviceId } });
